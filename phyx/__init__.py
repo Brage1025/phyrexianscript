@@ -32,6 +32,6 @@ __all__ = [
     "LANGUAGE_ALIASES",
 ]
 
-__version__ = "1.6.3"
+__version__ = "1.6.4"
 LANGUAGE = "φyrx"
 LANGUAGE_ALIASES = ("PhyrxScript", "PhyrexianScript")

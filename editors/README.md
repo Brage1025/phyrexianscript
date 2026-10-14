@@ -1,5 +1,7 @@
 # Editor support for φyrx
 
+<img src="phyx-original.png" width="96" height="96" alt="φyrx">
+
 Grammars for `.phyx` (row layout) and `.vphyx` (vertical columns). They highlight mood markers, verbs, constants, notes (`^rukx`), strings, and hexadecimal numerals.
 
 `editors/` **is** a Cursor / VS Code extension (`package.json`).
@@ -17,18 +19,18 @@ Or copy the folder into the editor’s extensions directory (restart the editor 
 
 ```
 # Cursor, Windows
-xcopy /E /I editors %USERPROFILE%\.cursor\extensions\brage1025.phyx-1.6.3
+xcopy /E /I editors %USERPROFILE%\.cursor\extensions\brage1025.phyx-1.6.4
 
 # VS Code, Windows
-xcopy /E /I editors %USERPROFILE%\.vscode\extensions\brage1025.phyx-1.6.3
+xcopy /E /I editors %USERPROFILE%\.vscode\extensions\brage1025.phyx-1.6.4
 ```
 
 ```
 # Cursor, macOS / Linux
-cp -R editors ~/.cursor/extensions/brage1025.phyx-1.6.3
+cp -R editors ~/.cursor/extensions/brage1025.phyx-1.6.4
 
 # VS Code, macOS / Linux
-cp -R editors ~/.vscode/extensions/brage1025.phyx-1.6.3
+cp -R editors ~/.vscode/extensions/brage1025.phyx-1.6.4
 ```
 
 A VSIX, if you have Node:
@@ -37,7 +39,7 @@ A VSIX, if you have Node:
 npx --yes @vscode/vsce package --no-dependencies
 ```
 
-That writes `phyx-1.6.3.vsix` in `editors/`. Then **Install from VSIX…**.
+That writes `phyx-1.6.4.vsix` in `editors/`. Then **Install from VSIX…**.
 
 Completions, jump to `ťe`, and hover need `phyx` (or `python -m phyx`) on PATH. The extension starts `python -m phyx lsp`.
 

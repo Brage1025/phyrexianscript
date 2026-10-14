@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.4
+
+Extension icon. The language is still **1.6**.
+
+- `brage1025.phyx` has a hex badge: `phyx-original` (white / gray-white split), `phyx-plain` (solid white hex, oil ϕ), `phyx-line` (white hex ring + ϕ). Closed **ϕ**, not the Wizards mana SVG.
+
 ## 1.6.3
 
 Toolchain DX. The language is still **1.6**. `pip install phyx` and `brage1025.phyx` are 1.6.3.
