@@ -1,0 +1,12 @@
+{
+  "comments": {
+    "lineComment": "^rukx"
+  },
+  "brackets": [],
+  "autoClosingPairs": [
+    { "open": "\"", "close": "\"" }
+  ],
+  "surroundingPairs": [
+    { "open": "\"", "close": "\"" }
+  ]
+}

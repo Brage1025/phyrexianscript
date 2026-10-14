@@ -1,0 +1,10 @@
+include phyx/lib/*.phyx
+include editors/*.json
+include editors/package.json
+include editors/README.md
+include editors/syntax/phyx.vim
+include editors/ftdetect/phyx.vim
+include docs/*.md
+include examples/*.phyx
+include examples/*.vphyx
+include tests/phyx/*.phyx

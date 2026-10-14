@@ -1,0 +1,30 @@
+^rukx  Errors.  ɬšeɴazv = "mistake" raises; baqilx = "if would" tries;
+^rukx  qit = "instead" catches, with the blame bound to dekp ("blame").
+
+^ťe-a-b-safeχɬkevk:
+    ^ba-b-0-ǆ'ynpp:
+        ^xe-"nothing can be distributed into zero parts"-ɬšeɴazv.
+    ^lo-a-b-χɬkevk-'iţpənn.
+
+^baqilx:
+    !"10 / 2 =",10-ķu-safeχɬkevk.
+    !"10 / 0 =",10-0-safeχɬkevk.
+    !"never spoken".
+^qit:
+    !"caught:",dekp.
+
+^rukx  Built-in faults are caught the same way.
+^baqilx:
+    ^xe-1-ķu-3-ķi-ťewn-l-ţə''.
+    !l-7-tapq.
+^qit:
+    !"caught:",dekp.
+
+^rukx  ǩaπa = jussive "must": an assertion.
+^xe-ķi-4-tøwp-x-ţə''.
+^ǩaπa-x-0c-ǆ'ynpp,"three times four must be twelve".
+!"all is as it must be".
+
+^rukx  A mistake that is not caught ends the program with its line number.
+^xe-"the-grand-evolution-stops-here"-ɬšeɴazv.
+!"unreachable".

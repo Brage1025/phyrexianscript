@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "phyx"
+version = "1.6.1"
+description = "φyrx (PhyrxScript / PhyrexianScript) — a programming language written in Phyrexian"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Brage" }]
+keywords = [
+    "esolang", "phyrexian", "mtg", "interpreter", "conlang", "language",
+    "phyx", "phyrx", "phyrxscript", "phyrexianscript",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Software Development :: Interpreters",
+]
+
+[project.urls]
+Homepage = "https://github.com/Brage1025/phyrexianscript"
+Documentation = "https://github.com/Brage1025/phyrexianscript/tree/main/docs"
+Issues = "https://github.com/Brage1025/phyrexianscript/issues"
+
+[project.scripts]
+phyx = "phyx.cli:main"
+phyrx = "phyx.cli:main"
+phyrxscript = "phyx.cli:main"
+phyrexianscript = "phyx.cli:main"
+
+[tool.setuptools]
+packages = ["phyx"]
+
+[tool.setuptools.package-data]
+phyx = ["lib/*.phyx"]

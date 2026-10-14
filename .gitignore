@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+dist/
+.venv/
+*.vsix
+node_modules/
+
+# downloaded with `python -m phyx fetch` (GPL-3 assets from fxbuson/PhyrexianDictionary)
+assets/
+
+# rendered pages and notes written by examples
+examples/*.html
+examples/compleat.txt
