@@ -72,6 +72,8 @@ python -m phyx fmt examples/01_welcome.phyx
 python -m phyx lint examples/12_sort.phyx
 python -m phyx lib                          # shipped herds (asərθ, ťewn, compleat)
 python -m phyx test                         # tests written in φyrx (tests/phyx/)
+python -m phyx new NAME                     # shebang program + test_NAME.phyx
+python -m phyx lsp                          # language server (editor extension starts this)
 python -m phyx bench
 python -m phyx dis examples/03_abilities.phyx
 ```
@@ -116,7 +118,7 @@ python -m unittest discover -s tests -v
 
 ## Status
 
-φyrx 1.6.1 (PhyrxScript / PhyrexianScript) is a Turing-complete language that compiles to CPython. Unbounded lists, `baxuφ`, and recursive `ťe` run a Turing machine (`examples/11_machine.phyx`). Pure abilities compile to ordinary Python `def` with nested `return fib(n-1)+fib(n-2)` and `while i < n:`. After compile, `python -m phyx bench` is typically within a small factor of CPython on recursive `fib` and a tight loop (equality and ordering keep Phyrexian kinds, so they are not raw Python `==`).
+φyrx 1.6.3 (PhyrxScript / PhyrexianScript) is a Turing-complete language that compiles to CPython. Unbounded lists, `baxuφ`, and recursive `ťe` run a Turing machine (`examples/11_machine.phyx`). Pure abilities compile to ordinary Python `def` with nested `return fib(n-1)+fib(n-2)` and `while i < n:`. After compile, `python -m phyx bench` is typically within a small factor of CPython on recursive `fib` and a tight loop (equality and ordering keep Phyrexian kinds, so they are not raw Python `==`).
 
 The standard library is φyrx: `phyx/lib/` is on the `bukð` search path. `python -m phyx test` runs tests written in φyrx (`ǩaπa` is the assertion; a sibling `.expected` file is exact stdout). `python -m phyx lookup` searches the lexicon without a fetch. TextMate and Vim grammars live in `editors/`.
 

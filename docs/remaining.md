@@ -1,6 +1,6 @@
 # What remains to be done
 
-Snapshot of **φyrx 1.6.1** (PhyrxScript / PhyrexianScript). The language is finished under the dictionary constraint. Git, CI, `pip install phyx`, and the Visual Studio Marketplace listing (`brage1025.phyx`) are live.
+Snapshot of **φyrx 1.6.3** (language **1.6**; PhyrxScript / PhyrexianScript). The language is finished under the dictionary constraint. Git, CI, `pip install phyx`, the Visual Studio Marketplace listing (`brage1025.phyx`), `phyx new`, and `phyx lsp` are live.
 
 Do not invent non-dictionary syntax to “finish” this list. See [rationale.md](rationale.md) for what will not be added.
 
@@ -13,7 +13,7 @@ None of this changes Phyrexian grammar. Highest leverage.
 - [x] **Git.** https://github.com/Brage1025/phyrexianscript — history, `v1.6.1` tag, public remote.
 - [x] **First commit** of the 1.6.1 tree.
 - [x] **CI** (`.github/workflows/ci.yml`) runs `python -m unittest discover -s tests -v` and `python -m phyx test`.
-- [x] **PyPI.** `pip install phyx` installs **1.6.1** from the index. Wheel includes the herds. Trusted publishing is live (`publish.yml`).
+- [x] **PyPI.** `pip install phyx` installs from the index. Wheel includes the herds. Trusted publishing is live (`publish.yml`).
 - [x] **Cursor / VS Code extension.** https://marketplace.visualstudio.com/items?itemName=brage1025.phyx (`brage1025.phyx`).
 
 ---
@@ -38,10 +38,10 @@ Closed in 1.6.1.
 
 ## Optional DX — skip until someone asks
 
-- [ ] Language server (complete markers/verbs, jump to `ťe`).
-- [ ] `phyx new` scaffold (shebang + a `test_*.phyx`).
+- [x] Language server (complete markers/verbs, jump to `ťe`). `python -m phyx lsp`; the editor extension starts it.
+- [x] `phyx new` scaffold (shebang + a `test_*.phyx`).
 - [ ] Closer-to-1× `bench` by using raw Python `<` on proven ints — rejected in 1.4.1 because `1 == True` is not Phyrexian.
-- [ ] Extra herds for books/text. `tekt` and `rukx` already have verbs; `min` / `sort` were herds only because the dictionary has no such words.
+- [x] Extra herds for books/text. **Not added.** The dictionary already has `tekt` (book), `rukx` (note), `rukxtekt` (notebook), `tluxt` (copy), `ťewn` (list), plus split/join/length/slice as verbs. `min` / `sort` were herds only because the dictionary has no such words.
 
 ---
 
@@ -59,7 +59,7 @@ Do not treat these as leftovers.
 - [x] `fmt`, `lint`, `explain`, `dis`, `bench`, REPL, render, fetch
 - [x] TextMate and Vim grammars generated from the lexicon
 
-Python and φyrx tests were passing at the 1.6.1 snapshot. CI is green. `pip install phyx` is on the index.
+Python and φyrx tests were passing at the 1.6.3 snapshot. CI is green. `pip install phyx` is on the index.
 
 ---
 
