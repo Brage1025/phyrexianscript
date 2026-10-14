@@ -7,6 +7,7 @@ Toolchain DX. The language is still **1.6**. `pip install phyx` and `brage1025.p
 - `phyx new NAME` writes a shebang program and a sibling `test_NAME.phyx`.
 - `phyx lsp` is a stdlib JSON-RPC language server: complete markers/verbs/constants/`ťe` names, jump to `ťe`, hover. The editor extension starts it when `phyx` is on PATH.
 - No extra book/text herds: the dictionary already names those operations as verbs.
+- The same 1.6.3 VSIX is on [Open VSX](https://open-vsx.org/extension/brage1025/phyx) so Cursor’s in-editor marketplace can find it.
 
 ## 1.6.2
 
