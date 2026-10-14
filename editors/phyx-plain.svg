@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="φyrx">
+  <!-- Plain mark: solid white hex, no split, closed ϕ in oil. Not Wizards' mana SVG. -->
+  <path transform="scale(2)" fill="#FFFFFF" d="M117.5 33.5l.3-.2c-.6-1.1-1.5-2.1-2.4-2.6L67.1 2.9c-.8-.5-1.9-.7-3.1-.7-1.2 0-2.3.3-3.1.7l-48 27.9c-1.7 1-2.9 3.5-2.9 5.4v55.7c0 1.1.2 2.3.9 3.4l-.2.1c.5.8 1.2 1.5 1.9 1.9l48.2 27.9c.8.5 1.9.7 3.1.7 1.2 0 2.3-.3 3.1-.7l48-27.9c1.7-1 2.9-3.5 2.9-5.4V36.1c.1-.8 0-1.7-.4-2.6z"/>
+  <circle fill="none" stroke="#1A1614" stroke-width="30" stroke-linecap="butt" cx="128" cy="128" r="46"/>
+  <line fill="none" stroke="#1A1614" stroke-width="30" stroke-linecap="butt" x1="128" y1="54" x2="128" y2="202"/>
+</svg>

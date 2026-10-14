@@ -1,6 +1,6 @@
 # What remains to be done
 
-Snapshot of **φyrx 1.6.3** (language **1.6**; PhyrxScript / PhyrexianScript). The language is finished under the dictionary constraint. Git, CI, `pip install phyx`, the Visual Studio Marketplace listing, Open VSX (`brage1025.phyx`), `phyx new`, and `phyx lsp` are live.
+Snapshot of **φyrx 1.6.4** (language **1.6**; PhyrxScript / PhyrexianScript). The language is finished under the dictionary constraint. Git, CI, `pip install phyx`, the Visual Studio Marketplace listing, Open VSX (`brage1025.phyx`), `phyx new`, and `phyx lsp` are live.
 
 Do not invent non-dictionary syntax to “finish” this list. See [rationale.md](rationale.md) for what will not be added.
 
@@ -59,7 +59,7 @@ Do not treat these as leftovers.
 - [x] `fmt`, `lint`, `explain`, `dis`, `bench`, REPL, render, fetch
 - [x] TextMate and Vim grammars generated from the lexicon
 
-Python and φyrx tests were passing at the 1.6.3 snapshot. CI is green. `pip install phyx` is on the index.
+Python and φyrx tests were passing at the 1.6.4 snapshot. CI is green. `pip install phyx` is on the index.
 
 ---
 
