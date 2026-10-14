@@ -1,0 +1,4 @@
+_gen.py
+syntax/**
+ftdetect/**
+*.vsix

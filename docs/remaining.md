@@ -1,6 +1,6 @@
 # What remains to be done
 
-Snapshot of **φyrx 1.6.1** (PhyrxScript / PhyrexianScript). The language is finished under the dictionary constraint. Remaining work is shipping it.
+Snapshot of **φyrx 1.6.1** (PhyrxScript / PhyrexianScript). The language is finished under the dictionary constraint. Git, CI, `pip install phyx`, and the Visual Studio Marketplace listing (`brage1025.phyx`) are live.
 
 Do not invent non-dictionary syntax to “finish” this list. See [rationale.md](rationale.md) for what will not be added.
 
@@ -13,8 +13,8 @@ None of this changes Phyrexian grammar. Highest leverage.
 - [x] **Git.** https://github.com/Brage1025/phyrexianscript — history, `v1.6.1` tag, public remote.
 - [x] **First commit** of the 1.6.1 tree.
 - [x] **CI** (`.github/workflows/ci.yml`) runs `python -m unittest discover -s tests -v` and `python -m phyx test`.
-- [x] **PyPI packaging.** Name `phyx` is free; `python -m build` / `twine check` run in CI. `pip install phyx` from the index after the first trusted-publish Release (configure a pending publisher on pypi.org).
-- [x] **Cursor / VS Code extension.** `editors/package.json`. Install from that folder; not on a marketplace yet. See [../editors/README.md](../editors/README.md).
+- [x] **PyPI.** `pip install phyx` installs **1.6.1** from the index. Wheel includes the herds. Trusted publishing is live (`publish.yml`).
+- [x] **Cursor / VS Code extension.** https://marketplace.visualstudio.com/items?itemName=brage1025.phyx (`brage1025.phyx`).
 
 ---
 
@@ -59,7 +59,7 @@ Do not treat these as leftovers.
 - [x] `fmt`, `lint`, `explain`, `dis`, `bench`, REPL, render, fetch
 - [x] TextMate and Vim grammars generated from the lexicon
 
-Python and φyrx tests were passing at the 1.6.1 snapshot. CI, the extension manifest, and PyPI packaging landed with the first commit.
+Python and φyrx tests were passing at the 1.6.1 snapshot. CI is green. `pip install phyx` is on the index.
 
 ---
 
@@ -73,6 +73,6 @@ If a change needs a word the dictionary does not have, the change is wrong, or t
 
 ## Next useful move
 
-1. On pypi.org, add a pending trusted publisher for project `phyx`, owner `Brage1025`, repo `phyrexianscript`, workflow `publish.yml`. Then a GitHub Release of `v1.6.1` makes `pip install phyx` work.
+1. Optional DX below, if someone asks.
 
 Do not start another “make it more like Python” pass.

@@ -1,0 +1,43 @@
+name: Publish extension
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+jobs:
+  marketplace:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    defaults:
+      run:
+        working-directory: editors
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Package
+        run: npx --yes @vscode/vsce package --no-dependencies
+      - name: Publish to Visual Studio Marketplace
+        run: npx --yes @vscode/vsce publish --oidc --no-dependencies
+
+  openvsx:
+    runs-on: ubuntu-latest
+    if: ${{ secrets.OVSX_PAT != '' }}
+    defaults:
+      run:
+        working-directory: editors
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Package
+        run: npx --yes @vscode/vsce package --no-dependencies
+      - name: Publish to Open VSX
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+        run: npx --yes ovsx publish --no-dependencies

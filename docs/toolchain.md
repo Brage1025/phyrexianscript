@@ -168,7 +168,7 @@ run_source('!"šdeχd".', argv=["ignored-by-this-program"])
 
 GitHub Actions (`.github/workflows/ci.yml`) runs `python -m unittest discover -s tests -v` and `python -m phyx test` on Python 3.11–3.14, then `python -m build` / `twine check`.
 
-A GitHub Release triggers `.github/workflows/publish.yml`, which uploads to PyPI with trusted publishing. Configure a pending publisher on pypi.org for this repository before the first release; the package name is `phyx`.
+`pip install phyx` installs from the Python Package Index (1.6.1). A GitHub Release retriggers `.github/workflows/publish.yml` (trusted publishing). `brage1025.phyx` is on the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=brage1025.phyx). `.github/workflows/publish-extension.yml` packages `editors/` and publishes with `vsce publish --oidc`.
 
 ```
 pip install phyx
