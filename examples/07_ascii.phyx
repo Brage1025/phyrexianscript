@@ -1,0 +1,15 @@
+^rukx  Run with:  python -m phyx run --ascii examples/07_ascii.phyx
+^rukx  In ASCII mode a capital letter stands for the special letter it resembles:
+^rukx    A=A  O=O  E=E   S=S Z=Z C=C J=J W=W   TH=TH DH=DH NG=NG NN=NN LH=LH LZ=LZ
+^rukx    P=P PH=PH  T=T TT=TT  K=K KH=KH  GG=GG GH=GH  G=G X=X Q=Q R=R
+^rukx  so  TTE''  is  ţə''  and  THuqx  is  θuqx.  Quoted text is left alone.
+
+^xe-"Yawgmoth"-mo'TH-TTE''.
+!"father of machines:",mo'TH.
+
+^Te-n-PHyrxbabg:
+    ^lo-n-'ii-babg-'iTTpEnn.
+!"one more:",0f-PHyrxbabg.
+
+^aXEw'-i-dl-KHi-ronG:
+    !i,i-KHus'Er.

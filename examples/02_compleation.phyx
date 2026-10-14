@@ -1,0 +1,19 @@
+^rukx  FizzBuzz, compleated.  For each i in sixteen turns (0..0f):
+^rukx    divisible by 3 -> "φyrx"  (Phyrexian)
+^rukx    divisible by 5 -> "jɒ'g"  (Machine)
+^rukx    both           -> "φyrxjɒ'g" (a composite word, as Phyrexian would build it)
+
+^rukx  aχəw' = "each"; dl = "in"; ronɣ = "turns" gives the list 0 … n-1.
+^aχəw'-i-dl-10-ronɣ:
+    ^xe-i-'ii-babg-n-ţə''.
+    ^xe-n-ķi-geft-0-ǆ'ynpp-ķi'ər-ţə''.
+    ^xe-n-5-geft-0-ǆ'ynpp-ķu'ər-ţə''.
+    ^rukx  ba = if, qit-ba = instead-if, qit = instead.
+    ^ba-ķi'ər-ķu'ər-xə:
+        !"φyrxjɒ'g".
+    ^qit-ba-ķi'ər:
+        !"φyrx".
+    ^qit-ba-ķu'ər:
+        !"jɒ'g".
+    ^qit:
+        !n.

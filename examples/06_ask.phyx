@@ -1,0 +1,26 @@
+^rukx  A question sentence (?) asks and stores the answer in its last word.
+^rukx  Guess the number: 'uɬč = "astray" gives a random number below its object.
+
+^xe-10-'uɬč-'ii-babg-secret-ţə''.
+^xe-0-tries-ţə''.
+!"I hold a number between 1 and 10 (hexadecimal!).".
+
+^baxuφ-əxbytp:
+    ?"your guess: "-answer.
+    ^ba-answer-əixiww-ǆ'ynpp:
+        !"silence. the number was",secret.
+        ^lo-lups.
+    ^xe-tries-'ii-babg-tries-ţə''.
+    ^rukx  asərθ turns text into a number; a bad numeral is a mistake, so guard it.
+    ^baqilx:
+        ^xe-answer-asərθ-guess-ţə''.
+    ^qit:
+        !"that is not a numeral:",dekp.
+        ^lo-ɢnagɮ.
+    ^ba-guess-secret-ǆ'ynpp:
+        !"compleat. found in",tries,"tries.".
+        ^lo-lups.
+    ^qit-ba-guess-secret-grmɒɣg:
+        !"higher".
+    ^qit:
+        !"lower".

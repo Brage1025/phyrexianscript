@@ -1,0 +1,35 @@
+^rukx  A Turing machine.  Tape is a list of 0/1; the head is an index; state is a number.
+^rukx  Unbounded tape + while + a finite table of transitions is Turing-complete.
+^rukx  This machine adds two unary numbers: 1^m 0 1^n  becomes  1^{m+n}.
+^rukx  1 1 1 0 1 1  (3 + 2)  →  five 1s.
+
+^ťe-state-sym-δ:
+    ^ba-state-0-ǆ'ynpp:
+        ^ba-sym-'ii-ǆ'ynpp:lo-1-1-0-3-ťewn-'iţpənn.
+        ^qit:lo-1-1-1-3-ťewn-'iţpənn.
+    ^qit-ba-state-'ii-ǆ'ynpp:
+        ^ba-sym-'ii-ǆ'ynpp:lo-1-1-1-3-ťewn-'iţpənn.
+        ^qit:lo-0-0-2-3-ťewn-'iţpənn.
+    ^qit:
+        ^lo-0-1-3-3-ťewn-'iţpənn.
+
+^ťe-tape-head-state-run:
+    ^baxuφ-state-ķi-ǆ'ynpp-əx:
+        ^ba-head-0-grmɒɣg:
+            ^xe-0-1-ťewn-tape-babg-tape-ţə''.
+            ^xe-0-head-ţə''.
+        ^ba-head-tape-samk-ǆ'ynpp:
+            ^xe-tape-0-bɬølπ.
+        ^xe-tape-head-tapq-sym-ţə''.
+        ^xe-state-sym-δ-tr-ţə''.
+        ^xe-tr-0-tapq-tape-head-tapq-ţə''.
+        ^ba-tr-1-tapq:'ii-head-babg-head-ţə''.
+        ^qit:head-1-mɒɣg-head-ţə''.
+        ^xe-tr-2-tapq-state-ţə''.
+    ^xe-0-c-ţə''.
+    ^aχəw'-x-dl-tape:
+        ^ba-x:c-1-babg-c-ţə''.
+    ^lo-c-'iţpənn.
+
+^rukx  3 + 2 in unary.
+!1-1-1-0-1-1-6-ťewn-0-0-run.

@@ -1,0 +1,29 @@
+^rukx  ťe = potential mood, "X can Y": it defines the ability Y.
+^rukx  The objects come first, the ability's name last — exactly how it is called.
+
+^rukx  "a b can šχa'θbabg" — great-add: (a + b) twice.
+^ťe-a-b-šχa'θbabg:
+    ^lo-a-b-babg-ķus'ər-'iţpənn.
+
+^rukx  Recursive fibonacci.  'iţpənn = return; lo = imperative "do".
+^ťe-n-fib:
+    ^ba-n-ķu-grmɒɣg:lo-n-'iţpənn.
+    ^lo-n-'ii-mɒɣg-fib-n-ķu-mɒɣg-fib-babg-'iţpənn.
+
+^rukx  Greatest common divisor, iteratively.  baxuφ = "whenever" (while).
+^ťe-a-b-ǩeznasərθ:
+    ^baxuφ-b-0-ǆ'ynpp-əx:
+        ^xe-a-b-geft-t-ţə''.
+        ^xe-b-a-ţə''.
+        ^xe-t-b-ţə''.
+    ^lo-a-'iţpənn.
+
+!"3 4 šχa'θbabg =",ķi-4-šχa'θbabg.
+!"fib(14) =",14-fib.
+!"gcd(30, 12) =",30-12-ǩeznasərθ.
+
+^rukx  Abilities nest: ʁšθakɴ = "choose" (cond a b -> a if cond else b).
+^ťe-n-sxɬəčjðəəxsxɬəčj:
+    ^lo-n-ķu-geft-0-ǆ'ynpp-"sxɬəčj"-"əxsxɬəčj"-ʁšθakɴ-'iţpənn.
+^aχəw'-n-dl-4-ronɣ:
+    !n,n-sxɬəčjðəəxsxɬəčj.

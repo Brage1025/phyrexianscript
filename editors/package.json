@@ -1,0 +1,49 @@
+{
+  "name": "phyx",
+  "displayName": "φyrx",
+  "description": "φyrx (PhyrxScript / PhyrexianScript) — a programming language written in Phyrexian",
+  "version": "1.6.1",
+  "publisher": "brage",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Brage1025/phyrexianscript.git"
+  },
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "keywords": [
+    "phyx",
+    "phyrx",
+    "phyrxscript",
+    "phyrexianscript",
+    "phyrexian"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "phyx",
+        "aliases": [
+          "φyrx",
+          "PhyrxScript",
+          "PhyrexianScript"
+        ],
+        "extensions": [
+          ".phyx",
+          ".vphyx"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "phyx",
+        "scopeName": "source.phyx",
+        "path": "./phyx.tmLanguage.json"
+      }
+    ]
+  }
+}

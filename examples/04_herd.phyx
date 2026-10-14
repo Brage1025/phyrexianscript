@@ -1,0 +1,39 @@
+^rukx  Lists (ťewn) and books (tekt).
+^rukx  "x1 x2 x3 3 list": the count comes right before the verb, like "three cards".
+
+^xe-"'elš"-"ǆi'n"-"šøldrd"-"'urbrask"-"vornχlx"-5-ťewn-pxaajtr-ţə''.
+!"praetors:",pxaajtr.
+!"count:",pxaajtr-samk.
+!"first:",pxaajtr-'iixtfu'q,"last:",pxaajtr-ǩeǆylqitsodrm.
+
+^rukx  tapq = get (negative indices count from the bottom).
+!pxaajtr-1-tapq,pxaajtr-əx1-tapq.
+
+^rukx  "value list index get put" — assignment into a place.
+^xe-"norn"-pxaajtr-0-tapq-ţə''.
+^rukx  bɬølπ = fill (append); čxət' = exile (remove and give).
+^xe-pxaajtr-"ǆes"-bɬølπ.
+^xe-pxaajtr-əx1-čxət'-čxət'iww-ţə''.
+!"exiled:",čxət'iww,"now:",pxaajtr.
+
+^rukx  dl = in (membership).
+!"šøldrd"-pxaajtr-dl,"jɒ'gmo'θ"-pxaajtr-dl.
+
+^rukx  A book maps keys to values: "k1 v1 k2 v2 2 book".
+^xe-"faxt"-"black"-"ɮiww"-"green"-ķu-tekt-sopšikt-ţə''.
+^xe-"blue"-sopšikt-"kẅ"-tapq-ţə''.
+!sopšikt-"ɮiww"-tapq.
+^aχəw'-k-dl-sopšikt-rukxtekt:
+    !k,"=",sopšikt-k-tapq.
+
+^rukx  Text: pən'g = break (split), raφoj = link (join), ɣɒzɢ = flay (slice).
+^xe-"φyrx-keθəɢð-jnaķm"-"-"-pən'g-words-ţə''.
+!words.
+!words-" "-raφoj.
+!"compleated"-0-5-ɣɒzɢ.
+
+^rukx  Sum of a list, the old way.
+^xe-0-sum-ţə''.
+^aχəw'-n-dl-1-2-3-4-5-5-ťewn:
+    ^xe-sum-n-babg-sum-ţə''.
+!"sum:",sum.

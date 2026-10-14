@@ -1,0 +1,26 @@
+^rukx  Standard herd: numbers.  Cast:  ^lo-"asərθ.phyx"-bukð.   (or  ^lo-"compleat.phyx"-bukð.)
+
+^rukx  |n| — if n is less than zero, reduce it from zero.
+^ťe-n-abs:
+    ^ba-n-0-grmɒɣg:lo-0-n-mɒɣg-'iţpənn.
+    ^lo-n-'iţpənn.
+
+^rukx  gcd, Euclidean.  Remaining (geft) until the second object is voided.
+^ťe-a-b-ǩeznasərθ:
+    ^baxuφ-b-0-ǆ'ynpp-əx:
+        ^xe-a-b-geft-t-ţə''.
+        ^xe-b-a-ţə''.
+        ^xe-t-b-ţə''.
+    ^lo-a-'iţpənn.
+
+^ťe-a-b-min:
+    ^lo-a-b-grmɒɣg-a-b-ʁšθakɴ-'iţpənn.
+
+^ťe-a-b-max:
+    ^lo-a-b-korxgr-a-b-ʁšθakɴ-'iţpənn.
+
+^ťe-xs-sum:
+    ^xe-0-s-ţə''.
+    ^aχəw'-x-dl-xs:
+        ^xe-s-x-babg-s-ţə''.
+    ^lo-s-'iţpənn.

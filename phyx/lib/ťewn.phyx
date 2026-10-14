@@ -1,0 +1,37 @@
+^rukx  Standard herd: lists.  Cast:  ^lo-"ťewn.phyx"-bukð.
+^rukx  map / filter take a list and an ability (store it, or write name-naķm).
+
+^ťe-xs-fn-map:
+    ^xe-0-ťewn-out-ţə''.
+    ^aχəw'-x-dl-xs:
+        ^xe-out-x-1-ťewn-fn-čtəčpliɣn-bɬølπ-out-ţə''.
+    ^lo-out-'iţpənn.
+
+^ťe-xs-fn-filter:
+    ^xe-0-ťewn-out-ţə''.
+    ^aχəw'-x-dl-xs:
+        ^ba-x-1-ťewn-fn-čtəčpliɣn:
+            ^xe-out-x-bɬølπ-out-ţə''.
+    ^lo-out-'iţpənn.
+
+^ťe-xs-reverse:
+    ^xe-0-ťewn-out-ţə''.
+    ^aχəw'-x-dl-xs:
+        ^xe-x-1-ťewn-out-babg-out-ţə''.
+    ^lo-out-'iţpənn.
+
+^rukx  Insertion sort, least first (grmɒɣg).
+^ťe-xs-sort:
+    ^xe-xs-tluxt-out-ţə''.
+    ^xe-1-i-ţə''.
+    ^baxuφ-i-out-samk-grmɒɣg:
+        ^xe-out-i-tapq-key-ţə''.
+        ^xe-i-1-mɒɣg-j-ţə''.
+        ^baxuφ-əxbytp:
+            ^bu-j-0-grmɒɣg-əx:lo-lups.
+            ^bu-out-j-tapq-key-korxgr:lo-lups.
+            ^xe-out-j-tapq-out-j-1-babg-tapq-ţə''.
+            ^xe-j-1-mɒɣg-j-ţə''.
+        ^xe-key-out-j-1-babg-tapq-ţə''.
+        ^xe-i-1-babg-i-ţə''.
+    ^lo-out-'iţpənn.
