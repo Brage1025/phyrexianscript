@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.6.3
+
+Toolchain DX. The language is still **1.6**. `pip install phyx` and `brage1025.phyx` are 1.6.3.
+
+- `phyx new NAME` writes a shebang program and a sibling `test_NAME.phyx`.
+- `phyx lsp` is a stdlib JSON-RPC language server: complete markers/verbs/constants/`ťe` names, jump to `ťe`, hover. The editor extension starts it when `phyx` is on PATH.
+- No extra book/text herds: the dictionary already names those operations as verbs.
+
 ## 1.6.2
 
 Marketplace listing text. The language and `pip install phyx` stay **1.6.1**.

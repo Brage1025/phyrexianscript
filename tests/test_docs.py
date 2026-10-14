@@ -23,7 +23,7 @@ class DocDriftTests(unittest.TestCase):
 
     def test_readme_names_explain_fmt_lint(self):
         text = _read("README.md")
-        for cmd in ("explain", "fmt", "lint", "bench", "dis", "test", "lib"):
+        for cmd in ("explain", "fmt", "lint", "bench", "dis", "test", "lib", "new", "lsp"):
             self.assertIn(cmd, text)
 
     def test_reference_lists_every_verb_and_marker(self):

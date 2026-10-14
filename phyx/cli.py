@@ -40,14 +40,16 @@ from .fmt import format_source
 from .hints import explain_missing, explain_word, search_lexicon
 from .lint import format_notes, lint_program
 from .paths import stdlib_dir
+from .scaffold import create as create_scaffold
 from .testing import run_suite
 from .vocabulary import CONSTANTS, MARKERS, VERBS
+from .lsp import serve as serve_lsp
 from . import ast as phyx_ast
 
 SUBCOMMANDS = {
     "run", "check", "render", "transpose", "translit",
     "fetch", "lookup", "words", "repl", "eval", "bench", "dis",
-    "explain", "fmt", "lint", "test", "lib",
+    "explain", "fmt", "lint", "test", "lib", "new", "lsp",
 }
 
 DICT_REMOTE = "https://raw.githubusercontent.com/fxbuson/PhyrexianDictionary/gh-pages/_data/PhyrexianAPI.json"
@@ -420,6 +422,23 @@ def _walk_stmts(stmts: list) -> Iterable:
             yield from _walk_stmts(handler)
 
 
+def cmd_new(args: argparse.Namespace) -> int:
+    folder = Path(args.directory) if getattr(args, "directory", None) else Path.cwd()
+    program, test = create_scaffold(
+        args.name,
+        ascii_mode=bool(getattr(args, "ascii", False)),
+        directory=folder,
+    )
+    print(program)
+    print(test)
+    return 0
+
+
+def cmd_lsp(args: argparse.Namespace) -> int:
+    _ = args
+    return serve_lsp()
+
+
 def cmd_lib(args: argparse.Namespace) -> int:
     folder = stdlib_dir()
     print(f"standard library: {folder}")
@@ -590,6 +609,16 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = sub.add_parser("lib", help="list the shipped standard herds")
     p.set_defaults(fn=cmd_lib)
+
+    p = sub.add_parser("new", help="write NAME.phyx and a sibling test_NAME.phyx")
+    p.add_argument("name", help="ability and file name (letters, digits, underscore)")
+    p.add_argument("-d", "--directory", help="folder to write into (default: current directory)")
+    p.add_argument("--ascii", action="store_true",
+                   help="write ASCII capitals for special letters")
+    p.set_defaults(fn=cmd_new)
+
+    p = sub.add_parser("lsp", help="language server (stdin/stdout JSON-RPC)")
+    p.set_defaults(fn=cmd_lsp)
     return ap
 
 
@@ -608,6 +637,9 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     except FileNotFoundError as err:
         print(f"ɬšeɴazv: no such file: {err.filename}", file=sys.stderr)
+        return 1
+    except FileExistsError as err:
+        print(f"ɬšeɴazv: already exists: {err.filename or err}", file=sys.stderr)
         return 1
     except ValueError as err:
         print(f"ɬšeɴazv: {err}", file=sys.stderr)

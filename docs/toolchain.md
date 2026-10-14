@@ -31,12 +31,14 @@ python -m phyx bench [--size N] [--loops N]
 python -m phyx dis FILE [--ascii]
 python -m phyx test [PATH…] [--ascii]
 python -m phyx lib
+python -m phyx new NAME [-d DIR] [--ascii]
+python -m phyx lsp
 python -m phyx -V
 ```
 
 `explain` is the lexicon at the moment you need it: `explain if` names `ba`; `explain babg` is add. `fmt` rewrites `-` separators and 4-space indent; `^rukx` notes stay. `lint` names a dropped `'iţpənn`, an unused object, or an English *keyword* used as a name (`if`, `return` — not `fn`, which is a normal binding). ASCII-capital files need `--ascii` on `run` / `check` / `lint` / `dis` / `test` (`examples/07_ascii.phyx`).
 
-`test` runs `test_*.phyx` under the given paths (default `tests/`). A file passes when it finishes without a fault; `ǩaπa` (must) is the assertion. If a sibling `test_foo.expected` exists next to `test_foo.phyx`, stdout must match that UTF-8 text exactly. `lookup` searches the running lexicon (`phyx/vocabulary.py`); a fetched dictionary is extra. `lib` lists the shipped herds in `phyx/lib/`.
+`test` runs `test_*.phyx` under the given paths (default `tests/`). A file passes when it finishes without a fault; `ǩaπa` (must) is the assertion. If a sibling `test_foo.expected` exists next to `test_foo.phyx`, stdout must match that UTF-8 text exactly. `lookup` searches the running lexicon (`phyx/vocabulary.py`); a fetched dictionary is extra. `lib` lists the shipped herds in `phyx/lib/`. `new NAME` writes `NAME.phyx` (shebang and a `ťe`) and `test_NAME.phyx`. `lsp` is the language server: complete the lexicon and `ťe` names, jump to `ťe`, hover.
 
 `bench` times compiled abilities after parse/compile, against the identical algorithms in Python. `dis` prints the CPython a program compiles to. Pure abilities (no I/O) become ordinary `def` with nested integer expressions and `while cond:`. Equality and ordering keep Phyrexian kinds (`1` is not `əxbytp`). `PHYX_TREEWALK=1` restores the AST walker.
 
@@ -168,7 +170,7 @@ run_source('!"šdeχd".', argv=["ignored-by-this-program"])
 
 GitHub Actions (`.github/workflows/ci.yml`) runs `python -m unittest discover -s tests -v` and `python -m phyx test` on Python 3.11–3.14, then `python -m build` / `twine check`.
 
-`pip install phyx` installs from the Python Package Index (1.6.1). A GitHub Release retriggers `.github/workflows/publish.yml` (trusted publishing). `brage1025.phyx` is on the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=brage1025.phyx). `.github/workflows/publish-extension.yml` packages `editors/` and publishes with `vsce publish --oidc`.
+`pip install phyx` installs from the Python Package Index (1.6.3). A GitHub Release retriggers `.github/workflows/publish.yml` (trusted publishing). `brage1025.phyx` is on the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=brage1025.phyx). `.github/workflows/publish-extension.yml` packages `editors/` and publishes with `vsce publish --oidc`.
 
 ```
 pip install phyx

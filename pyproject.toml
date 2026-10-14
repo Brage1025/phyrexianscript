@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "phyx"
-version = "1.6.1"
+version = "1.6.3"
 description = "φyrx (PhyrxScript / PhyrexianScript) — a programming language written in Phyrexian"
 readme = "README.md"
 requires-python = ">=3.11"
