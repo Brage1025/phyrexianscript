@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.2
+
+Marketplace listing text. The language and `pip install phyx` stay **1.6.1**.
+
+- `brage1025.phyx` 1.6.2: the VSIX README names the live Marketplace listing instead of saying it is not on a marketplace.
+
 ## 1.6.1
 
 The four consistency gaps, plus the shipping surface: git, CI, PyPI layout, and a Cursor / VS Code extension.
