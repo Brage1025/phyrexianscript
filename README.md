@@ -46,7 +46,7 @@ pip install -e .                            # optional: phyx on PATH
 phyx examples/01_welcome.phyx
 ```
 
-Cursor / VS Code: [φyrx on the Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=brage1025.phyx) (`brage1025.phyx`). Local install from `editors/` is in [editors/README.md](editors/README.md).
+Cursor / VS Code: [Open VSX](https://open-vsx.org/extension/brage1025/phyx) (Cursor’s in-editor marketplace) and the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=brage1025.phyx) (`brage1025.phyx`). Local install from `editors/` is in [editors/README.md](editors/README.md).
 
 Typing `ţ` is painful. `--ascii` lets a capital stand for the special letter it resembles (`TTE''` → `ţə''`):
 

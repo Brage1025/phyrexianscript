@@ -1,6 +1,6 @@
 # What remains to be done
 
-Snapshot of **φyrx 1.6.3** (language **1.6**; PhyrxScript / PhyrexianScript). The language is finished under the dictionary constraint. Git, CI, `pip install phyx`, the Visual Studio Marketplace listing (`brage1025.phyx`), `phyx new`, and `phyx lsp` are live.
+Snapshot of **φyrx 1.6.3** (language **1.6**; PhyrxScript / PhyrexianScript). The language is finished under the dictionary constraint. Git, CI, `pip install phyx`, the Visual Studio Marketplace listing, Open VSX (`brage1025.phyx`), `phyx new`, and `phyx lsp` are live.
 
 Do not invent non-dictionary syntax to “finish” this list. See [rationale.md](rationale.md) for what will not be added.
 
@@ -14,7 +14,7 @@ None of this changes Phyrexian grammar. Highest leverage.
 - [x] **First commit** of the 1.6.1 tree.
 - [x] **CI** (`.github/workflows/ci.yml`) runs `python -m unittest discover -s tests -v` and `python -m phyx test`.
 - [x] **PyPI.** `pip install phyx` installs from the index. Wheel includes the herds. Trusted publishing is live (`publish.yml`).
-- [x] **Cursor / VS Code extension.** https://marketplace.visualstudio.com/items?itemName=brage1025.phyx (`brage1025.phyx`).
+- [x] **Cursor / VS Code extension.** Visual Studio Marketplace: https://marketplace.visualstudio.com/items?itemName=brage1025.phyx. Cursor’s in-editor marketplace: [Open VSX `brage1025.phyx`](https://open-vsx.org/extension/brage1025/phyx).
 
 ---
 
@@ -73,6 +73,4 @@ If a change needs a word the dictionary does not have, the change is wrong, or t
 
 ## Next useful move
 
-1. Optional DX below, if someone asks.
-
-Do not start another “make it more like Python” pass.
+Stop. Do not start another “make it more like Python” pass. The leftover 1× `bench` item stays rejected.

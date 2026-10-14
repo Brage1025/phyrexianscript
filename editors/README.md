@@ -4,7 +4,7 @@ Grammars for `.phyx` (row layout) and `.vphyx` (vertical columns). They highligh
 
 `editors/` **is** a Cursor / VS Code extension (`package.json`).
 
-Install from the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=brage1025.phyx) (`brage1025.phyx`).
+Install from the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=brage1025.phyx) (VS Code) or [Open VSX](https://open-vsx.org/extension/brage1025/phyx) (Cursor’s in-editor marketplace). Both listings are `brage1025.phyx`.
 
 ## Cursor / Visual Studio Code
 

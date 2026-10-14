@@ -2,11 +2,21 @@ name: Publish extension
 
 on:
   workflow_dispatch:
+    inputs:
+      registry:
+        description: Where to publish the VSIX
+        type: choice
+        options:
+          - both
+          - marketplace
+          - openvsx
+        default: both
   release:
     types: [published]
 
 jobs:
   marketplace:
+    if: ${{ github.event_name == 'release' || inputs.registry == 'marketplace' || inputs.registry == 'both' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -25,8 +35,11 @@ jobs:
         run: npx --yes @vscode/vsce publish --oidc --no-dependencies
 
   openvsx:
+    if: ${{ github.event_name == 'release' || inputs.registry == 'openvsx' || inputs.registry == 'both' }}
     runs-on: ubuntu-latest
-    if: ${{ secrets.OVSX_PAT != '' }}
+    permissions:
+      contents: read
+      id-token: write
     defaults:
       run:
         working-directory: editors
@@ -38,6 +51,4 @@ jobs:
       - name: Package
         run: npx --yes @vscode/vsce package --no-dependencies
       - name: Publish to Open VSX
-        env:
-          OVSX_PAT: ${{ secrets.OVSX_PAT }}
-        run: npx --yes ovsx publish --no-dependencies
+        run: npx --yes ovsx publish --trusted-publishing --no-dependencies
