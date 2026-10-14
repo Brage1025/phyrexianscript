@@ -7,8 +7,8 @@ The four consistency gaps, plus the shipping surface: git, CI, PyPI layout, and 
 - `tests/phyx/` covers abilities, loops, list counts, and `ǩaπa`. A sibling `test_*.expected` file is exact UTF-8 stdout; without one, a file still passes when it finishes without a fault.
 - `brøtjt` searches like a read: file directory, working directory, `PHYX_PATH`. It does not search `phyx/lib/` (herds are programs). `mɴyrx` writes next to the program and never searches, so a short name cannot clobber the library.
 - `python -m phyx lookup` searches `phyx/vocabulary.py` (and conjugations). The fetched dictionary is extra when present.
-- `editors/package.json` is a Cursor / VS Code extension (install from that folder; not on a marketplace yet).
-- GitHub Actions run `python -m unittest discover -s tests -v` and `python -m phyx test`, then build/check the sdist. A GitHub Release uploads `phyx` to PyPI when trusted publishing is configured.
+- `editors/package.json` is a Cursor / VS Code extension (`brage1025.phyx`) on the Visual Studio Marketplace.
+- GitHub Actions run `python -m unittest discover -s tests -v` and `python -m phyx test`. `pip install phyx` is on PyPI (1.6.1).
 
 ## 1.6.0
 

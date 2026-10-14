@@ -2,11 +2,13 @@
 
 Grammars for `.phyx` (row layout) and `.vphyx` (vertical columns). They highlight mood markers, verbs, constants, notes (`^rukx`), strings, and hexadecimal numerals.
 
-`editors/` **is** a Cursor / VS Code extension (`package.json`). It is not on a marketplace yet; install it from this folder.
+`editors/` **is** a Cursor / VS Code extension (`package.json`).
+
+Install from the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=brage1025.phyx) (`brage1025.phyx`).
 
 ## Cursor / Visual Studio Code
 
-From this repository:
+From this repository, without the Marketplace:
 
 1. Cursor / VS Code → **Extensions** → `…` → **Install from Location…** (or **Install from VSIX…** after packaging).
 2. Choose the `editors/` folder.
@@ -15,18 +17,18 @@ Or copy the folder into the editor’s extensions directory (restart the editor 
 
 ```
 # Cursor, Windows
-xcopy /E /I editors %USERPROFILE%\.cursor\extensions\brage.phyx-1.6.1
+xcopy /E /I editors %USERPROFILE%\.cursor\extensions\brage1025.phyx-1.6.1
 
 # VS Code, Windows
-xcopy /E /I editors %USERPROFILE%\.vscode\extensions\brage.phyx-1.6.1
+xcopy /E /I editors %USERPROFILE%\.vscode\extensions\brage1025.phyx-1.6.1
 ```
 
 ```
 # Cursor, macOS / Linux
-cp -R editors ~/.cursor/extensions/brage.phyx-1.6.1
+cp -R editors ~/.cursor/extensions/brage1025.phyx-1.6.1
 
 # VS Code, macOS / Linux
-cp -R editors ~/.vscode/extensions/brage.phyx-1.6.1
+cp -R editors ~/.vscode/extensions/brage1025.phyx-1.6.1
 ```
 
 A VSIX, if you have Node:
