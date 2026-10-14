@@ -17,18 +17,18 @@ Or copy the folder into the editor’s extensions directory (restart the editor 
 
 ```
 # Cursor, Windows
-xcopy /E /I editors %USERPROFILE%\.cursor\extensions\brage1025.phyx-1.6.1
+xcopy /E /I editors %USERPROFILE%\.cursor\extensions\brage1025.phyx-1.6.2
 
 # VS Code, Windows
-xcopy /E /I editors %USERPROFILE%\.vscode\extensions\brage1025.phyx-1.6.1
+xcopy /E /I editors %USERPROFILE%\.vscode\extensions\brage1025.phyx-1.6.2
 ```
 
 ```
 # Cursor, macOS / Linux
-cp -R editors ~/.cursor/extensions/brage1025.phyx-1.6.1
+cp -R editors ~/.cursor/extensions/brage1025.phyx-1.6.2
 
 # VS Code, macOS / Linux
-cp -R editors ~/.vscode/extensions/brage1025.phyx-1.6.1
+cp -R editors ~/.vscode/extensions/brage1025.phyx-1.6.2
 ```
 
 A VSIX, if you have Node:
@@ -37,7 +37,7 @@ A VSIX, if you have Node:
 npx --yes @vscode/vsce package --no-dependencies
 ```
 
-That writes `phyx-1.6.1.vsix` in `editors/`. Then **Install from VSIX…**.
+That writes `phyx-1.6.2.vsix` in `editors/`. Then **Install from VSIX…**.
 
 `.phyx` and `.vphyx` are associated with language id `phyx` (scope `source.phyx`).
 
