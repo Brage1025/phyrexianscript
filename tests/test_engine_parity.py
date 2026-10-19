@@ -1,7 +1,7 @@
 """The compiled engine and the tree-walker must agree.
 
 ``run_both`` runs one source on each engine. A Phyrexian fault is
-``(class name, message, line)``. Any other Python exception is
+``(class name, message, line, hint)``. Any other Python exception is
 ``"PYTHON:"`` plus the exception name. ``assertParity`` fails when
 those results differ.
 """
@@ -39,7 +39,7 @@ def _run_one(source, *, treewalk, argv=None, stdin="", base_dir=None):
             treewalk=treewalk,
         ).run(program)
     except PhyrexianError as err:
-        fault = (type(err).__name__, err.message, err.line)
+        fault = (type(err).__name__, err.message, err.line, err.hint)
     except KeyboardInterrupt:
         raise
     except BaseException as err:
@@ -139,6 +139,34 @@ BUG_F = """\
 !"y =",y.
 """
 
+BUG_H = """\
+!əx2-2-lu'f.
+"""
+
+BUG_H_ABILITY = """\
+^ťe-pw:
+    ^lo-əx2-2-lu'f-'iţpənn.
+!pw.
+"""
+
+BUG_I = """\
+^0-y-ţə''.
+^ťe-bump:
+    ^y-1-babg-y-ţə''.
+    ^lo-y-'iţpənn.
+^ťe-go:
+    ^lo-y-bump-babg-'iţpənn.
+!go.
+"""
+
+BUG_I_MODULE = """\
+^0-y-ţə''.
+^ťe-bump:
+    ^y-1-babg-y-ţə''.
+    ^lo-y-'iţpənn.
+!y-bump-babg.
+"""
+
 
 def _bench_result(treewalk: bool):
     """Outcome of ``python -m phyx bench``. Timings are not compared."""
@@ -192,15 +220,27 @@ for _path in _phyx_files():
 
 
 class EngineBugTests(unittest.TestCase):
-    @unittest.expectedFailure  # BUG-A: divide by zero inside a pure ability must be catchable.
     def test_bug_a_pure_divide_by_zero_is_catchable(self):
         self.assertEqual(
             run_both(BUG_A)[1],
             ("caught nothing can be distributed into zero parts\nafter\n", None),
         )
         assertParity(BUG_A)
+        uncaught = (
+            "^ťe-a-b-dv:\n"
+            "    ^lo-a-b-χɬkevk-'iţpənn.\n"
+            "!0-0-dv.\n"
+        )
+        hint = (
+            "χɬkevk is floor division; the second object is the number of parts "
+            "and cannot be 0"
+        )
+        self.assertEqual(
+            run_both(uncaught)[1],
+            ("", ("RuntimeFault", "nothing can be distributed into zero parts", 2, hint)),
+        )
+        assertParity(uncaught)
 
-    @unittest.expectedFailure  # BUG-B: type error inside a pure ability must be catchable.
     def test_bug_b_pure_type_error_is_catchable(self):
         self.assertEqual(
             run_both(BUG_B)[1],
@@ -208,21 +248,93 @@ class EngineBugTests(unittest.TestCase):
         )
         assertParity(BUG_B)
 
-    @unittest.expectedFailure  # BUG-C: a negative power is a fault, never a float.
     def test_bug_c_negative_power_is_a_fault(self):
         self.assertEqual(
             run_both(BUG_C)[1],
-            ("", ("RuntimeFault", "lu'f (energize) cannot raise to a negative power", 2)),
+            ("", ("RuntimeFault", "lu'f (energize) cannot raise to a negative power", 2, None)),
         )
         assertParity(BUG_C)
 
-    @unittest.expectedFailure  # BUG-D: truth is not a number.
     def test_bug_d_truth_is_not_a_number(self):
         self.assertEqual(
             run_both(BUG_D)[1],
-            ("", ("RuntimeFault", "cannot add wija'x (truth) and asərθ (number)", 2)),
+            (
+                "",
+                (
+                    "RuntimeFault",
+                    "cannot add wija'x (truth) and asərθ (number)",
+                    2,
+                    "babg adds two numbers, two texts, or two lists",
+                ),
+            ),
         )
         assertParity(BUG_D)
+
+    def test_pure_operators_match_on_the_other_faults(self):
+        cases = [
+            (
+                "^ťe-a-b-op:\n    ^lo-a-b-mɒɣg-'iţpənn.\n!\"x\"-1-op.\n",
+                ("", ("RuntimeFault", "'mɒɣg' needs a number, got rukx (text)", 2, None)),
+            ),
+            (
+                "^ťe-a-b-op:\n    ^lo-a-b-mɒɣg-'iţpənn.\n!1-\"x\"-op.\n",
+                ("", ("RuntimeFault", "'mɒɣg' needs a number, got rukx (text)", 2, None)),
+            ),
+            (
+                "^ťe-a-b-op:\n    ^lo-a-b-geft-'iţpənn.\n!1-0-op.\n",
+                ("", ("RuntimeFault", "nothing remains when dividing by zero", 2, None)),
+            ),
+            (
+                "^ťe-a-h:\n    ^lo-a-əxķus'ər-'iţpənn.\n!əxbytp-h.\n",
+                ("", ("RuntimeFault", "'əxķus'ər' needs a number, got wija'x (truth)", 2, None)),
+            ),
+            (
+                "^ťe-a-b-pw:\n    ^lo-a-b-lu'f-'iţpənn.\n!2-2711-pw.\n",
+                ("", ("RuntimeFault", "lu'f (energize): the exponent is too great", 2, None)),
+            ),
+            (
+                "^ťe-a-b-m:\n    ^lo-a-b-tøwp-'iţpənn.\n!3-\"ab\"-m.\n",
+                ("", ("RuntimeFault", "cannot multiply asərθ (number) and rukx (text)", 2, None)),
+            ),
+            (
+                "^ťe-a-b-m:\n    ^lo-a-b-tøwp-'iţpənn.\n!\"ab\"-3-m.\n",
+                ("ababab\n", None),
+            ),
+            (
+                "^ťe-a-n:\n    ^lo-a-əx-'iţpənn.\n!0-n.\n!\"\"-n.\n",
+                ("əxbytp\nəxbytp\n", None),
+            ),
+        ]
+        for source, walked in cases:
+            with self.subTest(source=source):
+                self.assertEqual(run_both(source)[1], walked)
+                assertParity(source)
+
+    def test_condition_calls_an_ability_once_per_turn(self):
+        source = (
+            "^ťe-tick:\n"
+            "    !\"t\".\n"
+            "    ^lo-'ii-'iţpənn.\n"
+            "^xe-0-i-ţə''.\n"
+            "^baxuφ-i-tick-babg-3-grmɒɣg:\n"
+            "    ^xe-i-1-babg-i-ţə''.\n"
+        )
+        self.assertEqual(run_both(source)[1], ("t\nt\nt\n", None))
+        assertParity(source)
+
+    def test_bug_h_negative_power_base(self):
+        self.assertEqual(run_both(BUG_H)[1], ("4\n", None))
+        assertParity(BUG_H)
+        self.assertEqual(run_both(BUG_H_ABILITY)[1], ("4\n", None))
+        assertParity(BUG_H_ABILITY)
+
+    def test_bug_i_operands_left_to_right(self):
+        self.assertEqual(run_both(BUG_I)[1], ("1\n", None))
+        assertParity(BUG_I)
+
+    def test_bug_i_module_operands_left_to_right(self):
+        self.assertEqual(run_both(BUG_I_MODULE)[1], ("1\n", None))
+        assertParity(BUG_I_MODULE)
 
     @unittest.expectedFailure  # BUG-E: an ability rebinds a top-level variable assigned after it.
     def test_bug_e_ability_rebinds_later_global(self):

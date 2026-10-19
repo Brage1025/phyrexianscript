@@ -66,6 +66,51 @@ class CompilerShapeTests(unittest.TestCase):
         self.assertIn("_a_fib", py)
         self.assertNotIn("while True:", py)
 
+    def test_literal_sum_skips_the_type_test(self):
+        py = compile_to_python(parse(
+            "^ťe-f:\n"
+            "    ^lo-1-2-babg-'iţpənn.\n"
+            "!f.\n"
+        ))
+        self.assertIn("(1 + 2)", py)
+        self.assertNotIn("_add", py)
+
+    def test_name_keeps_the_type_test(self):
+        py = compile_to_python(parse(
+            "^ťe-n-f:\n"
+            "    ^lo-n-1-babg-'iţpənn.\n"
+            "!1-f.\n"
+        ))
+        self.assertIn("_add(", py)
+        self.assertIn("type(", py)
+
+    def test_int_only_results_skip_the_outer_type_test(self):
+        py = compile_to_python(parse(
+            "^ťe-n-f:\n"
+            "    ^lo-n-1-mɒɣg-n-2-mɒɣg-babg-'iţpənn.\n"
+            "!3-f.\n"
+        ))
+        self.assertIn("_sub(", py)
+        self.assertNotIn("_add", py)
+
+    def test_division_of_literals_keeps_the_zero_check(self):
+        py = compile_to_python(parse(
+            "^ťe-d:\n"
+            "    ^lo-1-2-χɬkevk-'iţpənn.\n"
+            "!d.\n"
+        ))
+        self.assertIn("_div(", py)
+        self.assertNotIn("type(", py)
+
+    def test_pure_not_uses_the_truthy_helper(self):
+        py = compile_to_python(parse(
+            "^ťe-n-f:\n"
+            "    ^lo-n-əx-'iţpənn.\n"
+            "!0-f.\n"
+        ))
+        self.assertIn("_not(", py)
+        self.assertNotIn("not n", py)
+
     def test_loop_compiles_to_while_not_break_guard(self):
         src = (
             "^ťe-n-sum:\n"
