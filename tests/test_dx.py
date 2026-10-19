@@ -1,3 +1,4 @@
+import ast
 import io
 import unittest
 
@@ -154,6 +155,33 @@ class CompilerShapeTests(unittest.TestCase):
             stdout=out,
         )
         self.assertEqual(out.getvalue().strip(), "15")
+
+    def test_compiled_blocks_are_never_empty(self):
+        sources = [
+            "^xe-1.\n",
+            "^baqilx:\n    ^xe-fbx.\n!\"after\".\n",
+            "^ba-bytp:\n    ^xe-1.\n",
+            "^ťe-f:\n    ^xe-1.\n!f.\n",
+        ]
+        for source in sources:
+            with self.subTest(source=source):
+                tree = ast.parse(compile_to_python(parse(source)))
+                for node in ast.walk(tree):
+                    for body in _suites(node):
+                        self.assertTrue(body, ast.dump(node))
+
+
+def _suites(node: ast.AST) -> list[list[ast.stmt]]:
+    """Suites the compiler emits. An absent else is an empty list and is fine."""
+    bodies: list[list[ast.stmt]] = []
+    body = getattr(node, "body", None)
+    if isinstance(body, list) and type(node) is not ast.Module:
+        bodies.append(body)
+    handlers = getattr(node, "handlers", None)
+    if isinstance(handlers, list):
+        for handler in handlers:
+            bodies.append(handler.body)
+    return bodies
 
 
 class FrameTests(unittest.TestCase):
