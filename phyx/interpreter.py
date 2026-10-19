@@ -11,6 +11,7 @@ from typing import IO
 from . import ast
 from .builtins import IMPLS, put_into
 from .errors import PhyrexianError, RuntimeFault, UserMistake
+from .limits import call_on_stack, memory_fault
 from .parser import parse
 from .values import Ability, Env, to_text, truthy
 from .vertical import from_vertical
@@ -52,8 +53,13 @@ class Interpreter:
     def write(self, text: str) -> None:
         self.out.write(text)
 
-    def speak_values(self, values: list) -> None:
-        self.out.write(" ".join(to_text(v) for v in values) + "\n")
+    def speak_values(self, values: list, line: int | None = None) -> None:
+        try:
+            self.out.write(" ".join(to_text(v) for v in values) + "\n")
+        except RuntimeFault as err:
+            if err.line is None and line:
+                err.line = line
+            raise
 
     def read_line(self, prompt: str = "") -> object:
         if prompt:
@@ -80,6 +86,9 @@ class Interpreter:
         return out
 
     def run(self, program: list[ast.Stmt]) -> None:
+        call_on_stack(lambda: self._run_here(program))
+
+    def _run_here(self, program: list[ast.Stmt]) -> None:
         if not self._treewalk:
             from .compiler import run_compiled
             persist = self.persistent or bool(self._include_stack)
@@ -161,6 +170,8 @@ class Interpreter:
     def exec_stmt(self, stmt: ast.Stmt, env: Env) -> None:
         try:
             self._exec(stmt, env)
+        except MemoryError:
+            raise memory_fault(stmt.line) from None
         except PhyrexianError as err:
             if err.line is None:
                 err.line = stmt.line
@@ -348,7 +359,7 @@ class Interpreter:
             raise RuntimeFault(f"bukð (play/cast): '{path_str}' is already being cast (cycle)")
         try:
             text = path.read_text(encoding="utf-8")
-        except OSError as err:
+        except (OSError, UnicodeError) as err:
             raise RuntimeFault(f"bukð (play/cast) cannot read '{path_str}': {err}") from err
         if path.suffix.lower() == ".vphyx":
             text = from_vertical(text)

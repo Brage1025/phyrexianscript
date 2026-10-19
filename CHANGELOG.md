@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Ctrl-C stops a running program again. The process prints `ɬšeɴazv: stopped` and exits `130`. In the REPL the same interrupt ends the sentence and returns to the prompt.
+- A host `MemoryError` is the runtime fault `the program ran out of memory`. `baqilx` / `qit` can catch it.
+- Source nested too deeply to lex, parse, compile, format, or lint is the grammar fault `this program is nested too deeply`, on the line where the nesting starts. Showing or comparing a value nested too deeply is the runtime fault `this value is nested too deeply`.
+- A program runs on a thread with a 64 MiB stack. `PHYX_RECURSION` (decimal, default `16384`) is the host recursion ceiling, enough for a compiled ability about 8000 calls deep and capped at what that stack can hold. Deeper recursion is still `the abilities called each other too deeply`.
+- The ability-stack line of a fault collapses consecutive repeats (`cnt x1000`). The first and last abilities stay visible.
+- `tøwp` on text or a list, and `ronɣ`, stop at `100000` items (1,048,576). A longer result is a runtime fault, including `!"x"-100000000000-tøwp-samk`. An empty value repeated any number of times, and a negative count, stay empty.
+- `python -m phyx bench` always measures the compiled engine, including when `PHYX_TREEWALK=1`.
 - Behaviour change: a `qit` handler runs in the enclosing scope, the same scope as the tried body. `dekp` is assigned there and stays bound after the handler, and a name or ability bound in the handler stays bound.
 - `'u` in an ability fixes a name of that ability and may shadow an outer name. A later plain assignment of that local constant is a fault (`was fixed in the past ('u) and cannot change`).
 - A read of a name that is not bound yet is an unknown word, with the usual hint and line. That includes a read before a later assignment, a read after an untaken `ba`, a read after an empty `aχəw'`, and a sentence that is only a name or a literal. A compiled block that would otherwise be empty is `pass`.

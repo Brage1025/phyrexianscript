@@ -119,7 +119,7 @@ Objects are listed in writing order. `N` is a literal count sitting immediately 
 | --- | --- | --- |
 | `babg` | a b | add (numbers, text, lists) |
 | `mɒɣg` | a b | reduce (subtract) |
-| `tøwp` | a b | times (also repeats text/lists) |
+| `tøwp` | a b | times (also repeats text/lists, at most `100000` items) |
 | `χɬkevk` | a b | distribute (floor divide) |
 | `geft` | a b | remaining (modulo) |
 | `ķus'ər` | a | twice |
@@ -157,7 +157,7 @@ Objects are listed in writing order. `N` is a literal count sitting immediately 
 | --- | --- | --- |
 | `ťewn` | x₁ … xₙ n | list of n items |
 | `tekt` | k₁ v₁ … kₙ vₙ n | book of n entries |
-| `ronɣ` | n | turns — `[0, n)` |
+| `ronɣ` | n | turns — `[0, n)`, at most `100000` numbers |
 | `tapq` | coll key | get (`-1` is the last item) |
 | `bɬølπ` | list item | fill (append; yields the list) |
 | `čxət'` | coll key | exile (remove and yield) |
@@ -208,7 +208,7 @@ A `word` that is a known verb is a call. A scanned `ťe` name followed by `naķm
 
 ## Errors
 
-Faults are `ɬšeɴazv`. They name a stage (`symbols`, `grammar`, `runtime`, `program`), a line, the offending source, a **hint** (what to write instead), and the **ability stack** when the fault sat inside `ťe`:
+Faults are `ɬšeɴazv`. They name a stage (`symbols`, `grammar`, `runtime`, `program`), a line, the offending source, a **hint** (what to write instead), and the **ability stack** when the fault sat inside `ťe`. A run of the same ability is one entry with a count (`cnt x1000`); the first and last abilities stay visible.
 
 ```
 ɬšeɴazv [grammar] (line 1, col 2): 'if' is English, not Phyrexian. The mood marker you want is 'ba'.
@@ -237,7 +237,9 @@ Cast with `bukð` before calling. Files live in `phyx/lib/` and are found by the
 
 A program is compiled to Python and run by CPython. `ťe` becomes a nested `def`; `baxuφ` / `aχəw'` become `while` / `for`; `ţə''` is assignment. Verbs keep Phyrexian faults (`cannot add`, division by zero) instead of raw `TypeError`.
 
-Set `PHYX_TREEWALK=1` to walk the AST instead (slower; same results). `python -m phyx bench` times compiled φyrx against the same code in Python.
+Set `PHYX_TREEWALK=1` to walk the AST instead (slower; same results). `python -m phyx bench` times compiled φyrx against the same code in Python, and it measures that compiled engine even when `PHYX_TREEWALK=1`. `PHYX_RECURSION` (decimal, default `16384`) is the host recursion ceiling for a program thread with a 64 MiB stack. See [toolchain.md](toolchain.md).
+
+A host `MemoryError` is `the program ran out of memory` and can be caught with `baqilx`. A value nested too deeply to show or compare is `this value is nested too deeply`. Source nested too deeply to parse, compile, format, or lint is a grammar fault, `this program is nested too deeply`, on the line where the nesting starts. Ctrl-C exits `130`.
 
 ## Turing completeness
 

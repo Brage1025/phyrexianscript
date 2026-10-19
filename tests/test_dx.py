@@ -216,6 +216,33 @@ class FrameTests(unittest.TestCase):
         else:
             self.fail("expected RuntimeFault")
 
+    def test_repeated_frames_collapse(self):
+        err = RuntimeFault("too deeply", frames=["cnt"] * 1000)
+        shown = format_error(err)
+        self.assertIn("in abilities: cnt x1000", shown)
+        self.assertNotIn("cnt → cnt", shown)
+
+    def test_collapse_keeps_the_first_and_last_frames(self):
+        err = RuntimeFault("broke", frames=["go", *["cnt"] * 1000, "boom"])
+        shown = format_error(err)
+        self.assertIn("in abilities: go → cnt x1000 → boom", shown)
+        self.assertNotIn("cnt → cnt", shown)
+        plain = format_error(RuntimeFault("broke", frames=["go", "boom"]))
+        self.assertIn("in abilities: go → boom", plain)
+
+    def test_recursive_fault_collapses_on_both_engines(self):
+        src = "^ťe-cnt:\n    ^lo-cnt-'iţpənn.\n!cnt.\n"
+        for flag in (False, True):
+            with self.subTest(treewalk=flag):
+                try:
+                    run_source(src, treewalk=flag)
+                except RuntimeFault as err:
+                    shown = format_error(err, src)
+                else:
+                    self.fail("expected RuntimeFault")
+                self.assertRegex(shown, r"in abilities: cnt x[0-9]+")
+                self.assertNotIn("cnt → cnt", shown)
+
 
 class FmtTests(unittest.TestCase):
     def test_canonical_hyphens_and_indent(self):

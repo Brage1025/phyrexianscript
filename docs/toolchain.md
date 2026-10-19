@@ -40,11 +40,13 @@ python -m phyx -V
 
 `test` runs `test_*.phyx` under the given paths (default `tests/`). A file passes when it finishes without a fault; `ǩaπa` (must) is the assertion. If a sibling `test_foo.expected` exists next to `test_foo.phyx`, stdout must match that UTF-8 text exactly. `lookup` searches the running lexicon (`phyx/vocabulary.py`); a fetched dictionary is extra. `lib` lists the shipped herds in `phyx/lib/`. `new NAME` writes `NAME.phyx` (shebang and a `ťe`) and `test_NAME.phyx`. `lsp` is the language server: complete the lexicon and `ťe` names, jump to `ťe`, hover.
 
-`bench` times compiled abilities after parse/compile, against the identical algorithms in Python. `dis` prints the CPython a program compiles to. Pure abilities (no I/O) become ordinary `def` with nested integer expressions and `while cond:`. Equality and ordering keep Phyrexian kinds (`1` is not `əxbytp`). `PHYX_TREEWALK=1` restores the AST walker.
+`bench` times compiled abilities after parse/compile, against the identical algorithms in Python. It always measures the compiled engine, including when `PHYX_TREEWALK=1` is set. `dis` prints the CPython a program compiles to. Pure abilities (no I/O) become ordinary `def` with nested integer expressions and `while cond:`. Equality and ordering keep Phyrexian kinds (`1` is not `əxbytp`). `PHYX_TREEWALK=1` restores the AST walker for every other command.
 
-A runtime fault prints the source line, a caret, a **hint** (the next command or the Phyrexian word you wanted), and the **ability stack** when the fault sat inside `ťe`.
+A program runs on a thread with a **64 MiB** stack. `PHYX_RECURSION` is the host recursion ceiling, a decimal integer. The default is `16384`, enough for a compiled ability about 8000 calls deep. A value above `16384` is refused: that is how many frames fit in the stack at 4 KiB each, so a deeper call is the fault `the abilities called each other too deeply` rather than a host crash. The tree-walker spends several host frames on each call, so the same ceiling is a shallower ability.
 
-`run` / implicit run pass `ARG…` to `'uxq`. `qab'` (kill) is the process exit code.
+A runtime fault prints the source line, a caret, a **hint** (the next command or the Phyrexian word you wanted), and the **ability stack** when the fault sat inside `ťe`. A run of the same ability is one entry with a count (`cnt x1000`). The first and last abilities in the stack stay visible.
+
+`run` / implicit run pass `ARG…` to `'uxq`. `qab'` (kill) is the process exit code. A φyrx fault exits `1`. Ctrl-C while a program is running exits `130` and prints `ɬšeɴazv: stopped`. The program runs on a daemon thread, so that interrupt stops the thread and the process leaves. In the REPL the same interrupt ends the running sentence and returns to the prompt.
 
 A first source line `#! /usr/bin/env phyx` is a shebang and is ignored.
 

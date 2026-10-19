@@ -110,6 +110,8 @@ An ability applied to fewer objects than its arity is the ability value, not a c
 
 Lists and books take a **plain numeral count** immediately before the verb: `1-2-3-3-ťewn`. Empty: `0-ťewn`.
 
+`tøwp` repeats text or a list. The result is at most `100000` items (1,048,576). A longer repetition is a runtime fault. An empty text or an empty list repeated by any count, including a negative count, is empty. `ronɣ` is the list `[0, n)` and is at most `100000` numbers; a larger `n` is a runtime fault. A negative `n` is empty. Multiplying two numbers is not subject to this bound.
+
 `ǆ'ynpp` is equal only when both values have the same kind: a number is never equal to a truth. `xə` / `ðə` yield truth and evaluate both objects. `ʁšθakɴ` evaluates the condition and both arms (objects sit before the verb).
 
 ## 6. Modules, command, notes on disk
@@ -125,6 +127,10 @@ Lists and books take a **plain numeral count** immediately before the verb: `1-2
 
 Every fault is a `ɬšeɴazv` with a kind (`[symbols]`, `[grammar]`, `[runtime]`, `[program]`), a location, the source line and a caret when known, a **hint** (what to do next), and an **ability stack** when the fault arose inside `ťe`.
 
+A run of the same ability on that stack is written once, with a count (`cnt x1000`). The first and last abilities stay visible, so `go` then a thousand `cnt` then `boom` is `go → cnt x1000 → boom`.
+
+A program the host cannot keep in memory is a runtime fault (`the program ran out of memory`). `baqilx` / `qit` can catch it. Showing or comparing a list or book that is nested too deeply for the host is a runtime fault (`this value is nested too deeply`). Source that is itself nested too deeply for the reader — the parser, the compiler, the formatter, or the linter — is a grammar fault (`this program is nested too deeply`) on the line where that nesting starts.
+
 English mood words (`if`, `while`, `def`, …) in marker position are a grammar fault naming the Phyrexian marker.
 
 Unknown names at runtime suggest a nearby lexicon word, or the English → Phyrexian mapping.
@@ -134,6 +140,8 @@ Unknown names at runtime suggest a nearby lexicon word, or the English → Phyre
 A conforming toolchain may compile a program to CPython. Observable behaviour must match this specification, including fault messages' meaning (wording may grow hints). `PHYX_TREEWALK=1` selects a tree-walker with the same semantics.
 
 Integer overflow does not occur: host integers are unbounded.
+
+Calling abilities deeper than the host recursion ceiling is a runtime fault (`the abilities called each other too deeply`). The ceiling is `PHYX_RECURSION`; see [toolchain.md](toolchain.md).
 
 ## 9. Versioning
 
