@@ -92,7 +92,7 @@ Python’s `import math` is a file of abilities here:
 
 ## Speed
 
-`python -m phyx bench` times the compiled ability, not the parser. Recursive `fib` and a tight `baxuφ` stay within a small factor of CPython. Equality and ordering are not raw Python `==` / `<` — `1` is never `əxbytp`. Pure abilities become ordinary Python `def` (`return fib(n-1)+fib(n-2)`, `while i < n:`). `python -m phyx explain if` is the glossary for someone whose hands still type Python. Sentences that print, read files, or index collections keep Phyrexian type faults.
+`python -m phyx bench` times the compiled ability, not the parser. Recursive `fib(16)` was 1.6× CPython before the guarded operators and 2.8× after; a 20000-turn loop was 2.2× and is 4.0×. Arithmetic uses Python's operator only when both values are numbers, and `əx` uses φyrx truth, so a fault inside a pure ability is a `RuntimeFault`. Pure abilities are still ordinary Python `def`s. `python -m phyx explain if` is the glossary for someone whose hands still type Python. Sentences that print, read files, or index collections keep Phyrexian type faults.
 
 The old AST walker is `PHYX_TREEWALK=1` — about a hundred times slower, same results.
 

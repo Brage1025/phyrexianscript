@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Pure abilities no longer compile arithmetic to raw Python operators. Divide by zero, a bad kind, a negative `lu'f`, and adding a truth are `RuntimeFault`s with the tree-walker's message and hint, so `baqilx` can catch them. `əx` uses `truthy()`. The type test is skipped only when both objects are provably numbers.
+- A negative number literal is parenthesised in the generated Python, so `əx2-2-lu'f` is 4 (`(-2) ** 2`), not `-(2 ** 2)`.
+- Operands are evaluated left to right. When a later operand needs statements, each earlier operand that is not a literal is copied into a temporary first. `y-bump-babg` reads `y` before `bump` runs, in an ability and at module level.
+
 ## 1.6.4
 
 Extension icon. The language is still **1.6**.
