@@ -6,6 +6,9 @@ integer ``+``) lets the same C eval loop that runs Python run φyrx.  That is
 the same architecture CPython itself uses (source → bytecode → PVM), just
 with Phyrexian as the source language.
 
+Python's own operators run only when both objects are numbers.  Otherwise a
+helper raises ``RuntimeFault``.  ``əx`` uses ``truthy()``, not Python ``not``.
+
 Semantics that are not Python — ``'u`` constants, ``ɬšeɴazv`` messages,
 dynamic REPL bindings — go through a few helpers on the interpreter.
 """
@@ -44,9 +47,13 @@ def _add(a, b, line=0):
 
 
 def _sub(a, b, line=0):
-    if type(a) is int and type(b) is int:
-        return a - b
-    raise RuntimeFault(f"'mɒɣg' needs a number, got {_kinds(a, b)}", line)
+    # One object at a time, in order: the tree-walker names only the first
+    # value that is not a number.
+    if type(a) is not int:
+        raise RuntimeFault(f"'mɒɣg' needs a number, got {_kinds(a)}", line)
+    if type(b) is not int:
+        raise RuntimeFault(f"'mɒɣg' needs a number, got {_kinds(b)}", line)
+    return a - b
 
 
 def _mul(a, b, line=0):
@@ -59,8 +66,10 @@ def _mul(a, b, line=0):
 
 
 def _div(a, b, line=0):
-    if type(a) is not int or type(b) is not int:
-        raise RuntimeFault(f"'χɬkevk' needs a number, got {_kinds(a, b)}", line)
+    if type(a) is not int:
+        raise RuntimeFault(f"'χɬkevk' needs a number, got {_kinds(a)}", line)
+    if type(b) is not int:
+        raise RuntimeFault(f"'χɬkevk' needs a number, got {_kinds(b)}", line)
     if b == 0:
         raise RuntimeFault(
             "nothing can be distributed into zero parts",
@@ -71,8 +80,10 @@ def _div(a, b, line=0):
 
 
 def _mod(a, b, line=0):
-    if type(a) is not int or type(b) is not int:
-        raise RuntimeFault(f"'geft' needs a number, got {_kinds(a, b)}", line)
+    if type(a) is not int:
+        raise RuntimeFault(f"'geft' needs a number, got {_kinds(a)}", line)
+    if type(b) is not int:
+        raise RuntimeFault(f"'geft' needs a number, got {_kinds(b)}", line)
     if b == 0:
         raise RuntimeFault("nothing remains when dividing by zero", line)
     return a % b
@@ -91,8 +102,10 @@ def _half(a, line=0):
 
 
 def _pow(a, b, line=0):
-    if type(a) is not int or type(b) is not int:
-        raise RuntimeFault(f"'lu'f' needs a number, got {_kinds(a, b)}", line)
+    if type(a) is not int:
+        raise RuntimeFault(f"'lu'f' needs a number, got {_kinds(a)}", line)
+    if type(b) is not int:
+        raise RuntimeFault(f"'lu'f' needs a number, got {_kinds(b)}", line)
     if b < 0:
         raise RuntimeFault("lu'f (energize) cannot raise to a negative power", line)
     if b > 10_000:
@@ -208,6 +221,101 @@ _UNARY = {
 
 # verbs compiled without touching the interpreter object
 _INLINE_VERBS = set(_BIN) | set(_UNARY) | {"ʁšθakɴ", "ťewn", "tekt", "ronɣ"}
+
+# These return a number whenever they return. The guarded form rejects every
+# other kind, so a later operator can treat the result as a number.
+_INT_ONLY_BIN = frozenset({"mɒɣg", "χɬkevk", "geft", "lu'f"})
+_INT_ONLY_UNARY = frozenset({"ķus'ər", "əxķus'ər"})
+# babg / tøwp return a number when both objects are already numbers.
+# They can also join text or repeat a list, so the arguments decide.
+_INT_IF_INT_BIN = frozenset({"babg", "tøwp"})
+_PLAIN_BIN = {
+    "babg": "+",
+    "mɒɣg": "-",
+    "tøwp": "*",
+    "grmɒɣg": "<",
+    "korxgr": ">",
+    "ǆ'ynpp": "==",
+}
+
+
+def _provably_int(expr: ast.Expr) -> bool:
+    """True when ``expr`` yields a number or raises ``RuntimeFault``.
+
+    An integer literal is a number (a truth literal is not: ``bool`` is its
+    own kind). A name is not a number, because a parameter or variable can
+    hold any kind. ``mɒɣg``, ``χɬkevk``, ``geft``, ``lu'f``, ``ķus'ər`` and
+    ``əxķus'ər`` return a number whenever they return. ``babg`` and ``tøwp``
+    do too when both of their objects do.
+    """
+    if isinstance(expr, ast.Literal) and type(expr.value) is int:
+        return True
+    if not isinstance(expr, ast.Call):
+        return False
+    word = expr.verb.word
+    args = expr.args
+    if word in _INT_ONLY_BIN and len(args) == 2:
+        return True
+    if word in _INT_ONLY_UNARY and len(args) == 1:
+        return True
+    if word in _INT_IF_INT_BIN and len(args) == 2:
+        return _provably_int(args[0]) and _provably_int(args[1])
+    return False
+
+
+def _is_reused_atom(expr: ast.Expr, py: str) -> bool:
+    """True when mentioning ``py`` twice evaluates it once.
+
+    A literal has no effect. A name that compiled to one identifier is a
+    load of a local. Anything else (a call, ``_rt.load(...)``) must be
+    bound before a guard mentions it again.
+    """
+    if py.isidentifier():
+        return True
+    return isinstance(expr, ast.Literal)
+
+
+def _repeated_operands(word: str, args: list[ast.Expr]) -> list[bool]:
+    """True when the compiled form of ``word`` mentions that operand twice.
+
+    A second mention is a second evaluation unless the operand is an atom
+    or has already been stored in a temporary.
+    """
+    n = len(args)
+    if word in ("xə", "ðə", "əx", "ǆ'ynpp"):
+        return [False] * n
+    if word in ("ķus'ər", "əxķus'ər") and n == 1 and _provably_int(args[0]):
+        return [False]
+    if (
+        word in _PLAIN_BIN
+        and n == 2
+        and _provably_int(args[0])
+        and _provably_int(args[1])
+    ):
+        return [False, False]
+    if word in _BIN or word in ("ķus'ər", "əxķus'ər"):
+        return [True] * n
+    return [False] * n
+
+
+def _literal_text(value: object) -> str:
+    """Python spelling of a φyrx literal.
+
+    ``-2 ** 2`` is ``-(2 ** 2)`` in Python. A negative number is parenthesised
+    so every operator, including ``lu'f``, sees the negative value.
+    """
+    if type(value) is int and value < 0:
+        return f"({value})"
+    return repr(value)
+
+
+def _is_emitted_literal(py: str) -> bool:
+    if py in ("True", "False", "None"):
+        return True
+    body = py[1:-1] if len(py) >= 2 and py[0] == "(" and py[-1] == ")" else py
+    if body.lstrip("-").isdigit():
+        return True
+    return len(py) >= 2 and py[0] == py[-1] and py[0] in "'\""
 
 _NS_NAMES = {
     "_add": _add,
@@ -546,12 +654,12 @@ class Emitter:
             if not stmt.exprs:
                 self.emit('_rt.write("\\n")')
                 return
-            parts = [self.expr(e, scope) for e in stmt.exprs]
+            parts = self._in_order(stmt.exprs, scope, True, [False] * len(stmt.exprs))
             self.emit(f"_rt.speak_values([{', '.join(parts)}])")
             return
         if isinstance(stmt, ast.Input):
             if stmt.prompt:
-                bits = [self.expr(e, scope) for e in stmt.prompt]
+                bits = self._in_order(stmt.prompt, scope, True, [False] * len(stmt.prompt))
                 prompt = f'" ".join(to_text(_v) for _v in ({", ".join(bits)},))'
             else:
                 prompt = '""'
@@ -574,18 +682,22 @@ class Emitter:
                 self.indent -= 1
             return
         if isinstance(stmt, ast.While):
-            if not _has_assign(stmt.cond):
-                cond = self.expr(stmt.cond, scope, bind=False)
+            # A guard that mentions a call twice would bind it. That binding
+            # has to sit inside the loop, so try the condition once: if it
+            # needed statements, throw them away and emit them each turn.
+            mark = len(self.lines)
+            cond = self.expr(stmt.cond, scope, bind=False)
+            if len(self.lines) == mark:
                 self.emit(f"while {cond}:")
                 self.indent += 1
                 self.emit_block(stmt.body, scope, False, in_ability, loop_depth + 1)
                 self.indent -= 1
                 return
-            # Assignment inside the condition must run every turn.
+            del self.lines[mark:]
             self.emit("while True:")
             self.indent += 1
-            cond = self.expr(stmt.cond, scope)
-            self.emit(f"if not {cond}:")
+            cond = self.expr(stmt.cond, scope, bind=False)
+            self.emit(f"if not ({cond}):")
             self.indent += 1
             self.emit("break")
             self.indent -= 1
@@ -690,18 +802,21 @@ class Emitter:
         """Emit any required statements; return a Python expression.
 
         ``bind=True`` (default) forces an atom (temp name or literal) so the
-        result can be reused.  ``bind=False`` keeps a nested expression so
-        ``return fib(n-1)+fib(n-2)`` and ``while i < n:`` are ordinary Python.
+        result can be reused.  ``bind=False`` keeps a nested expression when
+        each object is used once.  A guard that would mention a call twice
+        names it first, so the call runs once.
         """
         if isinstance(expr, ast.Literal):
-            return repr(expr.value)
+            return _literal_text(expr.value)
         if isinstance(expr, ast.Name):
             return self.load(expr.name, scope, expr.line)
         if isinstance(expr, ast.Call):
             return self.emit_call(expr, scope, bind=bind)
         if isinstance(expr, ast.UserCall):
             child_bind = bind or _has_assign(expr)
-            args = [self.expr(a, scope, bind=child_bind) for a in expr.args]
+            args = self._in_order(
+                expr.args, scope, child_bind, [False] * len(expr.args)
+            )
             arglist = ", ".join(args)
             found = scope.find(expr.name)
             if found is not None and expr.name in found.funs:
@@ -729,14 +844,64 @@ class Emitter:
             raise RuntimeFault("lups (stop) used outside of a loop", expr.line)
         raise RuntimeFault(f"unknown expression {type(expr).__name__}", expr.line)  # pragma: no cover
 
+    def _capture(self, node: ast.Expr, scope: Scope, bind: bool) -> tuple[str, list[str]]:
+        mark = len(self.lines)
+        py = self.expr(node, scope, bind=bind)
+        lines = self.lines[mark:]
+        del self.lines[mark:]
+        return py, lines
+
+    def _in_order(
+        self,
+        nodes: list[ast.Expr],
+        scope: Scope,
+        bind: bool,
+        repeat: list[bool],
+    ) -> list[str]:
+        """Evaluate ``nodes`` left to right.
+
+        When a later operand needs statements (its own, or a temporary
+        because a guard mentions it twice), every earlier operand that is
+        not a literal is copied into a temporary first.
+        """
+        captured = [self._capture(node, scope, bind) for node in nodes]
+        return self._commit(nodes, captured, repeat)
+
+    def _commit(
+        self,
+        nodes: list[ast.Expr],
+        captured: list[tuple[str, list[str]]],
+        repeat: list[bool],
+    ) -> list[str]:
+        emits = [
+            bool(lines) or (repeat[i] and not _is_reused_atom(node, py))
+            for i, (node, (py, lines)) in enumerate(zip(nodes, captured))
+        ]
+        pys: list[str] = []
+        for i, (node, (py, lines)) in enumerate(zip(nodes, captured)):
+            later = any(emits[j] for j in range(i + 1, len(emits)))
+            self.lines.extend(lines)
+            if later and not isinstance(node, ast.Literal):
+                py = self.bind(py)
+            elif repeat[i] and not _is_reused_atom(node, py):
+                py = self.bind(py)
+            pys.append(py)
+        return pys
+
     def emit_call(self, expr: ast.Call, scope: Scope, bind: bool = True) -> str:
         word = expr.verb.word
-        args = [self.expr(a, scope, bind=bind) for a in expr.args]
         line = expr.line
+        guarded = (word in _BIN and len(expr.args) == 2) or (
+            word in _UNARY and len(expr.args) == 1
+        )
+        repeat = _repeated_operands(word, expr.args) if guarded else [False] * len(expr.args)
+        args = self._in_order(expr.args, scope, bind, repeat)
         if word in _BIN and len(args) == 2:
-            return self._int_binop(word, args[0], args[1], line, scope, bind=bind)
+            return self._int_binop(
+                word, expr.args[0], expr.args[1], args[0], args[1], line, bind=bind
+            )
         if word in _UNARY and len(args) == 1:
-            return self._int_unop(word, args[0], line, scope, bind=bind)
+            return self._int_unop(word, expr.args[0], args[0], line, bind=bind)
         if word == "ʁšθakɴ" and len(args) == 3:
             return self.maybe_bind(f"_choose({args[0]}, {args[1]}, {args[2]}, {line})", bind)
         if word == "ťewn":
@@ -749,53 +914,61 @@ class Emitter:
         return self.maybe_bind(f"_verb(_rt, {word!r}, [{joined}], {line})", bind)
 
     def _int_binop(
-        self, word: str, a: str, b: str, line: int, scope: Scope, bind: bool = True
+        self,
+        word: str,
+        a_expr: ast.Expr,
+        b_expr: ast.Expr,
+        a: str,
+        b: str,
+        line: int,
+        bind: bool = True,
     ) -> str:
-        """Integer ops: raw CPython in pure abilities, guarded elsewhere."""
-        raw = scope.kind == "func" and not scope.needs_rt
-        both = f"type({a}) is int and type({b}) is int"
-        py = {
-            "babg": f"({a} + {b})",
-            "mɒɣg": f"({a} - {b})",
-            "tøwp": f"({a} * {b})",
-            "χɬkevk": f"({a} // {b})",
-            "geft": f"({a} % {b})",
-            "lu'f": f"({a} ** {b})",
-            "grmɒɣg": f"({a} < {b})",
-            "korxgr": f"({a} > {b})",
-            "ǆ'ynpp": f"({a} == {b})",
-        }.get(word)
-        helper = _BIN.get(word)
-        # Equality must use values_equal: Python `1 == True` is true, φyrx kinds differ.
-        # Ordering must not treat truth as a number (`0 < True`).
-        if word == "ǆ'ynpp":
-            expr = f"_eq({a}, {b}, {line})"
-        elif word in ("grmɒɣg", "korxgr") and py is not None and helper:
-            expr = f"({py[1:-1]} if {both} else {helper}({a}, {b}, {line}))"
-        elif raw and py is not None:
-            expr = py
-        elif word == "χɬkevk":
-            expr = f"({a} // {b} if {both} and {b} else _div({a}, {b}, {line}))"
-        elif word == "geft":
-            expr = f"({a} % {b} if {both} and {b} else _mod({a}, {b}, {line}))"
-        elif word == "lu'f":
-            expr = f"({a} ** {b} if {both} and 0 <= {b} <= 10000 else _pow({a}, {b}, {line}))"
-        elif py is not None and helper:
-            expr = f"({py[1:-1]} if {both} else {helper}({a}, {b}, {line}))"
-        else:
+        """Number ops. Python's operator only when both values are numbers.
+
+        Division, remainder and power keep the zero and range checks even
+        then. The type test is left out only when both objects are provably
+        numbers; a name never is.
+        """
+        both_int = _provably_int(a_expr) and _provably_int(b_expr)
+        helper = _BIN[word]
+        if word in ("xə", "ðə"):
             expr = f"{helper}({a}, {b}, {line})"
+        elif word == "ǆ'ynpp" and not both_int:
+            # Python `1 == True`. Kinds differ, so equality goes through values_equal.
+            expr = f"_eq({a}, {b}, {line})"
+        elif both_int and word in _PLAIN_BIN:
+            expr = f"({a} {_PLAIN_BIN[word]} {b})"
+        else:
+            # Operands that a guard mentions twice were stored by ``_in_order``.
+            types = f"type({a}) is int and type({b}) is int"
+            if word == "χɬkevk":
+                guard = b if both_int else f"{types} and {b}"
+                expr = f"({a} // {b} if {guard} else _div({a}, {b}, {line}))"
+            elif word == "geft":
+                guard = b if both_int else f"{types} and {b}"
+                expr = f"({a} % {b} if {guard} else _mod({a}, {b}, {line}))"
+            elif word == "lu'f":
+                span = f"0 <= {b} <= 10000"
+                guard = span if both_int else f"{types} and {span}"
+                expr = f"({a} ** {b} if {guard} else _pow({a}, {b}, {line}))"
+            else:
+                # Ordering uses the same guard: `0 < True` is not a φyrx comparison.
+                expr = f"({a} {_PLAIN_BIN[word]} {b} if {types} else {helper}({a}, {b}, {line}))"
         return self.maybe_bind(expr, bind)
 
     def _int_unop(
-        self, word: str, a: str, line: int, scope: Scope, bind: bool = True
+        self, word: str, a_expr: ast.Expr, a: str, line: int, bind: bool = True
     ) -> str:
-        raw = scope.kind == "func" and not scope.needs_rt
-        if word == "ķus'ər":
-            expr = f"({a} * 2)" if raw else f"({a} * 2 if type({a}) is int else _twice({a}, {line}))"
-        elif word == "əxķus'ər":
-            expr = f"({a} // 2)" if raw else f"({a} // 2 if type({a}) is int else _half({a}, {line}))"
-        elif word == "əx":
-            expr = f"(not {a})" if raw else f"_not({a}, {line})"
+        if word == "əx":
+            # Python `not` is not φyrx truth. `_not` calls truthy().
+            expr = f"_not({a}, {line})"
+        elif word in ("ķus'ər", "əxķus'ər"):
+            op = "*" if word == "ķus'ər" else "//"
+            helper = "_twice" if word == "ķus'ər" else "_half"
+            if _provably_int(a_expr):
+                expr = f"({a} {op} 2)"
+            else:
+                expr = f"({a} {op} 2 if type({a}) is int else {helper}({a}, {line}))"
         else:
             expr = f"{_UNARY[word]}({a}, {line})"
         return self.maybe_bind(expr, bind)
@@ -819,8 +992,12 @@ class Emitter:
         if isinstance(target, ast.Name):
             return self.store_name(target.name, val, scope, const, line)
         if isinstance(target, ast.Call) and target.verb.word == GET_WORD:
-            coll = self.expr(target.args[0], scope)
-            key = self.expr(target.args[1], scope)
+            # The value was evaluated first. Copy it before the place's
+            # statements, then evaluate the place left to right.
+            caps = [self._capture(node, scope, True) for node in target.args]
+            if any(lines for _, lines in caps) and not _is_emitted_literal(val):
+                val = self.bind(val)
+            coll, key = self._commit(list(target.args), caps, [False, False])
             return self.bind(f"_put_at({coll}, {key}, {val}, {line})")
         raise RuntimeFault("cannot put a value there", line)  # pragma: no cover
 
