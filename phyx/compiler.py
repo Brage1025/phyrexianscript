@@ -22,8 +22,9 @@ import traceback
 from dataclasses import dataclass, field
 
 from . import ast
-from .builtins import IMPLS, put_into, _kinds
-from .errors import RuntimeFault, UserMistake
+from .builtins import IMPLS, put_into, _hashable, _kinds
+from .errors import RuntimeFault, UserMistake, nesting_fault
+from .limits import memory_fault, repeat_sequence, take_turns
 from .hints import hint_for_unknown
 from .values import Ability, to_text, truthy, values_equal
 from .vocabulary import BLAME_WORD, GET_WORD
@@ -33,13 +34,16 @@ _DUMP = os.environ.get("PHYX_DUMP")
 
 # ------------------------------------------------------------------ helpers used by generated code
 def _add(a, b, line=0):
-    ta, tb = type(a), type(b)
-    if ta is int and tb is int:
-        return a + b
-    if ta is str and tb is str:
-        return a + b
-    if ta is list and tb is list:
-        return a + b
+    try:
+        ta, tb = type(a), type(b)
+        if ta is int and tb is int:
+            return a + b
+        if ta is str and tb is str:
+            return a + b
+        if ta is list and tb is list:
+            return a + b
+    except MemoryError:
+        raise memory_fault(line) from None
     raise RuntimeFault(
         f"cannot add {_kinds(a, b)}",
         line,
@@ -62,7 +66,7 @@ def _mul(a, b, line=0):
     if ta is int and tb is int:
         return a * b
     if ta in (str, list) and tb is int:
-        return a * b
+        return repeat_sequence(a, b, "tøwp (times)", line)
     raise RuntimeFault(f"cannot multiply {_kinds(a, b)}", line)
 
 
@@ -115,8 +119,12 @@ def _pow(a, b, line=0):
 
 
 def _eq(a, b, line=0):
-    _ = line
-    return values_equal(a, b)
+    try:
+        return values_equal(a, b)
+    except RuntimeFault as err:
+        if err.line is None and line:
+            err.line = line
+        raise
 
 
 def _lt(a, b, line=0):
@@ -158,7 +166,7 @@ def _choose(c, a, b, line=0):
 def _range(n, line=0):
     if type(n) is not int:
         raise RuntimeFault(f"'ronɣ' needs a number, got {_kinds(n)}", line)
-    return list(range(n))
+    return take_turns(n, line)
 
 
 def _walk(coll, line=0):
@@ -182,9 +190,12 @@ def _put_at(coll, key, value, line=0):
 def _mkbook(parts, line=0):
     book = {}
     for i in range(0, len(parts), 2):
-        k = parts[i]
-        if isinstance(k, (list, dict)):
-            raise RuntimeFault(f"a book cannot be keyed by a {type(k).__name__} ('tekt')", line)
+        try:
+            k = _hashable(parts[i], "tekt")
+        except RuntimeFault as err:
+            if err.line is None:
+                err.line = line
+            raise
         book[k] = parts[i + 1]
     return book
 
@@ -432,6 +443,7 @@ _NS_NAMES = {
     "_choose": _choose,
     "_range": _range,
     "_walk": _walk,
+    "_memory_fault": memory_fault,
     "_put_at": _put_at,
     "_mkbook": _mkbook,
     "_verb": _verb,
@@ -458,12 +470,12 @@ def _has_assign(expr: ast.Expr) -> bool:
     return False
 
 
-def _attach_python_frames(err: RuntimeFault, ns: dict) -> None:
+def _attach_python_frames(err: RuntimeFault, ns: dict, tb=None) -> None:
     names = ns.get("__phyx_names") or {}
     frames: list[str] = []
-    for fr in traceback.extract_tb(err.__traceback__):
+    for fr in traceback.extract_tb(tb if tb is not None else err.__traceback__):
         phyx = names.get(fr.name)
-        if phyx and (not frames or frames[-1] != phyx):
+        if phyx:
             frames.append(phyx)
     if frames and not err.frames:
         err.frames = frames
@@ -967,7 +979,7 @@ class Emitter:
                 self.emit('_rt.write("\\n")')
                 return
             parts = self._in_order(stmt.exprs, scope, True, [False] * len(stmt.exprs))
-            self.emit(f"_rt.speak_values([{', '.join(parts)}])")
+            self.emit(f"_rt.speak_values([{', '.join(parts)}], {stmt.line})")
             return
         if isinstance(stmt, ast.Input):
             if stmt.prompt:
@@ -1041,7 +1053,14 @@ class Emitter:
         if isinstance(stmt, ast.Try):
             self.emit("try:")
             self.indent += 1
+            self.emit("try:")
+            self.indent += 1
             self.emit_block(stmt.body, scope, False, in_ability, loop_depth)
+            self.indent -= 1
+            self.emit("except MemoryError:")
+            self.indent += 1
+            self.emit(f"raise _memory_fault({stmt.line})")
+            self.indent -= 1
             self.indent -= 1
             self.emit("except RuntimeFault as _err:")
             self.indent += 1
@@ -1519,9 +1538,12 @@ class Emitter:
 
 def compile_to_python(program: list[ast.Stmt], persist: bool = False) -> str:
     """Return the CPython source a φyrx program compiles to."""
-    em = Emitter(persist=persist)
-    em.compile_program(program)
-    return em.text()
+    try:
+        em = Emitter(persist=persist)
+        em.compile_program(program)
+        return em.text()
+    except RecursionError as err:
+        raise nesting_fault(err) from None
 
 
 def run_compiled(interp, program: list[ast.Stmt], persist: bool = False) -> None:
@@ -1536,8 +1558,12 @@ def run_compiled(interp, program: list[ast.Stmt], persist: bool = False) -> None
     exec(code, ns)
     try:
         ns["__phyx_run"](interp)
-    except RecursionError:
-        raise RuntimeFault("the abilities called each other too deeply") from None
+    except MemoryError:
+        raise memory_fault() from None
+    except RecursionError as err:
+        fault = RuntimeFault("the abilities called each other too deeply")
+        _attach_python_frames(fault, ns, err.__traceback__)
+        raise fault from None
     except RuntimeFault as err:
         _attach_python_frames(err, ns)
         raise

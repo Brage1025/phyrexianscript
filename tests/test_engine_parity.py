@@ -725,7 +725,109 @@ class EngineBugTests(unittest.TestCase):
         self.assertEqual(run_both(source)[1], ("after\n", None))
         assertParity(source)
 
-    @unittest.expectedFailure  # BUG-G: python -m phyx bench crashes with a TypeError when PHYX_TREEWALK=1.
+    def test_recursion_past_the_old_ceiling_agrees(self):
+        # 400 is 1024 host calls, past CPython's default ceiling of 1000.
+        source = (
+            "^ťe-n-cnt:\n"
+            "    ^ba-n-0-grmɒɣg:lo-0-'iţpənn.\n"
+            "    ^lo-n-1-mɒɣg-cnt-'iţpənn.\n"
+            "!400-cnt.\n"
+        )
+        self.assertEqual(run_both(source)[1], ("0\n", None))
+        assertParity(source)
+
+    def test_huge_text_repeat_is_a_fault(self):
+        source = '!"x"-100000000000-tøwp-samk.\n'
+        fault = (
+            "RuntimeFault",
+            "tøwp (times): the repetition is too great",
+            1,
+            "the maximum is 100000 items",
+        )
+        self.assertEqual(run_both(source)[1], ("", fault))
+        assertParity(source)
+
+    def test_text_repeat_stops_at_100000(self):
+        over = '!"x"-100001-tøwp-samk.\n'
+        fault = (
+            "RuntimeFault",
+            "tøwp (times): the repetition is too great",
+            1,
+            "the maximum is 100000 items",
+        )
+        self.assertEqual(run_both(over)[1], ("", fault))
+        assertParity(over)
+        at = '!"x"-100000-tøwp-samk.\n'
+        self.assertEqual(run_both(at)[1], ("100000\n", None))
+        assertParity(at)
+
+    def test_empty_repeat_of_a_huge_count_is_empty(self):
+        source = "!0-ťewn-100000000000-tøwp-samk.\n"
+        self.assertEqual(run_both(source)[1], ("0\n", None))
+        assertParity(source)
+
+    def test_huge_list_repeat_is_a_fault(self):
+        source = "!1-1-ťewn-100000000000-tøwp-samk.\n"
+        fault = (
+            "RuntimeFault",
+            "tøwp (times): the repetition is too great",
+            1,
+            "the maximum is 100000 items",
+        )
+        self.assertEqual(run_both(source)[1], ("", fault))
+        assertParity(source)
+
+    def test_negative_ronɣ_is_empty(self):
+        source = "!əx100000000000-ronɣ-samk.\n"
+        self.assertEqual(run_both(source)[1], ("0\n", None))
+        assertParity(source)
+
+    def test_ability_cannot_key_a_book(self):
+        source = "^ťe-f:\n    ^lo-1-'iţpənn.\n!f-naķm-1-1-tekt.\n"
+        fault = (
+            "RuntimeFault",
+            "a book cannot be keyed by a ability ('tekt')",
+            3,
+            None,
+        )
+        self.assertEqual(run_both(source)[1], ("", fault))
+        assertParity(source)
+
+    def test_research_of_non_utf8_is_a_fault(self):
+        with tempfile.TemporaryDirectory() as td:
+            (Path(td) / "bad.rukx").write_bytes(b"\xff")
+            source = '!"bad.rukx"-brøtjt.\n'
+            compiled, walked = run_both(source, base_dir=td)
+            self.assertIsInstance(compiled[1], tuple)
+            self.assertEqual(compiled[1][0], "RuntimeFault")
+            self.assertIn("cannot read", compiled[1][1])
+            assertParity(source)
+
+    def test_huge_ronɣ_is_a_fault(self):
+        source = "!100000000000-ronɣ-samk.\n"
+        fault = (
+            "RuntimeFault",
+            "ronɣ (turns): the count is too great",
+            1,
+            "the maximum is 100000 items",
+        )
+        self.assertEqual(run_both(source)[1], ("", fault))
+        assertParity(source)
+
+    def test_ronɣ_stops_at_100000(self):
+        over = "!100001-ronɣ-samk.\n"
+        fault = (
+            "RuntimeFault",
+            "ronɣ (turns): the count is too great",
+            1,
+            "the maximum is 100000 items",
+        )
+        self.assertEqual(run_both(over)[1], ("", fault))
+        assertParity(over)
+        at = "!100000-ronɣ-samk.\n"
+        self.assertEqual(run_both(at)[1], ("100000\n", None))
+        assertParity(at)
+
     def test_bug_g_bench_treewalk_typeerror(self):
         compiled = _bench_result(False)
         walked = _bench_result(True)

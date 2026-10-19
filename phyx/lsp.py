@@ -120,7 +120,7 @@ def abilities_in(
         visited.add(key)
         try:
             text = path.read_text(encoding="utf-8")
-        except OSError:
+        except (OSError, UnicodeError):
             continue
         nested = abilities_in(
             text,

@@ -111,13 +111,27 @@ def type_word(v: object) -> str:
 
 
 def values_equal(a: object, b: object) -> bool:
+    try:
+        return _values_equal(a, b)
+    except RecursionError:
+        raise _deep_value() from None
+
+
+def _values_equal(a: object, b: object) -> bool:
     if kind_of(a) != kind_of(b):
         return False
     if isinstance(a, list):
-        return len(a) == len(b) and all(values_equal(x, y) for x, y in zip(a, b))  # type: ignore[arg-type]
+        return len(a) == len(b) and all(_values_equal(x, y) for x, y in zip(a, b))  # type: ignore[arg-type]
     if isinstance(a, dict):
-        return a.keys() == b.keys() and all(values_equal(a[k], b[k]) for k in a)  # type: ignore[index]
+        return a.keys() == b.keys() and all(_values_equal(a[k], b[k]) for k in a)  # type: ignore[index]
     return a == b
+
+
+def _deep_value() -> RuntimeFault:
+    return RuntimeFault(
+        "this value is nested too deeply",
+        hint="a list or book this deep cannot be shown or compared",
+    )
 
 
 def format_number(n: int) -> str:
@@ -136,6 +150,13 @@ def to_text(v: object) -> str:
 
 def to_source(v: object) -> str:
     """How a value is written in a program (``krepg``, and items inside lists)."""
+    try:
+        return _to_source(v)
+    except RecursionError:
+        raise _deep_value() from None
+
+
+def _to_source(v: object) -> str:
     if v is None:
         return "əixiww"
     if isinstance(v, bool):
@@ -146,13 +167,13 @@ def to_source(v: object) -> str:
         escaped = v.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")
         return f'"{escaped}"'
     if isinstance(v, list):
-        parts = [to_source(x) for x in v] + [format_number(len(v)), "ťewn"]
+        parts = [_to_source(x) for x in v] + [format_number(len(v)), "ťewn"]
         return "-".join(parts)
     if isinstance(v, dict):
         parts: list[str] = []
         for k, val in v.items():
-            parts.append(to_source(k))
-            parts.append(to_source(val))
+            parts.append(_to_source(k))
+            parts.append(_to_source(val))
         parts += [format_number(len(v)), "tekt"]
         return "-".join(parts)
     if isinstance(v, Ability):
