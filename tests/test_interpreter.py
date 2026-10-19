@@ -1,4 +1,5 @@
 import io
+import os
 import unittest
 
 from phyx.errors import RuntimeFault, UserMistake
@@ -161,6 +162,42 @@ class AbilityTests(unittest.TestCase):
     def test_too_deep(self):
         with self.assertRaisesRegex(RuntimeFault, "too deeply"):
             run("^ťe-f:\n    ^lo-f-'iţpənn.\n!f.")
+
+    def test_compiled_recursion_of_8000_returns(self):
+        # 1f40 is 8000. The compiled engine uses one host frame per call.
+        src = (
+            "^ťe-n-cnt:\n"
+            "    ^ba-n-0-grmɒɣg:lo-0-'iţpənn.\n"
+            "    ^lo-n-1-mɒɣg-cnt-'iţpənn.\n"
+            "!1f40-cnt.\n"
+        )
+        self.assertEqual(run(src, treewalk=False), "0\n")
+
+    def test_phyx_recursion_sets_the_ceiling(self):
+        deep = (
+            "^ťe-n-cnt:\n"
+            "    ^ba-n-0-grmɒɣg:lo-0-'iţpənn.\n"
+            "    ^lo-n-1-mɒɣg-cnt-'iţpənn.\n"
+            "!100-cnt.\n"
+        )
+        shallow = deep.replace("!100-cnt.", "!20-cnt.")
+        previous = os.environ.get("PHYX_RECURSION")
+        os.environ["PHYX_RECURSION"] = "200"
+        try:
+            self.assertEqual(run(shallow, treewalk=False), "0\n")
+            with self.assertRaisesRegex(RuntimeFault, "too deeply"):
+                run(deep, treewalk=False)
+            os.environ["PHYX_RECURSION"] = "nope"
+            with self.assertRaisesRegex(RuntimeFault, "PHYX_RECURSION"):
+                run("!1.", treewalk=False)
+            os.environ["PHYX_RECURSION"] = "1000000"
+            with self.assertRaisesRegex(RuntimeFault, "does not fit"):
+                run("!1.", treewalk=False)
+        finally:
+            if previous is None:
+                os.environ.pop("PHYX_RECURSION", None)
+            else:
+                os.environ["PHYX_RECURSION"] = previous
 
     def test_ability_is_truthy_and_can_be_activated(self):
         src = (

@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from . import ast
+from .errors import nesting_fault
 from .hints import ENGLISH_NAME_TRAPS, ENGLISH_TO_PHYX
 from .vocabulary import CONSTANTS, MARKERS, VERBS
 
@@ -106,6 +107,13 @@ def _discarded_value(stmt: ast.Stmt) -> bool:
 
 
 def lint_program(program: list[ast.Stmt]) -> list[Note]:
+    try:
+        return _lint_program(program)
+    except RecursionError as err:
+        raise nesting_fault(err) from None
+
+
+def _lint_program(program: list[ast.Stmt]) -> list[Note]:
     notes: list[Note] = []
 
     def visit_block(stmts: list[ast.Stmt]) -> None:

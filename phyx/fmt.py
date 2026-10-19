@@ -6,6 +6,7 @@ invent sentences; it only rewrites punctuation and spacing of what is there.
 
 from __future__ import annotations
 
+from .errors import nesting_fault
 from .lexer import tokenize
 from .values import format_number, to_source
 
@@ -65,6 +66,13 @@ def _join_tokens(group) -> str:
 
 def format_source(source: str) -> str:
     """Return ``source`` with canonical separators and 4-space indents."""
+    try:
+        return _format_source(source)
+    except RecursionError as err:
+        raise nesting_fault(err) from None
+
+
+def _format_source(source: str) -> str:
     lines = source.replace("\r\n", "\n").replace("\r", "\n").split("\n")
     toks = tokenize(source)
     by_line: dict[int, list] = {}

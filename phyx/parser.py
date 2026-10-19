@@ -19,7 +19,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from . import ast
-from .errors import ParseError
+from .errors import ParseError, nesting_fault
 from .hints import ENGLISH_MARKERS
 from .lexer import Token, tokenize, transliterate
 from .conjugation import lemma_of
@@ -124,7 +124,7 @@ class Parser:
             )
         try:
             text = path.read_text(encoding="utf-8")
-        except OSError:
+        except (OSError, UnicodeError):
             return
         if path.suffix.lower() == ".vphyx":
             text = from_vertical(text)
@@ -566,9 +566,12 @@ def parse(
     known_functions: dict[str, int] | None = None,
     base_dir: Path | str | None = None,
 ) -> list[ast.Stmt]:
-    return Parser(
-        tokenize(source, ascii_mode=ascii_mode),
-        known_functions=known_functions,
-        base_dir=base_dir,
-        ascii_mode=ascii_mode,
-    ).parse_program()
+    try:
+        return Parser(
+            tokenize(source, ascii_mode=ascii_mode),
+            known_functions=known_functions,
+            base_dir=base_dir,
+            ascii_mode=ascii_mode,
+        ).parse_program()
+    except RecursionError as err:
+        raise nesting_fault(err) from None

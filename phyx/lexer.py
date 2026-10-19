@@ -23,7 +23,7 @@ from __future__ import annotations
 import unicodedata
 from dataclasses import dataclass
 
-from .errors import LexError
+from .errors import LexError, nesting_fault
 from .numerals import hex_digit, is_numeral_start, normalize_hex
 
 VOWELS = "iyeaɒoøuə"
@@ -156,6 +156,13 @@ def _indent_of(line: str) -> int:
 
 
 def tokenize(source: str, ascii_mode: bool = False) -> list[Token]:
+    try:
+        return _tokenize(source, ascii_mode)
+    except RecursionError as err:
+        raise nesting_fault(err) from None
+
+
+def _tokenize(source: str, ascii_mode: bool = False) -> list[Token]:
     source = unicodedata.normalize("NFC", source.lstrip("\ufeff"))
     if source.startswith("#!"):
         nl = source.find("\n")

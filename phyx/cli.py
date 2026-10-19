@@ -312,7 +312,8 @@ def cmd_bench(args: argparse.Namespace) -> int:
         return t
 
     def load_ability(src, name):
-        interp = Interpreter(stdout=io.StringIO())
+        # bench measures the compiled engine even when PHYX_TREEWALK=1.
+        interp = Interpreter(stdout=io.StringIO(), treewalk=False)
         interp.run(parse(src))
         ability = interp.globals.vars[name]
         return interp, ability.impl
@@ -327,7 +328,7 @@ def cmd_bench(args: argparse.Namespace) -> int:
     print(f"φyrx {__version__}  (compiles to CPython; timed after compile)")
     print(f"fib({n})   python {pf*1000:7.2f} ms   φyrx {cf*1000:7.2f} ms   {cf/pf:4.1f}×")
     print(f"loop {loops} python {pl*1000:7.2f} ms   φyrx {cl*1000:7.2f} ms   {cl/pl:4.1f}×")
-    print("Set PHYX_TREEWALK=1 to time the old AST walker.")
+    print("bench always times the compiled engine.")
     return 0
 
 
@@ -640,6 +641,9 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     except FileExistsError as err:
         print(f"ɬšeɴazv: already exists: {err.filename or err}", file=sys.stderr)
+        return 1
+    except OSError as err:
+        print(f"ɬšeɴazv: {err}", file=sys.stderr)
         return 1
     except ValueError as err:
         print(f"ɬšeɴazv: {err}", file=sys.stderr)
