@@ -24,6 +24,7 @@ from dataclasses import dataclass, field
 from . import ast
 from .builtins import IMPLS, put_into, _kinds
 from .errors import RuntimeFault, UserMistake
+from .hints import hint_for_unknown
 from .values import Ability, to_text, truthy, values_equal
 from .vocabulary import BLAME_WORD, GET_WORD
 
@@ -309,6 +310,102 @@ def _literal_text(value: object) -> str:
     return repr(value)
 
 
+def _fix_here(consts, seen, name, value, const, line):
+    """Bind a local ``'u``, or reject a later assignment of that local.
+
+    ``consts`` holds names fixed in this ability. ``seen`` holds names
+    already bound here, including a plain assignment before ``'u``.
+    """
+    if const and name in seen:
+        raise RuntimeFault(
+            f"'{name}' already has a value here and cannot be fixed in the past ('u)",
+            line,
+        )
+    if name in consts:
+        raise RuntimeFault(
+            f"'{name}' was fixed in the past ('u) and cannot change",
+            line,
+        )
+    if const:
+        consts.add(name)
+    seen.add(name)
+    return value
+
+
+def _load_dyn(locs, boxes, gvars, name, line):
+    """Read a name that may be local, outer, or not bound yet."""
+    if locs is not None and name in locs:
+        return locs[name]
+    for box in boxes:
+        if name in box:
+            return box[name]
+    if gvars is not None and name in gvars:
+        return gvars[name]
+    raise RuntimeFault(
+        f"unknown word '{name}'",
+        line,
+        hint=hint_for_unknown(name),
+    )
+
+
+def _store_dyn(locs, boxes, gvars, consts, k, name, value, const, line):
+    """Rebind an existing binding, or create a local when none exists yet.
+
+    ``locs`` is this ability's own bindings. ``boxes`` are enclosing
+    bindings, nearest first. ``gvars`` is the persistent module environment.
+    """
+    if locs is not None and name in locs:
+        if const or (k is not None and name in k):
+            if const:
+                raise RuntimeFault(
+                    f"'{name}' already has a value here and cannot be fixed in the past ('u)",
+                    line,
+                )
+            raise RuntimeFault(
+                f"'{name}' was fixed in the past ('u) and cannot change",
+                line,
+            )
+        locs[name] = value
+        return value
+    for box in boxes:
+        if name in box:
+            if const:
+                raise RuntimeFault(
+                    f"'{name}' already has a value here and cannot be fixed in the past ('u)",
+                    line,
+                )
+            if (consts is not None and name in consts) or (k is not None and name in k):
+                raise RuntimeFault(
+                    f"'{name}' was fixed in the past ('u) and cannot change",
+                    line,
+                )
+            box[name] = value
+            return value
+    if gvars is not None and name in gvars:
+        if const:
+            raise RuntimeFault(
+                f"'{name}' already has a value here and cannot be fixed in the past ('u)",
+                line,
+            )
+        if consts is not None and name in consts:
+            raise RuntimeFault(
+                f"'{name}' was fixed in the past ('u) and cannot change",
+                line,
+            )
+        gvars[name] = value
+        return value
+    if locs is None:
+        raise RuntimeFault(
+            f"unknown word '{name}'",
+            line,
+            hint=hint_for_unknown(name),
+        )
+    if const and k is not None:
+        k.add(name)
+    locs[name] = value
+    return value
+
+
 def _is_emitted_literal(py: str) -> bool:
     if py in ("True", "False", "None"):
         return True
@@ -338,6 +435,9 @@ _NS_NAMES = {
     "_put_at": _put_at,
     "_mkbook": _mkbook,
     "_verb": _verb,
+    "_load_dyn": _load_dyn,
+    "_store_dyn": _store_dyn,
+    "_fix_here": _fix_here,
     "Ability": Ability,
     "truthy": truthy,
     "to_text": to_text,
@@ -391,6 +491,19 @@ class Scope:
     const_names: set[str] = field(default_factory=set)
     calls: set[str] = field(default_factory=set)
     needs_rt: bool = False
+    # Names of this scope that a nested ability assigns. They live in ``box``
+    # so the ability can see whether the assignment has run yet.
+    captured: set[str] = field(default_factory=set)
+    # Names this scope stores with a runtime "rebind or create local" check.
+    dyn: set[str] = field(default_factory=set)
+    box: str | None = None
+    locs_name: str | None = None
+    needs_locs: bool = False
+    # Abilities defined directly in this block. Nested ones are not hoisted.
+    hoisted: set[str] = field(default_factory=set)
+    # Runtime sets for a local 'u (function scopes only).
+    const_set: str | None = None
+    seen_set: str | None = None
 
     def bound(self) -> set[str]:
         return set(self.params) | set(self.locals_) | set(self.funs)
@@ -412,6 +525,7 @@ class Emitter:
         self.n = 0
         self.const_anywhere: set[str] = set()
         self.ability_names: dict[str, str] = {}
+        self.box_n = 0
 
     def emit(self, line: str = "") -> None:
         if line == "":
@@ -432,8 +546,73 @@ class Emitter:
             for stmt in stmts:
                 if isinstance(stmt, ast.FuncDef):
                     scope.funs[stmt.name] = stmt
+                    scope.hoisted.add(stmt.name)
+        # Names assigned in this scope, including inside ba / baxuφ / aχəw' /
+        # the tried body, before any ability body is analysed.
+        self.collect_assigned(stmts, scope)
         for stmt in stmts:
             self.analyze_stmt(stmt, scope)
+
+    def collect_assigned(self, stmts: list[ast.Stmt], scope: Scope) -> None:
+        for stmt in stmts:
+            self._collect_stmt(stmt, scope)
+
+    def _collect_stmt(self, stmt: ast.Stmt, scope: Scope) -> None:
+        if isinstance(stmt, ast.FuncDef):
+            return
+        if isinstance(stmt, ast.ExprStmt):
+            for e in stmt.exprs:
+                self._collect_expr(e, scope)
+        elif isinstance(stmt, ast.Print):
+            for e in stmt.exprs:
+                self._collect_expr(e, scope)
+        elif isinstance(stmt, ast.Input):
+            for e in stmt.prompt:
+                self._collect_expr(e, scope)
+            self._collect_target(stmt.target, scope)
+        elif isinstance(stmt, ast.If):
+            self._collect_expr(stmt.cond, scope)
+            self.collect_assigned(stmt.body, scope)
+            if stmt.orelse:
+                self.collect_assigned(stmt.orelse, scope)
+        elif isinstance(stmt, ast.While):
+            self._collect_expr(stmt.cond, scope)
+            self.collect_assigned(stmt.body, scope)
+        elif isinstance(stmt, ast.For):
+            self._collect_expr(stmt.iterable, scope)
+            self.note_store(stmt.var, scope, const=False)
+            self.collect_assigned(stmt.body, scope)
+        elif isinstance(stmt, ast.Assert):
+            self._collect_expr(stmt.cond, scope)
+            if stmt.message is not None:
+                self._collect_expr(stmt.message, scope)
+        elif isinstance(stmt, ast.Try):
+            # The tried body and the handler share this scope.
+            self.collect_assigned(stmt.body, scope)
+            if stmt.handler:
+                self.note_store(BLAME_WORD, scope, const=False)
+                self.collect_assigned(stmt.handler, scope)
+
+    def _collect_expr(self, expr: ast.Expr, scope: Scope) -> None:
+        if isinstance(expr, ast.Assign):
+            self._collect_expr(expr.value, scope)
+            self._collect_target(expr.target, scope, const=expr.const)
+        elif isinstance(expr, ast.Call):
+            for a in expr.args:
+                self._collect_expr(a, scope)
+        elif isinstance(expr, ast.UserCall):
+            for a in expr.args:
+                self._collect_expr(a, scope)
+        elif isinstance(expr, ast.Return) and expr.value is not None:
+            self._collect_expr(expr.value, scope)
+
+    def _collect_target(self, target: ast.Expr, scope: Scope, const: bool = False) -> None:
+        if isinstance(target, ast.Name):
+            self.note_store(target.name, scope, const)
+            return
+        if isinstance(target, ast.Call):
+            for a in target.args:
+                self._collect_expr(a, scope)
 
     def analyze_stmt(self, stmt: ast.Stmt, scope: Scope) -> None:
         if isinstance(stmt, ast.FuncDef):
@@ -518,17 +697,51 @@ class Emitter:
             scope.const_names.add(name)
             self.const_anywhere.add(name)
             scope.needs_rt = True
-        if name in scope.params:
+            if name in scope.params or name in scope.funs:
+                return
+            # 'u binds in the running scope. It does not walk outward.
+            scope.locals_.add(name)
             return
-        if name in scope.funs:
+        if name in scope.params or name in scope.funs:
             return
         found = scope.parent.find(name) if scope.parent is not None else None
-        if found is not None:
-            if found.kind == "module" and found.persist and name not in found.funs:
-                return
-            scope.nonlocals.add(name)
+        if found is not None and name in found.funs:
+            if not (found.kind == "module" and self.persist):
+                scope.nonlocals.add(name)
             return
-        if scope.kind == "module" and scope.persist:
+        if found is not None:
+            if name in found.params:
+                scope.nonlocals.add(name)
+                return
+            if self.persist and found.kind == "module":
+                scope.dyn.add(name)
+                scope.needs_locs = True
+                scope.needs_rt = True
+                return
+            if self.persist and found.kind == "func" and name in found.locals_:
+                scope.dyn.add(name)
+                scope.needs_locs = True
+                scope.needs_rt = True
+                return
+            # The outer assignment may not have run yet. Remember the name so
+            # the store can rebind it when it exists, and create a local when
+            # it does not.
+            found.captured.add(name)
+            scope.dyn.add(name)
+            scope.needs_locs = True
+            if name in self.const_anywhere:
+                scope.needs_rt = True
+            return
+        if name in scope.locals_:
+            return
+        if scope.kind == "module" and self.persist:
+            scope.locals_.add(name)
+            return
+        if self.persist and scope.kind == "func":
+            scope.locals_.add(name)
+            scope.dyn.add(name)
+            scope.needs_locs = True
+            scope.needs_rt = True
             return
         scope.locals_.add(name)
 
@@ -561,13 +774,99 @@ class Emitter:
                         changed = True
                         break
 
+    def _prepare(self, scope: Scope) -> None:
+        if scope.captured:
+            self.box_n += 1
+            scope.box = f"_e{self.box_n}"
+        if scope.needs_locs:
+            self.box_n += 1
+            scope.locs_name = f"_l{self.box_n}"
+        tracked = scope.const_names - scope.params - set(scope.funs)
+        if scope.kind == "func" and tracked:
+            self.box_n += 1
+            scope.const_set = f"_c{self.box_n}"
+            self.box_n += 1
+            scope.seen_set = f"_s{self.box_n}"
+        for stmt in scope.funs.values():
+            child = getattr(stmt, "_phyx_scope", None)
+            if child is not None:
+                self._prepare(child)
+
+    def _chain(self, scope: Scope) -> list[str]:
+        """Enclosing binding dicts, nearest first."""
+        chain: list[str] = []
+        s = scope.parent
+        while s is not None:
+            if s.locs_name:
+                chain.append(s.locs_name)
+            if s.box:
+                chain.append(s.box)
+            s = s.parent
+        return chain
+
+    def _tuple(self, items: list[str]) -> str:
+        if not items:
+            return "()"
+        if len(items) == 1:
+            return f"({items[0]},)"
+        return "(" + ", ".join(items) + ")"
+
+    def _dyn_load(self, scope: Scope, name: str, line: int) -> str:
+        gvars = "_rt.globals.vars" if self.persist and scope.kind == "func" else "None"
+        locs = scope.locs_name or "None"
+        return (
+            f"_load_dyn({locs}, {self._tuple(self._chain(scope))}, "
+            f"{gvars}, {name!r}, {line})"
+        )
+
+    def _dyn_store(self, scope: Scope, name: str, val: str, const: bool, line: int) -> str:
+        gvars = "_rt.globals.vars" if self.persist and scope.kind == "func" else "None"
+        consts = "_rt.globals.consts" if scope.needs_rt or self.persist else "None"
+        locs = scope.locs_name or "None"
+        k = self._owner_const_set(scope, name)
+        return self.bind(
+            f"_store_dyn({locs}, {self._tuple(self._chain(scope))}, "
+            f"{gvars}, {consts}, {k}, {name!r}, {val}, {const}, {line})"
+        )
+
+    def _owner_const_set(self, scope: Scope, name: str) -> str:
+        owner = scope.find(name)
+        if owner is not None and owner.const_set and name in owner.const_names:
+            return owner.const_set
+        return "None"
+
+    def _always_bound(self, scope: Scope) -> set[str]:
+        """Names that exist for the whole time this scope can run."""
+        names: set[str] = set()
+        s: Scope | None = scope
+        while s is not None:
+            if s.kind == "func":
+                names |= s.params
+            else:
+                names |= s.hoisted
+            s = s.parent
+        return names
+
+    def _outer_dynamic(self, name: str, scope: Scope, found: Scope | None) -> bool:
+        if name in scope.dyn:
+            return True
+        if found is None or found is scope:
+            return False
+        if name in found.params or name in found.funs:
+            return False
+        return name in found.captured or name in found.dyn
+
     # -------------------------------------------------------------- emit
     def compile_program(self, program: list[ast.Stmt]) -> None:
         module = Scope(kind="module", persist=self.persist)
         self.analyze_block(program, module, hoist=True)
         self._propagate_rt(module)
+        self._prepare(module)
+        self._mark_program(program, module)
         self.emit("def __phyx_run(_rt):")
         self.indent += 1
+        if module.box:
+            self.emit(f"{module.box} = {{}}")
         if not program:
             self.emit("return")
         else:
@@ -591,14 +890,20 @@ class Emitter:
             if not rest and not funs:
                 self.emit("pass")
                 return
+            mark = len(self.lines)
             for stmt in rest:
                 self.emit_stmt(stmt, scope, in_ability, loop_depth)
+            if rest and len(self.lines) == mark:
+                self.emit("pass")
             return
         if not stmts:
             self.emit("pass")
             return
+        mark = len(self.lines)
         for stmt in stmts:
             self.emit_stmt(stmt, scope, in_ability, loop_depth)
+        if len(self.lines) == mark:
+            self.emit("pass")
 
     def emit_func(self, stmt: ast.FuncDef, outer: Scope) -> None:
         child: Scope = getattr(stmt, "_phyx_scope", None) or Scope(
@@ -615,6 +920,13 @@ class Emitter:
         if child.nonlocals:
             names = ", ".join(py_id(n) for n in sorted(child.nonlocals))
             self.emit(f"nonlocal {names}")
+        if child.box:
+            self.emit(f"{child.box} = {{}}")
+        if child.locs_name:
+            self.emit(f"{child.locs_name} = {{}}")
+        if child.const_set:
+            self.emit(f"{child.const_set} = set()")
+            self.emit(f"{child.seen_set} = set()")
         if not stmt.body:
             self.emit("return None")
         else:
@@ -736,11 +1048,8 @@ class Emitter:
             if stmt.handler is None:
                 self.emit("pass")
             else:
-                self.emit(
-                    f"{py_id(BLAME_WORD)} = _err.value if isinstance(_err, UserMistake) else _err.message"
-                )
-                if scope.kind == "module" and scope.persist:
-                    self.emit(f"_rt.gstore({BLAME_WORD!r}, {py_id(BLAME_WORD)}, False, {stmt.line})")
+                blame = "(_err.value if isinstance(_err, UserMistake) else _err.message)"
+                self.store_name(BLAME_WORD, blame, scope, False, stmt.line)
                 self.emit_block(stmt.handler, scope, False, in_ability, loop_depth)
             self.indent -= 1
             return
@@ -784,8 +1093,6 @@ class Emitter:
             )
             return
         py = self.expr(expr, scope, bind=False)
-        if isinstance(expr, (ast.Literal, ast.Name)):
-            return
         self.emit(py)
 
     def bind(self, py: str) -> str:
@@ -809,7 +1116,12 @@ class Emitter:
         if isinstance(expr, ast.Literal):
             return _literal_text(expr.value)
         if isinstance(expr, ast.Name):
-            return self.load(expr.name, scope, expr.line)
+            return self.load(
+                expr.name,
+                scope,
+                expr.line,
+                proven=getattr(expr, "_phyx_proven", False),
+            )
         if isinstance(expr, ast.Call):
             return self.emit_call(expr, scope, bind=bind)
         if isinstance(expr, ast.UserCall):
@@ -973,13 +1285,154 @@ class Emitter:
             expr = f"{_UNARY[word]}({a}, {line})"
         return self.maybe_bind(expr, bind)
 
-    def load(self, name: str, scope: Scope, line: int) -> str:
+    def load(self, name: str, scope: Scope, line: int, proven: bool = False) -> str:
         found = scope.find(name)
+        if self._outer_dynamic(name, scope, found):
+            return self._dyn_load(scope, name, line)
         if found is None:
             return f"_rt.load({name!r}, {line})"
         if found.kind == "module" and found.persist and name not in found.funs:
             return f"_rt.load({name!r}, {line})"
-        return py_id(name)
+        if found is scope and name in scope.captured:
+            return f"_load_dyn(None, ({scope.box},), None, {name!r}, {line})"
+        py = py_id(name)
+        if proven:
+            return py
+        return self._checked_load(py, name, line)
+
+    def _checked_load(self, py: str, name: str, line: int) -> str:
+        """A Python local the analysis cannot prove is bound before this read."""
+        tmp = self.tmp()
+        hint = hint_for_unknown(name)
+        self.emit("try:")
+        self.indent += 1
+        self.emit(f"{tmp} = {py}")
+        self.indent -= 1
+        # A local read raises UnboundLocalError. A free variable that the
+        # enclosing scope has not bound yet raises NameError (3.14+).
+        self.emit("except NameError:")
+        self.indent += 1
+        self.emit(
+            f"raise RuntimeFault({f'unknown word {name!r}'!r}, {line}, hint={hint!r})"
+        )
+        self.indent -= 1
+        return tmp
+
+    def _store_local_const(
+        self,
+        name: str,
+        val: str,
+        scope: Scope,
+        const: bool,
+        line: int,
+    ) -> str:
+        """'u in an ability binds here, even when an outer name has the same spelling."""
+        rhs = (
+            f"_fix_here({scope.const_set}, {scope.seen_set}, {name!r}, "
+            f"{val}, {const}, {line})"
+        )
+        if name in scope.captured and scope.box:
+            self.emit(f"{scope.box}[{name!r}] = {rhs}")
+            return f"{scope.box}[{name!r}]"
+        py = py_id(name)
+        self.emit(f"{py} = {rhs}")
+        return py
+
+    def _mark_program(self, program: list[ast.Stmt], module: Scope) -> None:
+        for stmt in module.funs.values():
+            self._mark_func(stmt)
+        self._mark_block(program, module, set(module.hoisted), skip_funcs=True)
+
+    def _mark_func(self, stmt: ast.FuncDef) -> None:
+        child: Scope | None = getattr(stmt, "_phyx_scope", None)
+        if child is None:
+            return
+        for nested in child.funs.values():
+            self._mark_func(nested)
+        self._mark_block(stmt.body, child, set(stmt.params), skip_funcs=False)
+
+    def _mark_block(
+        self,
+        stmts: list[ast.Stmt],
+        scope: Scope,
+        proven: set[str],
+        skip_funcs: bool,
+    ) -> set[str]:
+        for stmt in stmts:
+            if skip_funcs and isinstance(stmt, ast.FuncDef):
+                continue
+            proven = self._mark_stmt(stmt, scope, proven)
+        return proven
+
+    def _mark_stmt(self, stmt: ast.Stmt, scope: Scope, proven: set[str]) -> set[str]:
+        if isinstance(stmt, ast.FuncDef):
+            self._mark_func(stmt)
+            return proven | {stmt.name}
+        if isinstance(stmt, ast.ExprStmt):
+            for e in stmt.exprs:
+                proven = self._mark_expr(e, scope, proven)
+            return proven
+        if isinstance(stmt, ast.Print):
+            for e in stmt.exprs:
+                proven = self._mark_expr(e, scope, proven)
+            return proven
+        if isinstance(stmt, ast.Input):
+            for e in stmt.prompt:
+                proven = self._mark_expr(e, scope, proven)
+            if isinstance(stmt.target, ast.Name):
+                return proven | {stmt.target.name}
+            return self._mark_expr(stmt.target, scope, proven)
+        if isinstance(stmt, ast.If):
+            proven = self._mark_expr(stmt.cond, scope, proven)
+            then_p = self._mark_block(stmt.body, scope, proven, skip_funcs=False)
+            if stmt.orelse:
+                else_p = self._mark_block(stmt.orelse, scope, proven, skip_funcs=False)
+            else:
+                else_p = proven
+            return then_p & else_p
+        if isinstance(stmt, ast.While):
+            self._mark_expr(stmt.cond, scope, proven)
+            self._mark_block(stmt.body, scope, proven, skip_funcs=False)
+            return proven
+        if isinstance(stmt, ast.For):
+            proven = self._mark_expr(stmt.iterable, scope, proven)
+            self._mark_block(stmt.body, scope, proven | {stmt.var}, skip_funcs=False)
+            return proven
+        if isinstance(stmt, ast.Assert):
+            proven = self._mark_expr(stmt.cond, scope, proven)
+            if stmt.message is not None:
+                proven = self._mark_expr(stmt.message, scope, proven)
+            return proven
+        if isinstance(stmt, ast.Try):
+            body_p = self._mark_block(stmt.body, scope, proven, skip_funcs=False)
+            if stmt.handler:
+                hand_p = self._mark_block(
+                    stmt.handler, scope, proven | {BLAME_WORD}, skip_funcs=False
+                )
+                return body_p & hand_p
+            return body_p
+        return proven
+
+    def _mark_expr(self, expr: ast.Expr, scope: Scope, proven: set[str]) -> set[str]:
+        if isinstance(expr, ast.Name):
+            expr._phyx_proven = (  # type: ignore[attr-defined]
+                expr.name in proven or expr.name in self._always_bound(scope)
+            )
+            return proven
+        if isinstance(expr, (ast.Literal, ast.Break, ast.Continue)):
+            return proven
+        if isinstance(expr, ast.Assign):
+            proven = self._mark_expr(expr.value, scope, proven)
+            if isinstance(expr.target, ast.Name):
+                return proven | {expr.target.name}
+            return self._mark_expr(expr.target, scope, proven)
+        if isinstance(expr, (ast.Call, ast.UserCall)):
+            for a in expr.args:
+                proven = self._mark_expr(a, scope, proven)
+            return proven
+        if isinstance(expr, ast.Return) and expr.value is not None:
+            return self._mark_expr(expr.value, scope, proven)
+        return proven
 
     def store(
         self,
@@ -1011,6 +1464,40 @@ class Emitter:
     ) -> str:
         py = py_id(name)
         found = scope.find(name)
+        if (
+            scope.kind == "func"
+            and const
+            and (name in scope.params or name in scope.funs)
+        ):
+            already = (
+                f"'{name}' already has a value here and cannot be fixed in the past ('u)"
+            )
+            self.emit(f"raise RuntimeFault({already!r}, {line})")
+            return "None"
+        if (
+            scope.kind == "func"
+            and name in scope.const_names
+            and name not in scope.params
+            and name not in scope.funs
+        ):
+            return self._store_local_const(name, val, scope, const, line)
+        if self._outer_dynamic(name, scope, found):
+            return self._dyn_store(scope, name, val, const, line)
+        if scope.kind == "module" and self.persist and name not in scope.funs:
+            if const:
+                rhs = f"_rt.fix({name!r}, {val}, {line})"
+            else:
+                rhs = f"_rt.setv({name!r}, {val}, {line}, True)"
+            return self.bind(rhs)
+        if found is scope and name in scope.captured:
+            if const:
+                rhs = f"_rt.fix({name!r}, {val}, {line})"
+            elif name in self.const_anywhere:
+                rhs = f"_rt.setv({name!r}, {val}, {line}, {self.persist})"
+            else:
+                rhs = val
+            self.emit(f"{scope.box}[{name!r}] = {rhs}")
+            return f"{scope.box}[{name!r}]"
         persist_env = scope.kind == "module" or (
             found is not None
             and found.kind == "module"

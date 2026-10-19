@@ -231,9 +231,15 @@ class Interpreter:
             except RuntimeFault as err:
                 if stmt.handler is None:
                     return
-                handler_env = Env(parent=env)
-                handler_env.vars[BLAME_WORD] = err.value if isinstance(err, UserMistake) else err.message
-                self.exec_block(stmt.handler, handler_env)
+                # The handler shares this scope. dekp stays bound afterwards.
+                blame = err.value if isinstance(err, UserMistake) else err.message
+                try:
+                    env.assign(BLAME_WORD, blame)
+                except RuntimeFault as fault:
+                    if fault.line is None:
+                        fault.line = stmt.line
+                    raise
+                self.exec_block(stmt.handler, env)
 
         else:  # pragma: no cover
             raise RuntimeFault(f"unknown sentence {type(stmt).__name__}", stmt.line)

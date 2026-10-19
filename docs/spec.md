@@ -92,6 +92,20 @@ Sentences run in order. `ťe` names are visible throughout the file (and in file
 
 `'u` constants cannot be rebound. Assignment is an expression and yields the value. Order is **value then place**.
 
+### Scope
+
+An assignment looks for a binding of that name that already exists, starting in the scope that is running and walking outward through each enclosing ability to the file. A parameter is a binding of its ability from the moment the body runs.
+
+If a binding is found, the assignment rebinds it. Rebinding a name that was fixed with `'u` is a fault. If none is found, the assignment creates a local of the scope that is running. This choice is made when the assignment runs, not when the ability is defined.
+
+A name is a binding of a scope once an assignment in that scope has run, including an assignment inside `ba`, `baxuφ`, `aχəw'`, or `baqilx`. The tried body and the `qit` handler share the scope that contains the sentence. An ability rebinds that name only after the assignment has run. Before then the ability's assignment is a local, and a read of the outer name is an unknown word.
+
+`'u` fixes a name in the scope that is running. It does not walk outward, so it may shadow an outer name. A later assignment of that local constant is a fault: the name was fixed in the past (`'u`) and cannot change. Fixing a name that already has a value in the running scope is also a fault.
+
+The item of `aχəw'` and the target of `?` are bindings of the scope that contains the sentence, once the loop or the question has run. An empty loop does not bind the item. The `qit` handler runs in that same scope: `dekp` is assigned there and stays bound after the handler, and so does any other name or ability bound in the handler.
+
+In a persistent session the file's bindings survive from one sentence to the next, so a later ability rebinds a name an earlier sentence already bound.
+
 An ability applied to fewer objects than its arity is the ability value, not a call. A zero-parameter ability is always a call; quote it with `naķm`.
 
 Lists and books take a **plain numeral count** immediately before the verb: `1-2-3-3-ťewn`. Empty: `0-ťewn`.
