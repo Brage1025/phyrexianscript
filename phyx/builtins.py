@@ -8,6 +8,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Callable
 
 from .errors import RuntimeFault, UserMistake
+from .limits import memory_fault, repeat_sequence, take_turns
 from .paths import note_hint, resolve_note, resolve_spread
 from .values import (
     Ability,
@@ -63,8 +64,12 @@ def _index(coll: list | str, key: object, verb_word: str) -> int:
 
 
 def _hashable(key: object, verb_word: str) -> object:
-    if isinstance(key, (list, dict)):
-        raise RuntimeFault(f"a book cannot be keyed by a {kind_of(key)} ('{verb_word}')")
+    try:
+        hash(key)
+    except TypeError:
+        raise RuntimeFault(
+            f"a book cannot be keyed by a {kind_of(key)} ('{verb_word}')"
+        ) from None
     return key
 
 
@@ -72,12 +77,15 @@ def _hashable(key: object, verb_word: str) -> object:
 @verb("babg")
 def _add(interp, args):
     a, b = args
-    if is_number(a) and is_number(b):
-        return a + b
-    if isinstance(a, str) and isinstance(b, str):
-        return a + b
-    if isinstance(a, list) and isinstance(b, list):
-        return a + b
+    try:
+        if is_number(a) and is_number(b):
+            return a + b
+        if isinstance(a, str) and isinstance(b, str):
+            return a + b
+        if isinstance(a, list) and isinstance(b, list):
+            return a + b
+    except MemoryError:
+        raise memory_fault() from None
     raise RuntimeFault(
         f"cannot add {_kinds(a, b)}",
         hint="babg adds two numbers, two texts, or two lists",
@@ -96,7 +104,7 @@ def _mul(interp, args):
     if is_number(a) and is_number(b):
         return a * b
     if isinstance(a, (str, list)) and is_number(b):
-        return a * b
+        return repeat_sequence(a, b, "tøwp (times)")
     raise RuntimeFault(f"cannot multiply {_kinds(a, b)}")
 
 
@@ -257,7 +265,7 @@ def _book(interp, args):
 @verb("ronɣ")
 def _turns(interp, args):
     n = _need_number(args[0], "ronɣ")
-    return list(range(n))
+    return take_turns(n)
 
 
 @verb("tapq")
@@ -461,7 +469,7 @@ def _research(interp, args):
         )
     try:
         return p.read_text(encoding="utf-8")
-    except OSError as err:
+    except (OSError, UnicodeError) as err:
         raise RuntimeFault(
             f"brøtjt (research) cannot read '{path}': {err}",
             hint=note_hint(path, interp.base_dir),
@@ -480,6 +488,6 @@ def _spread(interp, args):
     try:
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text(text, encoding="utf-8")
-    except OSError as err:
+    except (OSError, UnicodeError) as err:
         raise RuntimeFault(f"mɴyrx (spread) cannot write '{path}': {err}") from err
     return text

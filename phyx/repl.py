@@ -224,6 +224,8 @@ class Repl:
                 base_dir=self.interp.base_dir,
             )
             self.interp.run(program)
+        except KeyboardInterrupt:
+            self.write("\n")
         except PhyrexianError as err:
             self.write(format_error(err, text) + "\n")
         except SystemExit:
