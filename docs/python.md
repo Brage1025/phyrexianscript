@@ -96,6 +96,8 @@ Python’s `import math` is a file of abilities here:
 
 The old AST walker is `PHYX_TREEWALK=1` — about a hundred times slower, same results.
 
+A name the compiler can prove is bound before the read — a parameter, a hoisted ability, or a local assigned on every path before that read — is a direct Python load. `fib` and a counted loop stay ordinary Python. A name it cannot prove is bound is loaded with a check that raises unknown word, with the hint and line, instead of `UnboundLocalError`. The check is only on those reads.
+
 ASCII-capital spelling (`TTE''` for `ţə''`) is `--ascii`, including on `check`, `lint`, and `dis`. `python -m phyx lint` does not treat `fn` as a mistake: that is the usual name for a stored ability.
 
 ---

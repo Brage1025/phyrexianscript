@@ -105,6 +105,8 @@ The first word after `^` selects the sentence. If it is omitted, it is `xe`. `!`
 
 **Try.** `baqilx` without a following `qit` *ignores* the mistake and continues. With `qit`, `dekp` holds the raised value (for `ɬšeɴazv`) or the fault message (for runtime faults). `lups` / `'iţpənn` / `ɢnagɮ` are not mistakes; they pass through `baqilx`.
 
+**Scope.** An assignment rebinds a name that is already bound in the running scope or an enclosing one, and otherwise creates a local. It decides when it runs. A name assigned in the file or in an ability — including inside `ba`, `baxuφ`, `aχəw'`, or `baqilx` — is a binding of that scope once the assignment has run. The tried body and the `qit` handler share that scope, so `dekp` and any other name or ability bound in the handler stay bound afterwards. The item of `aχəw'` and the target of `?` are the same kind of binding; an empty loop does not bind the item. `'u` fixes a name in the running scope and may shadow an outer name. A later assignment of that local constant is a fault, and so is fixing a name that already has a value there. In a persistent session, a later sentence sees the bindings of earlier ones.
+
 ---
 
 ## Standard verbs

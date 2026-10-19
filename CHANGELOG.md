@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Behaviour change: a `qit` handler runs in the enclosing scope, the same scope as the tried body. `dekp` is assigned there and stays bound after the handler, and a name or ability bound in the handler stays bound.
+- `'u` in an ability fixes a name of that ability and may shadow an outer name. A later plain assignment of that local constant is a fault (`was fixed in the past ('u) and cannot change`).
+- A read of a name that is not bound yet is an unknown word, with the usual hint and line. That includes a read before a later assignment, a read after an untaken `ba`, a read after an empty `aχəw'`, and a sentence that is only a name or a literal. A compiled block that would otherwise be empty is `pass`.
+- An ability rebinds a module name, a name of an enclosing ability, a loop item, or a question target when that binding already exists, and otherwise creates a local. An ability defined in the handler rebinds `dekp`. The compiled engine decides this when the assignment runs, so a name assigned later in the file, inside `ba` / `baxuφ` / `aχəw'`, or by an earlier persistent sentence, matches the tree-walker.
 - Pure abilities no longer compile arithmetic to raw Python operators. Divide by zero, a bad kind, a negative `lu'f`, and adding a truth are `RuntimeFault`s with the tree-walker's message and hint, so `baqilx` can catch them. `əx` uses `truthy()`. The type test is skipped only when both objects are provably numbers.
 - A negative number literal is parenthesised in the generated Python, so `əx2-2-lu'f` is 4 (`(-2) ** 2`), not `-(2 ** 2)`.
 - Operands are evaluated left to right. When a later operand needs statements, each earlier operand that is not a literal is copied into a temporary first. `y-bump-babg` reads `y` before `bump` runs, in an ability and at module level.
