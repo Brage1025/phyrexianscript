@@ -516,6 +516,11 @@ class Scope:
     # Runtime sets for a local 'u (function scopes only).
     const_set: str | None = None
     seen_set: str | None = None
+    # 'u of a name that already exists further out. The local appears when
+    # 'u runs, so a read before that still sees the outer binding. The slot
+    # name is unique to this scope so a nested ability can read it.
+    late_const: set[str] = field(default_factory=set)
+    late_slot: dict[str, str] = field(default_factory=dict)
 
     def bound(self) -> set[str]:
         return set(self.params) | set(self.locals_) | set(self.funs)
@@ -711,7 +716,12 @@ class Emitter:
             scope.needs_rt = True
             if name in scope.params or name in scope.funs:
                 return
-            # 'u binds in the running scope. It does not walk outward.
+            # 'u binds in the running scope when it runs. It does not walk
+            # outward, and it must not hide an outer binding from a read
+            # that happens before it.
+            if scope.kind == "func" and self._outer_has(scope, name):
+                scope.late_const.add(name)
+                return
             scope.locals_.add(name)
             return
         if name in scope.params or name in scope.funs:
@@ -793,6 +803,10 @@ class Emitter:
         if scope.needs_locs:
             self.box_n += 1
             scope.locs_name = f"_l{self.box_n}"
+        if scope.late_const:
+            for name in sorted(scope.late_const):
+                self.box_n += 1
+                scope.late_slot[name] = f"_u{self.box_n}"
         tracked = scope.const_names - scope.params - set(scope.funs)
         if scope.kind == "func" and tracked:
             self.box_n += 1
@@ -858,6 +872,26 @@ class Emitter:
                 names |= s.hoisted
             s = s.parent
         return names
+
+    def _outer_has(self, scope: Scope, name: str) -> bool:
+        """True when a binding of ``name`` exists outside ``scope``."""
+        if scope.parent is not None and scope.parent.find(name) is not None:
+            return True
+        s = scope.parent
+        while s is not None:
+            if name in s.late_const:
+                return True
+            s = s.parent
+        return False
+
+    def _closer_late(self, scope: Scope, name: str, found: Scope | None) -> Scope | None:
+        """The nearest ``'u`` slot that is inside ``found`` (or anywhere, if none)."""
+        s: Scope | None = scope
+        while s is not None and s is not found:
+            if name in s.late_const:
+                return s
+            s = s.parent
+        return None
 
     def _outer_dynamic(self, name: str, scope: Scope, found: Scope | None) -> bool:
         if name in scope.dyn:
@@ -1306,6 +1340,9 @@ class Emitter:
 
     def load(self, name: str, scope: Scope, line: int, proven: bool = False) -> str:
         found = scope.find(name)
+        late = self._closer_late(scope, name, found)
+        if late is not None:
+            return self._load_late(name, late, line)
         if self._outer_dynamic(name, scope, found):
             return self._dyn_load(scope, name, line)
         if found is None:
@@ -1334,6 +1371,85 @@ class Emitter:
         self.emit(
             f"raise RuntimeFault({f'unknown word {name!r}'!r}, {line}, hint={hint!r})"
         )
+        self.indent -= 1
+        return tmp
+
+    def _load_late(self, name: str, late: Scope, line: int) -> str:
+        """Read a ``'u`` local, or the binding outside it when ``'u`` has not run."""
+        tmp = self.tmp()
+        slot = late.late_slot[name]
+        self.emit("try:")
+        self.indent += 1
+        self.emit(f"{tmp} = {slot}")
+        self.indent -= 1
+        self.emit("except NameError:")
+        self.indent += 1
+        outer = late.parent
+        if outer is None:  # pragma: no cover - 'u shadows something outside this scope
+            hint = hint_for_unknown(name)
+            self.emit(
+                f"raise RuntimeFault({f'unknown word {name!r}'!r}, {line}, hint={hint!r})"
+            )
+            self.emit(f"{tmp} = None")
+        else:
+            loaded = self.load(name, outer, line)
+            self.emit(f"{tmp} = {loaded}")
+        self.indent -= 1
+        return tmp
+
+    def _late_plain_scopes(self, scope: Scope, name: str) -> list[Scope]:
+        """``'u`` slots a plain assignment must see, nearest first.
+
+        A slot that does not exist yet is skipped: the assignment walks
+        onward. A slot that exists was fixed, so the assignment faults.
+        The walk stops at a parameter or ability, which is always bound.
+        """
+        found: list[Scope] = []
+        s: Scope | None = scope
+        while s is not None:
+            if name in s.params or name in s.funs:
+                break
+            if name in s.late_const:
+                found.append(s)
+            s = s.parent
+        return found
+
+    def _store_own_late(self, name: str, val: str, scope: Scope, line: int) -> str:
+        """``'u`` in the ability that owns the slot. It does not walk outward."""
+        slot = scope.late_slot[name]
+        rhs = (
+            f"_fix_here({scope.const_set}, {scope.seen_set}, {name!r}, "
+            f"{val}, True, {line})"
+        )
+        self.emit(f"{slot} = {rhs}")
+        return slot
+
+    def _store_guard(
+        self,
+        slots: list[Scope],
+        name: str,
+        val: str,
+        scope: Scope,
+        line: int,
+    ) -> str:
+        """Plain assignment that may meet a ``'u`` slot closer than the outer binding."""
+        if not slots:
+            return self._store_resolved(name, val, scope, False, line)
+        slot = slots[0].late_slot[name]
+        tmp = self.tmp()
+        self.emit("try:")
+        self.indent += 1
+        self.emit(f"{tmp} = {slot}")
+        self.indent -= 1
+        self.emit("except NameError:")
+        self.indent += 1
+        rebound = self._store_guard(slots[1:], name, val, scope, line)
+        self.emit(f"{tmp} = {rebound}")
+        self.indent -= 1
+        self.emit("else:")
+        self.indent += 1
+        msg = f"'{name}' was fixed in the past ('u) and cannot change"
+        self.emit(f"raise RuntimeFault({msg!r}, {line})")
         self.indent -= 1
         return tmp
 
@@ -1481,6 +1597,22 @@ class Emitter:
         const: bool,
         line: int,
     ) -> str:
+        if scope.kind == "func" and const and name in scope.late_const:
+            return self._store_own_late(name, val, scope, line)
+        if scope.kind == "func" and not const:
+            slots = self._late_plain_scopes(scope, name)
+            if slots:
+                return self._store_guard(slots, name, val, scope, line)
+        return self._store_resolved(name, val, scope, const, line)
+
+    def _store_resolved(
+        self,
+        name: str,
+        val: str,
+        scope: Scope,
+        const: bool,
+        line: int,
+    ) -> str:
         py = py_id(name)
         found = scope.find(name)
         if (
@@ -1496,6 +1628,7 @@ class Emitter:
         if (
             scope.kind == "func"
             and name in scope.const_names
+            and name not in scope.late_const
             and name not in scope.params
             and name not in scope.funs
         ):
