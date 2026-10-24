@@ -109,6 +109,12 @@ class Interpreter:
             raise RuntimeFault("lups (stop) used outside of a loop")
         except _Continue:
             raise RuntimeFault("ɢnagɮ (next) used outside of a loop")
+        except RuntimeFault as err:
+            # The overflow is raised on whichever call happened to be deepest.
+            # A line would name that call and the compiled engine has none.
+            if err.message == "the abilities called each other too deeply":
+                err.line = None
+            raise
 
     def load(self, name: str, line: int = 0) -> object:
         try:

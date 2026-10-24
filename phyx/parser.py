@@ -188,6 +188,7 @@ class Parser:
         tok = self.peek()
         if tok.kind != "EOF":
             raise ParseError(f"unexpected {self._describe(tok)}", tok.line, tok.col)
+        self._reject_misplaced_control(stmts)
         return stmts
 
     def parse_block(self, indent: int) -> list[ast.Stmt]:
@@ -558,6 +559,103 @@ class Parser:
                                  tok.line, tok.col)
 
             stack.append(ast.Name(word, line=tok.line))
+
+    # ------------------------------------------------------- control words
+    def _reject_misplaced_control(self, stmts: list[ast.Stmt]) -> None:
+        """``'iţpənn`` needs an ability. ``lups`` and ``ɢnagɮ`` need a loop.
+
+        The loop has to be written in the same ability. A caller that is
+        itself in a loop does not make them legal: both engines already
+        fault when the word leaves the ability. The walk uses its own
+        stack so a deep phrase does not spend the host recursion budget.
+        """
+        pending: list[tuple] = [("block", stmts, False, False)]
+        while pending:
+            kind, node, in_ability, in_loop = pending.pop()
+            if kind == "block":
+                for stmt in reversed(node):
+                    pending.append(("stmt", stmt, in_ability, in_loop))
+                continue
+            if kind == "exprs":
+                for expr in reversed(node):
+                    pending.append(("expr", expr, in_ability, in_loop))
+                continue
+            if kind == "stmt":
+                self._queue_stmt(pending, node, in_ability, in_loop)
+                continue
+            self._queue_expr(pending, node, in_ability, in_loop)
+
+    def _queue_stmt(self, pending: list[tuple], stmt: ast.Stmt, in_ability: bool, in_loop: bool) -> None:
+        if isinstance(stmt, ast.FuncDef):
+            pending.append(("block", stmt.body, True, False))
+            return
+        if isinstance(stmt, ast.While):
+            pending.append(("block", stmt.body, in_ability, True))
+            pending.append(("expr", stmt.cond, in_ability, in_loop))
+            return
+        if isinstance(stmt, ast.For):
+            pending.append(("block", stmt.body, in_ability, True))
+            pending.append(("expr", stmt.iterable, in_ability, in_loop))
+            return
+        if isinstance(stmt, ast.If):
+            if stmt.orelse:
+                pending.append(("block", stmt.orelse, in_ability, in_loop))
+            pending.append(("block", stmt.body, in_ability, in_loop))
+            pending.append(("expr", stmt.cond, in_ability, in_loop))
+            return
+        if isinstance(stmt, ast.Try):
+            if stmt.handler:
+                pending.append(("block", stmt.handler, in_ability, in_loop))
+            pending.append(("block", stmt.body, in_ability, in_loop))
+            return
+        if isinstance(stmt, ast.ExprStmt):
+            pending.append(("exprs", stmt.exprs, in_ability, in_loop))
+            return
+        if isinstance(stmt, ast.Print):
+            pending.append(("exprs", stmt.exprs, in_ability, in_loop))
+            return
+        if isinstance(stmt, ast.Input):
+            pending.append(("expr", stmt.target, in_ability, in_loop))
+            pending.append(("exprs", stmt.prompt, in_ability, in_loop))
+            return
+        if isinstance(stmt, ast.Assert):
+            if stmt.message is not None:
+                pending.append(("expr", stmt.message, in_ability, in_loop))
+            pending.append(("expr", stmt.cond, in_ability, in_loop))
+
+    def _queue_expr(self, pending: list[tuple], expr: ast.Expr, in_ability: bool, in_loop: bool) -> None:
+        if isinstance(expr, ast.Return):
+            if not in_ability:
+                raise ParseError(
+                    "'iţpənn (return) used outside of an ability",
+                    expr.line,
+                    hint="'iţpənn returns from the ability that is running; write it inside ťe",
+                )
+            if expr.value is not None:
+                pending.append(("expr", expr.value, in_ability, in_loop))
+            return
+        if isinstance(expr, ast.Break):
+            if not in_loop:
+                raise ParseError(
+                    "lups (stop) used outside of a loop",
+                    expr.line,
+                    hint="lups leaves a baxuφ or aχəw'; write it inside that loop",
+                )
+            return
+        if isinstance(expr, ast.Continue):
+            if not in_loop:
+                raise ParseError(
+                    "ɢnagɮ (next) used outside of a loop",
+                    expr.line,
+                    hint="ɢnagɮ skips to the next turn of a baxuφ or aχəw'; write it inside that loop",
+                )
+            return
+        if isinstance(expr, ast.Assign):
+            pending.append(("expr", expr.target, in_ability, in_loop))
+            pending.append(("expr", expr.value, in_ability, in_loop))
+            return
+        if isinstance(expr, (ast.Call, ast.UserCall)):
+            pending.append(("exprs", expr.args, in_ability, in_loop))
 
 
 def parse(
