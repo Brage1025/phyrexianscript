@@ -1280,6 +1280,81 @@ BUG_Q_WALKER = (
     ("ParseError", "ɢnagɮ (next) used outside of a loop", 2, _NEXT_HINT),
 )
 
+# 'u of the enclosing loop's item, when that name also exists outside.
+# The same text without a persistent session is LOOP_CONST, and the engines
+# agree. In a persistent session the tree-walker prints 0 and then faults on
+# the 'u. The compiled engine faults with an unknown word on the print.
+BUG_R = (
+    "^ťe-fbx:\n"
+    "    ^aχəw'-w-dl-2-ronɣ:\n"
+    "        !w.\n"
+    "        ^aχəw'-y-dl-2-ronɣ:\n"
+    "            ^'u-2-w-ţə''.\n"
+    "^xe-fbx.\n"
+)
+BUG_R_WALKER = (
+    "0\n",
+    (
+        "RuntimeFault",
+        "'w' already has a value here and cannot be fixed in the past ('u)",
+        5,
+        None,
+    ),
+)
+
+# 'u in a qit handler of a name bound in the baqilx body of the same ability.
+# The program without the last line agrees: both engines fault on the 'u.
+# The tried body does fault (unknown y) and both engines catch that the same
+# way, so the handler runs. A later module assignment of the same name is
+# what still separates them. The tree-walker faults on the 'u. The compiled
+# engine does not fault.
+BUG_S = (
+    "^ťe-fbx:\n"
+    "    ^baqilx:\n"
+    "        ^1-z-ţə''.\n"
+    "        ^y-1-babg-y-ţə''.\n"
+    "    ^qit:\n"
+    "        ^'u-3-z-ţə''.\n"
+    "^xe-fbx.\n"
+    "^0-z-ţə''.\n"
+)
+BUG_S_WALKER = (
+    "",
+    (
+        "RuntimeFault",
+        "'z' already has a value here and cannot be fixed in the past ('u)",
+        6,
+        None,
+    ),
+)
+
+# A second 'u of the same name, in a different nested block of the handler.
+# The second 'u is not reached. The tree-walker faults on the first 'u.
+# The compiled engine faults on the aχəw' above it, and its message is
+# "'y' was fixed in the past ('u) and cannot change".
+BUG_T = (
+    "^baqilx:\n"
+    "    !w.\n"
+    "    ^aχəw'-y-dl-3-ronɣ:\n"
+    "        !y.\n"
+    "^qit:\n"
+    "    ^ťe-fcx:\n"
+    "        ^aχəw'-y-dl-3-ronɣ:\n"
+    "            ^'u-2-y-ţə''.\n"
+    "    ^xe-fcx.\n"
+    "    ^baqilx:\n"
+    "        ^'u-3-y-ţə''.\n"
+)
+BUG_T_WALKER = (
+    "",
+    (
+        "RuntimeFault",
+        "'y' already has a value here and cannot be fixed in the past ('u)",
+        8,
+        None,
+    ),
+)
+
 # Both engines fault once the call depth passes the host ceiling.
 # The line is omitted: it would point at whichever call happened to overflow.
 BUG_K = (
@@ -1364,6 +1439,27 @@ class ParityFuzzTests(unittest.TestCase):
 
     def test_BUG_Q_next_inside_try_is_not_caught(self):
         assertParity(BUG_Q)
+
+    def test_BUG_R_tree_walker(self):
+        self.assertEqual(run_both(BUG_R, persistent=True)[1], BUG_R_WALKER)
+
+    @unittest.expectedFailure
+    def test_BUG_R_enclosing_loop_name_persistent(self):
+        assertParity(BUG_R, persistent=True)
+
+    def test_BUG_S_tree_walker(self):
+        self.assertEqual(run_both(BUG_S)[1], BUG_S_WALKER)
+
+    @unittest.expectedFailure
+    def test_BUG_S_fix_in_handler_of_try_name(self):
+        assertParity(BUG_S)
+
+    def test_BUG_T_tree_walker(self):
+        self.assertEqual(run_both(BUG_T)[1], BUG_T_WALKER)
+
+    @unittest.expectedFailure
+    def test_BUG_T_second_fix_message(self):
+        assertParity(BUG_T)
 
     def test_BUG_K_deep_fault_lines(self):
         previous = os.environ.get("PHYX_RECURSION")
