@@ -298,6 +298,64 @@ class LintTests(unittest.TestCase):
         notes = lint_program(program)
         self.assertTrue(any("never uses object 'b'" in n.message for n in notes))
 
+    def test_partial_ability_is_a_note(self):
+        program = parse(
+            "^ťe-a-b-addtwo:\n"
+            "    ^lo-a-b-babg-'iţpənn.\n"
+            "!1-addtwo.\n"
+        )
+        notes = lint_program(program)
+        self.assertEqual(len(notes), 1)
+        self.assertEqual(notes[0].line, 3)
+        self.assertEqual(
+            notes[0].message,
+            "ability 'addtwo' wants 2 objects but got 1 "
+            "— quote it with naķm if you wanted the ability as a value",
+        )
+
+    def test_quoted_ability_is_silent(self):
+        sources = [
+            (
+                "^ťe-a-b-addtwo:\n"
+                "    ^lo-a-b-babg-'iţpənn.\n"
+                "^xe-addtwo-naķm-fn-ţə''.\n"
+            ),
+            (
+                "^ťe-n-dub:\n"
+                "    ^lo-n-ķus'ər-'iţpənn.\n"
+                "^ťe-xs-fn-map:\n"
+                "    ^lo-xs-fn-'iţpənn.\n"
+                "!1-2-3-3-ťewn-dub-naķm-map.\n"
+            ),
+        ]
+        for source in sources:
+            with self.subTest(source=source):
+                self.assertEqual(lint_program(parse(source)), [])
+
+    def test_activated_ability_is_silent(self):
+        sources = [
+            (
+                "^ťe-a-b-addtwo:\n"
+                "    ^lo-a-b-babg-'iţpənn.\n"
+                "!1-2-2-ťewn-addtwo-čtəčpliɣn.\n"
+            ),
+            (
+                "^ťe-xs-fn-map:\n"
+                "    ^lo-xs-1-ťewn-fn-čtəčpliɣn-'iţpənn.\n"
+            ),
+        ]
+        for source in sources:
+            with self.subTest(source=source):
+                self.assertEqual(lint_program(parse(source)), [])
+
+    def test_complete_call_is_silent(self):
+        program = parse(
+            "^ťe-a-b-addtwo:\n"
+            "    ^lo-a-b-babg-'iţpənn.\n"
+            "!1-2-addtwo.\n"
+        )
+        self.assertEqual(lint_program(program), [])
+
 
 class CliDxTests(unittest.TestCase):
     def _run(self, *argv):
