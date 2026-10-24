@@ -585,6 +585,129 @@ class EngineBugTests(unittest.TestCase):
         self.assertEqual(run_both(source)[1], ("1\n0\n", None))
         assertParity(source)
 
+    def test_read_before_const_sees_the_outer_name(self):
+        source = (
+            "^5-y-ţə''.\n"
+            "^ťe-f:\n"
+            "    !y.\n"
+            "    ^'u-2-y-ţə''.\n"
+            "^xe-f.\n"
+            "!y.\n"
+        )
+        self.assertEqual(run_both(source)[1], ("5\n5\n", None))
+        assertParity(source)
+
+    def test_plain_assign_before_const_rebinds_the_outer_name(self):
+        source = (
+            "^5-y-ţə''.\n"
+            "^ťe-f:\n"
+            "    ^3-y-ţə''.\n"
+            "    ^'u-2-y-ţə''.\n"
+            "    !y.\n"
+            "^xe-f.\n"
+            "!y.\n"
+        )
+        self.assertEqual(run_both(source)[1], ("2\n3\n", None))
+        assertParity(source)
+
+    def test_plain_assign_after_shadowing_const_is_a_fault(self):
+        source = (
+            "^5-y-ţə''.\n"
+            "^ťe-f:\n"
+            "    ^'u-2-y-ţə''.\n"
+            "    ^3-y-ţə''.\n"
+            "^xe-f.\n"
+        )
+        fault = (
+            "RuntimeFault",
+            "'y' was fixed in the past ('u) and cannot change",
+            4,
+            None,
+        )
+        self.assertEqual(run_both(source)[1], ("", fault))
+        assertParity(source)
+
+    def test_nested_read_of_a_shadowing_const(self):
+        source = (
+            "^1-y-ţə''.\n"
+            "^ťe-outer:\n"
+            "    ^'u-2-y-ţə''.\n"
+            "    ^ťe-inner:\n"
+            "        ^lo-y-'iţpənn.\n"
+            "    ^lo-inner-'iţpənn.\n"
+            "!outer.\n"
+            "!y.\n"
+        )
+        self.assertEqual(run_both(source)[1], ("2\n1\n", None))
+        assertParity(source)
+
+    def test_nested_assign_of_a_shadowing_const_is_a_fault(self):
+        source = (
+            "^1-y-ţə''.\n"
+            "^ťe-outer:\n"
+            "    ^'u-2-y-ţə''.\n"
+            "    ^ťe-inner:\n"
+            "        ^3-y-ţə''.\n"
+            "    ^xe-inner.\n"
+            "^xe-outer.\n"
+        )
+        fault = (
+            "RuntimeFault",
+            "'y' was fixed in the past ('u) and cannot change",
+            5,
+            None,
+        )
+        self.assertEqual(run_both(source)[1], ("", fault))
+        assertParity(source)
+
+    def test_nested_assign_of_a_const_with_no_module_name_is_a_fault(self):
+        source = (
+            "^ťe-outer:\n"
+            "    ^'u-2-y-ţə''.\n"
+            "    ^ťe-inner:\n"
+            "        ^3-y-ţə''.\n"
+            "    ^xe-inner.\n"
+            "^xe-outer.\n"
+        )
+        fault = (
+            "RuntimeFault",
+            "'y' was fixed in the past ('u) and cannot change",
+            4,
+            None,
+        )
+        self.assertEqual(run_both(source)[1], ("", fault))
+        assertParity(source)
+
+    def test_assign_before_an_outer_const_creates_a_local(self):
+        source = (
+            "^ťe-outer:\n"
+            "    ^ťe-inner:\n"
+            "        ^3-y-ţə''.\n"
+            "        !y.\n"
+            "    ^xe-inner.\n"
+            "    ^'u-2-y-ţə''.\n"
+            "    !y.\n"
+            "^xe-outer.\n"
+        )
+        self.assertEqual(run_both(source)[1], ("3\n2\n", None))
+        assertParity(source)
+
+    def test_stop_in_an_ability_called_from_a_loop_is_grammar(self):
+        source = (
+            "^ťe-f:\n"
+            "    ^lo-lups.\n"
+            "^aχəw'-x-dl-3-ronɣ:\n"
+            "    ^xe-f.\n"
+        )
+        fault = (
+            "ParseError",
+            "lups (stop) used outside of a loop",
+            2,
+            "lups leaves a baxuφ or aχəw'; write it inside that loop",
+        )
+        self.assertEqual(run_both(source)[1], ("", fault))
+        assertParity(source)
+
     def test_plain_assignment_of_a_local_constant_is_a_fault(self):
         source = (
             "^ťe-f:\n"
