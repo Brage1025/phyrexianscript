@@ -2,7 +2,7 @@ import io
 import os
 import unittest
 
-from phyx.errors import RuntimeFault, UserMistake
+from phyx.errors import ParseError, RuntimeFault, UserMistake
 from phyx.interpreter import run_source
 
 
@@ -116,10 +116,16 @@ class ControlFlowTests(unittest.TestCase):
             run("^aχəw'-x-dl-3:!x.")
 
     def test_control_words_outside_context(self):
-        with self.assertRaisesRegex(RuntimeFault, "outside of a loop"):
+        with self.assertRaises(ParseError) as stopped:
             run("^lo-lups.")
-        with self.assertRaisesRegex(RuntimeFault, "outside of an ability"):
+        self.assertIn("outside of a loop", stopped.exception.message)
+        self.assertEqual(stopped.exception.line, 1)
+        self.assertTrue(stopped.exception.hint)
+        with self.assertRaises(ParseError) as returned:
             run("^lo-1-'iţpənn.")
+        self.assertIn("outside of an ability", returned.exception.message)
+        self.assertEqual(returned.exception.line, 1)
+        self.assertTrue(returned.exception.hint)
 
 
 class AbilityTests(unittest.TestCase):

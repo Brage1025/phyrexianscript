@@ -101,11 +101,11 @@ The first word after `^` selects the sentence. If it is omitted, it is `xe`. `!`
 ^qit: body                 catch; the blame is bound to dekp
 ```
 
-**Loops.** `lups` (stop) leaves the loop. `ɢnagɮ` (next) skips to the next turn. `aχəw'` walks a list, the keys of a book, or the characters of text. The item name remains bound after the loop (to the last item). `'u` constants cannot be overwritten by the loop variable.
+**Loops.** `lups` (stop) leaves the loop. `ɢnagɮ` (next) skips to the next turn. The loop has to be a `baxuφ` or `aχəw'` in the same ability; a caller that is in a loop does not count. Outside one, either word is a grammar fault on that line, with a hint. `aχəw'` walks a list, the keys of a book, or the characters of text. The item name remains bound after the loop (to the last item). `'u` constants cannot be overwritten by the loop variable.
 
-**Try.** `baqilx` without a following `qit` *ignores* the mistake and continues. With `qit`, `dekp` holds the raised value (for `ɬšeɴazv`) or the fault message (for runtime faults). `lups` / `'iţpənn` / `ɢnagɮ` are not mistakes; they pass through `baqilx`.
+**Try.** `baqilx` without a following `qit` *ignores* the mistake and continues. With `qit`, `dekp` holds the raised value (for `ɬšeɴazv`) or the fault message (for runtime faults). A legal `lups` / `'iţpənn` / `ɢnagɮ` is not a mistake; it passes through `baqilx`. `'iţpənn` outside an ability is a grammar fault, so `baqilx` never sees it.
 
-**Scope.** An assignment rebinds a name that is already bound in the running scope or an enclosing one, and otherwise creates a local. It decides when it runs. A name assigned in the file or in an ability — including inside `ba`, `baxuφ`, `aχəw'`, or `baqilx` — is a binding of that scope once the assignment has run. The tried body and the `qit` handler share that scope, so `dekp` and any other name or ability bound in the handler stay bound afterwards. The item of `aχəw'` and the target of `?` are the same kind of binding; an empty loop does not bind the item. `'u` fixes a name in the running scope and may shadow an outer name. A later assignment of that local constant is a fault, and so is fixing a name that already has a value there. In a persistent session, a later sentence sees the bindings of earlier ones.
+**Scope.** An assignment rebinds a name that is already bound in the running scope or an enclosing one, and otherwise creates a local. It decides when it runs. A name assigned in the file or in an ability — including inside `ba`, `baxuφ`, `aχəw'`, or `baqilx` — is a binding of that scope once the assignment has run. The tried body and the `qit` handler share that scope, so `dekp` and any other name or ability bound in the handler stay bound afterwards. The item of `aχəw'` and the target of `?` are the same kind of binding; an empty loop does not bind the item. `'u` fixes a name in the running scope and may shadow an outer name. A read before that `'u` sees the outer binding, or is an unknown word when there is none. A later assignment of that local constant is a fault, and so is fixing a name that already has a value there. In a persistent session, a later sentence sees the bindings of earlier ones.
 
 ---
 
@@ -237,7 +237,7 @@ Cast with `bukð` before calling. Files live in `phyx/lib/` and are found by the
 
 A program is compiled to Python and run by CPython. `ťe` becomes a nested `def`; `baxuφ` / `aχəw'` become `while` / `for`; `ţə''` is assignment. Verbs keep Phyrexian faults (`cannot add`, division by zero) instead of raw `TypeError`.
 
-Set `PHYX_TREEWALK=1` to walk the AST instead (slower; same results). `python -m phyx bench` times compiled φyrx against the same code in Python, and it measures that compiled engine even when `PHYX_TREEWALK=1`. `PHYX_RECURSION` (decimal, default `16384`) is the host recursion ceiling for a program thread with a 64 MiB stack. See [toolchain.md](toolchain.md).
+Set `PHYX_TREEWALK=1` to walk the AST instead (slower; same results). `python -m phyx bench` times compiled φyrx against the same code in Python, and it measures that compiled engine even when `PHYX_TREEWALK=1`. `PHYX_RECURSION` (decimal, default `16384`) is the host recursion ceiling for a program thread with a 64 MiB stack. Passing it is `the abilities called each other too deeply`, with no line, and the ability stack is still reported. See [toolchain.md](toolchain.md).
 
 A host `MemoryError` is `the program ran out of memory` and can be caught with `baqilx`. A value nested too deeply to show or compare is `this value is nested too deeply`. Source nested too deeply to parse, compile, format, or lint is a grammar fault, `this program is nested too deeply`, on the line where the nesting starts. Ctrl-C exits `130`.
 

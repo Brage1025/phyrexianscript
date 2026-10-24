@@ -91,7 +91,7 @@ class SentenceTests(unittest.TestCase):
         self.assertTrue(stmt.exprs[0].const)
 
     def test_inline_body(self):
-        (stmt,) = parse("^ba-x:lo-1-'iţpənn.")
+        (stmt,) = parse("^ba-x:lo-1.")
         self.assertIsInstance(stmt, ast.If)
         self.assertEqual(len(stmt.body), 1)
         (stmt,) = parse('^ba-x:!"y".')

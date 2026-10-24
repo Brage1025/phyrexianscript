@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Behaviour change: `'iţpənn` outside an ability, and `lups` or `ɢnagɮ` outside a loop, are grammar faults with a line and a hint. The parser raises them, so neither engine can reach them at run time. A loop that only calls an ability does not make `lups` or `ɢnagɮ` in that ability legal. A legal use still passes through `baqilx`.
+- Behaviour change: the tree-walker reports `the abilities called each other too deeply` with no line, the same as the compiled engine. The `in abilities:` stack stays.
+- The compiled engine no longer treats a `'u` name as a local for the whole ability. A read before that `'u` sees the outer binding, or is an unknown word when there is none; the `'u` then fixes a local.
 - Ctrl-C stops a running program again. The process prints `ɬšeɴazv: stopped` and exits `130`. In the REPL the same interrupt ends the sentence and returns to the prompt.
 - A host `MemoryError` is the runtime fault `the program ran out of memory`. `baqilx` / `qit` can catch it.
 - Source nested too deeply to lex, parse, compile, format, or lint is the grammar fault `this program is nested too deeply`, on the line where the nesting starts. Showing or comparing a value nested too deeply is the runtime fault `this value is nested too deeply`.

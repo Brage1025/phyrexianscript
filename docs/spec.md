@@ -84,7 +84,8 @@ Sentences run in order. `ťe` names are visible throughout the file (and in file
 - `ba` / `bu` / `əx` (as marker) — if / unless; `qit` attaches as else; `qit-ba` is else-if.
 - `baxuφ` — while the condition is truthy.
 - `aχəw'-ITEM-dl-COLLECTION` — for each.
-- `ťe` — define an ability. `'iţpənn` returns. Missing return yields void.
+- `ťe` — define an ability. `'iţpənn` returns. Missing return yields void. `'iţpənn` outside an ability is a grammar fault on that line.
+- `lups` leaves the innermost `baxuφ` or `aχəw'` written in the same ability. `ɢnagɮ` skips to its next turn. Either word outside such a loop is a grammar fault on that line. A loop that only calls the ability does not make the word legal.
 - `ǩaπa` — assert; a false condition is a runtime fault.
 - `baqilx` / `qit` — try / catch. `dekp` is the blame in the handler.
 - `!` — speak each value, separated by a space, then a newline. Numbers are hexadecimal.
@@ -100,7 +101,7 @@ If a binding is found, the assignment rebinds it. Rebinding a name that was fixe
 
 A name is a binding of a scope once an assignment in that scope has run, including an assignment inside `ba`, `baxuφ`, `aχəw'`, or `baqilx`. The tried body and the `qit` handler share the scope that contains the sentence. An ability rebinds that name only after the assignment has run. Before then the ability's assignment is a local, and a read of the outer name is an unknown word.
 
-`'u` fixes a name in the scope that is running. It does not walk outward, so it may shadow an outer name. A later assignment of that local constant is a fault: the name was fixed in the past (`'u`) and cannot change. Fixing a name that already has a value in the running scope is also a fault.
+`'u` fixes a name in the scope that is running. It does not walk outward, so it may shadow an outer name. A read of that name before the `'u` runs still sees the outer binding, or is an unknown word when there is none; the `'u` then fixes a local. A later assignment of that local constant is a fault: the name was fixed in the past (`'u`) and cannot change. Fixing a name that already has a value in the running scope is also a fault.
 
 The item of `aχəw'` and the target of `?` are bindings of the scope that contains the sentence, once the loop or the question has run. An empty loop does not bind the item. The `qit` handler runs in that same scope: `dekp` is assigned there and stays bound after the handler, and so does any other name or ability bound in the handler.
 
@@ -141,7 +142,7 @@ A conforming toolchain may compile a program to CPython. Observable behaviour mu
 
 Integer overflow does not occur: host integers are unbounded.
 
-Calling abilities deeper than the host recursion ceiling is a runtime fault (`the abilities called each other too deeply`). The ceiling is `PHYX_RECURSION`; see [toolchain.md](toolchain.md).
+Calling abilities deeper than the host recursion ceiling is a runtime fault (`the abilities called each other too deeply`). It has no line: the fault is raised inside the recursion, and a line would not say which call failed. The ability stack is still reported. The ceiling is `PHYX_RECURSION`; see [toolchain.md](toolchain.md).
 
 ## 9. Versioning
 
