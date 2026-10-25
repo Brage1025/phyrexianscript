@@ -19,7 +19,8 @@ Dot-commands::
 from __future__ import annotations
 
 import sys
-from typing import IO, Iterable
+from collections.abc import Iterable
+from typing import IO
 
 from .errors import PhyrexianError, format_error
 from .hints import explain_missing, explain_word

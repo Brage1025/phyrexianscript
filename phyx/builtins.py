@@ -5,7 +5,8 @@ objects, in the order they were written (objects first, verb last)."""
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable
+from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 from .errors import RuntimeFault, UserMistake
 from .limits import memory_fault, repeat_sequence, take_turns

@@ -39,7 +39,7 @@ phyrxscript = "phyx.cli:main"
 phyrexianscript = "phyx.cli:main"
 
 [project.optional-dependencies]
-dev = ["ruff", "coverage", "build", "twine"]
+dev = ["ruff~=0.17", "coverage", "build", "twine"]
 
 [tool.setuptools]
 packages = ["phyx"]
