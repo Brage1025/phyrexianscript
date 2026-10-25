@@ -1,32 +1,139 @@
 name: CI
 
+permissions:
+  contents: read
+
 on:
   push:
   pull_request:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.11", "3.12", "3.13", "3.14"]
+        include:
+          - os: ubuntu-latest
+            python-version: "3.11"
+          - os: ubuntu-latest
+            python-version: "3.12"
+          - os: ubuntu-latest
+            python-version: "3.13"
+            coverage: true
+          - os: ubuntu-latest
+            python-version: "3.14"
+          - os: windows-latest
+            python-version: "3.11"
+          - os: windows-latest
+            python-version: "3.13"
+          - os: macos-latest
+            python-version: "3.11"
+          - os: macos-latest
+            python-version: "3.13"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install
-        run: python -m pip install -e .
+        run: python -m pip install -e ".[dev]"
+      - name: Python tests
+        if: ${{ matrix.coverage != true }}
+        run: python -m unittest discover -s tests -v
+      - name: Python tests under coverage
+        if: ${{ matrix.coverage == true }}
+        run: python -m coverage run -m unittest discover -s tests -v
+      - name: φyrx tests
+        if: ${{ matrix.coverage != true }}
+        run: python -m phyx test
+      - name: φyrx tests under coverage
+        if: ${{ matrix.coverage == true }}
+        run: python -m coverage run -a -m phyx test
+      - name: Coverage report
+        if: ${{ matrix.coverage == true }}
+        run: |
+          python -m coverage report | tee coverage-report.txt
+          {
+            echo '### Coverage'
+            echo '```'
+            cat coverage-report.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  tree-walker:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.14"]
+    env:
+      PHYX_TREEWALK: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install
+        run: python -m pip install -e ".[dev]"
       - name: Python tests
         run: python -m unittest discover -s tests -v
       - name: φyrx tests
         run: python -m phyx test
-      - name: Package
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: python -m pip install -e ".[dev]"
+      # ruff format --check is not run: the formatting branch has not landed.
+      - name: Ruff
+        run: ruff check .
+
+  fuzz:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: python -m pip install -e ".[dev]"
+      - name: Fuzz
+        run: PHYX_FUZZ=3000 python -m unittest tests.test_parity_fuzz -v
+
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install build tools
+        run: python -m pip install build twine
+      - name: Build sdist and wheel
+        run: python -m build
+      - name: Twine check
+        run: python -m twine check dist/*
+      - name: Install the wheel outside the checkout
+        working-directory: ${{ runner.temp }}
         run: |
-          python -m pip install build twine
-          python -m build
-          python -m twine check dist/*
+          python -m venv "$RUNNER_TEMP/phyx-wheel"
+          "$RUNNER_TEMP/phyx-wheel/bin/python" -m pip install "$GITHUB_WORKSPACE"/dist/*.whl
+          "$RUNNER_TEMP/phyx-wheel/bin/phyx" --version
+          "$RUNNER_TEMP/phyx-wheel/bin/phyx" lib
+          "$RUNNER_TEMP/phyx-wheel/bin/phyx" -c '!1.'
+      - name: Install the sdist outside the checkout
+        working-directory: ${{ runner.temp }}
+        run: |
+          python -m venv "$RUNNER_TEMP/phyx-sdist"
+          "$RUNNER_TEMP/phyx-sdist/bin/python" -m pip install "$GITHUB_WORKSPACE"/dist/*.tar.gz
+          "$RUNNER_TEMP/phyx-sdist/bin/phyx" --version
+          "$RUNNER_TEMP/phyx-sdist/bin/phyx" lib
 
   extension:
     runs-on: ubuntu-latest
