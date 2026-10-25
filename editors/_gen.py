@@ -8,8 +8,8 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 
-from phyx.conjugation import CONJUGATIONS
-from phyx.vocabulary import CONSTANTS, MARKERS, VERBS
+from phyx.conjugation import CONJUGATIONS  # noqa: E402  # importable only after the path insert above
+from phyx.vocabulary import CONSTANTS, MARKERS, VERBS  # noqa: E402  # importable only after the path insert above
 
 
 def alt(words) -> str:

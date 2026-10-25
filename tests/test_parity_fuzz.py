@@ -483,7 +483,7 @@ def _value_phrase(word: str, rng: random.Random, *, wrong: bool) -> str:
         return rng.choice(("0-ťewn", '"ab"', "0-tekt")) + "-samk"
     if word == "rukxtekt":
         if wrong:
-            return f"0-ťewn-rukxtekt"
+            return "0-ťewn-rukxtekt"
         return '"k"-"v"-1-tekt-rukxtekt'
     if word == "tluxt":
         if wrong:

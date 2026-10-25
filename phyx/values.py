@@ -26,8 +26,8 @@ class Ability:
 
     name: str
     params: list[str]
-    body: list["ast.Stmt"] = field(default_factory=list)
-    closure: "Env | None" = None
+    body: list[ast.Stmt] = field(default_factory=list)
+    closure: Env | None = None
     impl: object = None  # compiled Python callable (interp, *args)
 
     def __repr__(self) -> str:  # pragma: no cover
@@ -38,7 +38,7 @@ class Ability:
 class Env:
     vars: dict[str, object] = field(default_factory=dict)
     consts: set[str] = field(default_factory=set)
-    parent: "Env | None" = None
+    parent: Env | None = None
 
     def lookup(self, name: str) -> object:
         env: Env | None = self
@@ -121,7 +121,7 @@ def _values_equal(a: object, b: object) -> bool:
     if kind_of(a) != kind_of(b):
         return False
     if isinstance(a, list):
-        return len(a) == len(b) and all(_values_equal(x, y) for x, y in zip(a, b))  # type: ignore[arg-type]
+        return len(a) == len(b) and all(_values_equal(x, y) for x, y in zip(a, b, strict=False))  # type: ignore[arg-type]
     if isinstance(a, dict):
         return a.keys() == b.keys() and all(_values_equal(a[k], b[k]) for k in a)  # type: ignore[index]
     return a == b
