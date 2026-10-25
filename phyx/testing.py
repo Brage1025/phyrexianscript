@@ -10,9 +10,10 @@ to ``\\n``).
 from __future__ import annotations
 
 import io
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, Sequence, TextIO
+from typing import TextIO
 
 from .errors import PhyrexianError, format_error
 from .interpreter import run_source
