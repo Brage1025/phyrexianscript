@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -8,17 +8,17 @@ version = "1.6.4"
 description = "φyrx (PhyrxScript / PhyrexianScript) — a programming language written in Phyrexian"
 readme = "README.md"
 requires-python = ">=3.11"
-license = { text = "MIT" }
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [{ name = "Brage" }]
 keywords = [
     "esolang", "phyrexian", "mtg", "interpreter", "conlang", "language",
     "phyx", "phyrx", "phyrxscript", "phyrexianscript",
 ]
 classifiers = [
-    "Development Status :: 5 - Production/Stable",
+    "Development Status :: 4 - Beta",
     "Environment :: Console",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -43,6 +43,9 @@ dev = ["ruff~=0.17", "coverage", "build", "twine"]
 
 [tool.setuptools]
 packages = ["phyx"]
+# phyx/lib is herd data, not an importable package. Leaving include-package-data
+# on makes setuptools warn that phyx.lib is absent from `packages`.
+include-package-data = false
 
 [tool.setuptools.package-data]
 phyx = ["lib/*.phyx"]

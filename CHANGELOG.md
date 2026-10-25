@@ -1,25 +1,42 @@
 # Changelog
 
+All notable changes to this project are documented in this file.
+
+The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
+
 ## Unreleased
 
+### Added
+
+- `docs/releasing.md` is the release checklist: which files hold a version, how to rename Unreleased, and what the two publish workflows run.
+- `tests/test_versions.py` checks the version rule. `phyx.__version__` must match `pyproject.toml`, the spec heading must be the language major.minor, `## Unreleased` must be first, the next version heading must be the package version, and `editors/package.json` must be an `X.Y.Z` of its own.
 - CI runs the suite on Ubuntu, Windows, and macOS, and adds the tree-walker, `ruff check .`, a 3000-program fuzz, coverage on Ubuntu 3.13 with no threshold, and a wheel and sdist install outside the checkout.
+- A program runs on a thread with a 64 MiB stack. `PHYX_RECURSION` (decimal, default `16384`) is the host recursion ceiling, enough for a compiled ability about 8000 calls deep and capped at what that stack can hold. Deeper recursion is still `the abilities called each other too deeply`.
+
+### Changed
+
+- `phyx.__version__` is the installed distribution's version (`importlib.metadata`). When the package is not installed, it is the `version` in `pyproject.toml` (`tomllib`). When neither can be read, it is `0+unknown`. An editable install keeps the previous metadata until `python -m pip install -e ".[dev]"` is run again.
+- The specification heading names the language version (1.6), the first two numbers of the toolchain version.
+- The Development Status classifier is Beta. The license field is the SPDX expression `MIT` and `license-files` lists `LICENSE`. The build requires setuptools >= 77.0.0. The OSI license classifier is removed. `include-package-data` is off, so the `phyx.lib` directory stays package data (`lib/*.phyx`) and setuptools no longer warns that `phyx.lib` is absent from `packages`.
 - Behaviour change: `'iţpənn` outside an ability, and `lups` or `ɢnagɮ` outside a loop, are grammar faults with a line and a hint. The parser raises them, so neither engine can reach them at run time. A loop that only calls an ability does not make `lups` or `ɢnagɮ` in that ability legal. A legal use still passes through `baqilx`.
 - Behaviour change: the tree-walker reports `the abilities called each other too deeply` with no line, the same as the compiled engine. The `in abilities:` stack stays.
 - The compiled engine no longer treats a `'u` name as a local for the whole ability. A read before that `'u` sees the outer binding, or is an unknown word when there is none; the `'u` then fixes a local.
-- Ctrl-C stops a running program again. The process prints `ɬšeɴazv: stopped` and exits `130`. In the REPL the same interrupt ends the sentence and returns to the prompt.
-- A host `MemoryError` is the runtime fault `the program ran out of memory`. `baqilx` / `qit` can catch it.
-- Source nested too deeply to lex, parse, compile, format, or lint is the grammar fault `this program is nested too deeply`, on the line where the nesting starts. Showing or comparing a value nested too deeply is the runtime fault `this value is nested too deeply`.
-- A program runs on a thread with a 64 MiB stack. `PHYX_RECURSION` (decimal, default `16384`) is the host recursion ceiling, enough for a compiled ability about 8000 calls deep and capped at what that stack can hold. Deeper recursion is still `the abilities called each other too deeply`.
 - The ability-stack line of a fault collapses consecutive repeats (`cnt x1000`). The first and last abilities stay visible.
 - `tøwp` on text or a list, and `ronɣ`, stop at `100000` items (1,048,576). A longer result is a runtime fault, including `!"x"-100000000000-tøwp-samk`. An empty value repeated any number of times, and a negative count, stay empty.
-- `python -m phyx bench` always measures the compiled engine, including when `PHYX_TREEWALK=1`.
 - Behaviour change: a `qit` handler runs in the enclosing scope, the same scope as the tried body. `dekp` is assigned there and stays bound after the handler, and a name or ability bound in the handler stays bound.
 - `'u` in an ability fixes a name of that ability and may shadow an outer name. A later plain assignment of that local constant is a fault (`was fixed in the past ('u) and cannot change`).
 - A read of a name that is not bound yet is an unknown word, with the usual hint and line. That includes a read before a later assignment, a read after an untaken `ba`, a read after an empty `aχəw'`, and a sentence that is only a name or a literal. A compiled block that would otherwise be empty is `pass`.
 - An ability rebinds a module name, a name of an enclosing ability, a loop item, or a question target when that binding already exists, and otherwise creates a local. An ability defined in the handler rebinds `dekp`. The compiled engine decides this when the assignment runs, so a name assigned later in the file, inside `ba` / `baxuφ` / `aχəw'`, or by an earlier persistent sentence, matches the tree-walker.
+- Operands are evaluated left to right. When a later operand needs statements, each earlier operand that is not a literal is copied into a temporary first. `y-bump-babg` reads `y` before `bump` runs, in an ability and at module level.
+
+### Fixed
+
+- Ctrl-C stops a running program again. The process prints `ɬšeɴazv: stopped` and exits `130`. In the REPL the same interrupt ends the sentence and returns to the prompt.
+- A host `MemoryError` is the runtime fault `the program ran out of memory`. `baqilx` / `qit` can catch it.
+- Source nested too deeply to lex, parse, compile, format, or lint is the grammar fault `this program is nested too deeply`, on the line where the nesting starts. Showing or comparing a value nested too deeply is the runtime fault `this value is nested too deeply`.
+- `python -m phyx bench` always measures the compiled engine, including when `PHYX_TREEWALK=1`.
 - Pure abilities no longer compile arithmetic to raw Python operators. Divide by zero, a bad kind, a negative `lu'f`, and adding a truth are `RuntimeFault`s with the tree-walker's message and hint, so `baqilx` can catch them. `əx` uses `truthy()`. The type test is skipped only when both objects are provably numbers.
 - A negative number literal is parenthesised in the generated Python, so `əx2-2-lu'f` is 4 (`(-2) ** 2`), not `-(2 ** 2)`.
-- Operands are evaluated left to right. When a later operand needs statements, each earlier operand that is not a literal is copied into a temporary first. `y-bump-babg` reads `y` before `bump` runs, in an ability and at module level.
 
 ## 1.6.4
 
