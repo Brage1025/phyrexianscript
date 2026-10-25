@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- CI runs the suite on Ubuntu, Windows, and macOS, and adds the tree-walker, `ruff check .`, a 3000-program fuzz, coverage on Ubuntu 3.13 with no threshold, and a wheel and sdist install outside the checkout.
 - Behaviour change: `'iţpənn` outside an ability, and `lups` or `ɢnagɮ` outside a loop, are grammar faults with a line and a hint. The parser raises them, so neither engine can reach them at run time. A loop that only calls an ability does not make `lups` or `ɢnagɮ` in that ability legal. A legal use still passes through `baqilx`.
 - Behaviour change: the tree-walker reports `the abilities called each other too deeply` with no line, the same as the compiled engine. The `in abilities:` stack stays.
 - The compiled engine no longer treats a `'u` name as a local for the whole ability. A read before that `'u` sees the outer binding, or is an unknown word when there is none; the `'u` then fixes a local.

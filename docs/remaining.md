@@ -12,7 +12,7 @@ None of this changes Phyrexian grammar. Highest leverage.
 
 - [x] **Git.** https://github.com/Brage1025/phyrexianscript — history, `v1.6.1` tag, public remote.
 - [x] **First commit** of the 1.6.1 tree.
-- [x] **CI** (`.github/workflows/ci.yml`) runs `python -m unittest discover -s tests -v` and `python -m phyx test`.
+- [x] **CI** (`.github/workflows/ci.yml`) runs `python -m unittest discover -s tests -v` and `python -m phyx test` on Ubuntu, Windows, and macOS, plus the tree-walker, `ruff check .`, a fuzz sample, coverage on Ubuntu 3.13, and a wheel/sdist install outside the checkout.
 - [x] **PyPI.** `pip install phyx` installs from the index. Wheel includes the herds. Trusted publishing is live (`publish.yml`).
 - [x] **Cursor / VS Code extension.** Visual Studio Marketplace: https://marketplace.visualstudio.com/items?itemName=brage1025.phyx. Cursor’s in-editor marketplace: [Open VSX `brage1025.phyx`](https://open-vsx.org/extension/brage1025/phyx).
 
