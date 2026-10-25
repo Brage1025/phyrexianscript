@@ -22,10 +22,10 @@ import traceback
 from dataclasses import dataclass, field
 
 from . import ast
-from .builtins import IMPLS, put_into, _hashable, _kinds
+from .builtins import IMPLS, _hashable, _kinds, put_into
 from .errors import RuntimeFault, UserMistake, nesting_fault
-from .limits import memory_fault, repeat_sequence, take_turns
 from .hints import hint_for_unknown
+from .limits import memory_fault, repeat_sequence, take_turns
 from .values import Ability, to_text, truthy, values_equal
 from .vocabulary import BLAME_WORD, GET_WORD
 

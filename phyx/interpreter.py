@@ -13,9 +13,9 @@ from .builtins import IMPLS, put_into
 from .errors import PhyrexianError, RuntimeFault, UserMistake
 from .limits import call_on_stack, memory_fault
 from .parser import parse
+from .paths import cast_hint, resolve_cast
 from .values import Ability, Env, to_text, truthy
 from .vertical import from_vertical
-from .paths import cast_hint, resolve_cast
 from .vocabulary import BLAME_WORD
 
 

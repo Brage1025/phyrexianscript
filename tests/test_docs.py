@@ -1,8 +1,8 @@
 """Mechanical claims in the docs must match the running language."""
 
 import json
-from pathlib import Path
 import unittest
+from pathlib import Path
 
 from phyx.cli import SUBCOMMANDS
 from phyx.vocabulary import CONSTANTS, MARKERS, VERBS

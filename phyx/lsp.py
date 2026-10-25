@@ -12,7 +12,7 @@ from pathlib import Path
 from urllib.parse import unquote, urlparse
 from urllib.request import url2pathname
 
-from . import ast, __version__
+from . import __version__, ast
 from .errors import PhyrexianError
 from .hints import explain_word
 from .lexer import Token, tokenize

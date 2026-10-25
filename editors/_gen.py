@@ -11,6 +11,7 @@ sys.path.insert(0, str(HERE.parent))
 from phyx.conjugation import CONJUGATIONS
 from phyx.vocabulary import CONSTANTS, MARKERS, VERBS
 
+
 def alt(words) -> str:
     return "|".join(sorted(words, key=lambda w: (-len(w), w)))
 
