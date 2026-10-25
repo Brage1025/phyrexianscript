@@ -170,7 +170,7 @@ run_source('!"šdeχd".', argv=["ignored-by-this-program"])
 
 ## CI and the index
 
-GitHub Actions (`.github/workflows/ci.yml`) runs `python -m unittest discover -s tests -v` and `python -m phyx test` on Python 3.11–3.14, then `python -m build` / `twine check`.
+GitHub Actions (`.github/workflows/ci.yml`) runs `python -m unittest discover -s tests -v` and `python -m phyx test` on Ubuntu, Windows, and macOS for Python 3.11 and 3.13, and on Ubuntu for 3.12 and 3.14. Ubuntu 3.11 and 3.14 also run that suite with `PHYX_TREEWALK=1`. Ubuntu 3.13 writes a coverage report and does not set a minimum. Other jobs run `ruff check .`, `PHYX_FUZZ=3000` on `tests.test_parity_fuzz`, and `python -m build` / `twine check`, then install the wheel and the sdist outside the checkout.
 
 `pip install phyx` installs from the Python Package Index (1.6.4). A GitHub Release retriggers `.github/workflows/publish.yml` (trusted publishing). `brage1025.phyx` is on the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=brage1025.phyx) and [Open VSX](https://open-vsx.org/extension/brage1025/phyx) (Cursor’s in-editor marketplace). `.github/workflows/publish-extension.yml` packages `editors/` and publishes with `vsce publish --oidc` and `ovsx publish --trusted-publishing`. Dispatch `registry=openvsx` to skip a Marketplace version that already exists. After Eclipse grants namespace ownership ([claim](https://github.com/EclipseFdn/open-vsx.org/issues/14213)), Open VSX Settings → Trusted Publishers: GitHub user `Brage1025`, repo `phyrexianscript`, workflow `publish-extension.yml`.
 
