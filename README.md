@@ -1,5 +1,10 @@
 # φyrx
 
+[![CI](https://img.shields.io/github/actions/workflow/status/Brage1025/phyrexianscript/ci.yml?branch=main)](https://github.com/Brage1025/phyrexianscript/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/phyx)](https://pypi.org/project/phyx/)
+[![Python versions](https://img.shields.io/pypi/pyversions/phyx)](https://pypi.org/project/phyx/)
+[![Licence](https://img.shields.io/github/license/Brage1025/phyrexianscript?label=licence)](https://github.com/Brage1025/phyrexianscript/blob/main/LICENSE)
+
 <p><img src="editors/phyx-original.svg" width="128" height="128" alt="φyrx"></p>
 
 **Also known as PhyrxScript and PhyrexianScript.**
@@ -7,6 +12,8 @@
 φyrx is a programming language written in Phyrexian. Its orthography, vocabulary, and grammar are not invented: they come from the community [Phyrexian Dictionary](https://fxbuson.github.io/PhyrexianDictionary/) (tutorial chapters 1–3). A program is a sequence of Phyrexian sentences. The verb comes last. Numbers are hexadecimal. Text is read in vertical columns.
 
 The toolchain is a small Python 3.11+ interpreter with no third-party dependencies. The language and interpreter are **MIT**. The optional font and dictionary JSON are **GPL-3.0** and are fetched, not vendored. Source: [github.com/Brage1025/phyrexianscript](https://github.com/Brage1025/phyrexianscript).
+
+Not affiliated with or endorsed by Wizards of the Coast.
 
 ```
 python -m phyx examples/01_welcome.phyx
