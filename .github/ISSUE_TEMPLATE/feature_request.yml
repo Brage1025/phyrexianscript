@@ -1,0 +1,14 @@
+name: Feature request
+description: A change to the language or the toolchain.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Language-syntax suggestions are judged against [docs/rationale.md](https://github.com/Brage1025/phyrexianscript/blob/main/docs/rationale.md).
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use case
+      description: What you are trying to do, and why the current language does not do it.
+    validations:
+      required: true

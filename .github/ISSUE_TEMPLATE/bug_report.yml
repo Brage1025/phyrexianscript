@@ -1,0 +1,52 @@
+name: Bug report
+description: A φyrx program or the toolchain does something other than the spec.
+body:
+  - type: input
+    id: phyx-version
+    attributes:
+      label: phyx version
+      description: Output of `phyx --version`.
+    validations:
+      required: true
+  - type: input
+    id: python-version
+    attributes:
+      label: Python version
+      description: Output of `python --version`.
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+    validations:
+      required: true
+  - type: dropdown
+    id: engine
+    attributes:
+      label: Engine
+      description: The compiled engine is the default. PHYX_TREEWALK=1 selects the tree-walker.
+      options:
+        - default (compiled engine)
+        - PHYX_TREEWALK=1 (tree-walker)
+    validations:
+      required: true
+  - type: textarea
+    id: program
+    attributes:
+      label: Program
+      description: The φyrx program that shows the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected output
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual output
+    validations:
+      required: true
