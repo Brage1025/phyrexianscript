@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .lexer import CONSONANTS, VOWELS
+from .lexer import CONSONANTS
 from .vocabulary import CONSTANTS, MARKERS, VERBS
 
 PERSON = {1: "me", 2: "you", 3: "they", 4: "one"}

@@ -19,10 +19,12 @@ from __future__ import annotations
 from pathlib import Path
 
 from . import ast
+from .conjugation import lemma_of
 from .errors import ParseError, nesting_fault
 from .hints import ENGLISH_MARKERS
 from .lexer import Token, tokenize, transliterate
-from .conjugation import lemma_of
+from .paths import resolve_cast
+from .vertical import from_vertical
 from .vocabulary import (
     BREAK_WORD,
     CAST_WORD,
@@ -37,8 +39,6 @@ from .vocabulary import (
     RETURN_WORD,
     VERBS,
 )
-from .paths import resolve_cast
-from .vertical import from_vertical
 
 
 class Parser:

@@ -13,9 +13,9 @@ Dictionary (https://fxbuson.github.io/PhyrexianDictionary/):
 """
 
 from .errors import PhyrexianError, format_error
+from .interpreter import Interpreter, run_source
 from .lexer import tokenize, transliterate
 from .parser import parse
-from .interpreter import Interpreter, run_source
 from .repl import Repl, is_complete
 
 __all__ = [

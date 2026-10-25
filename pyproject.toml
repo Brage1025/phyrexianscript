@@ -38,8 +38,18 @@ phyrx = "phyx.cli:main"
 phyrxscript = "phyx.cli:main"
 phyrexianscript = "phyx.cli:main"
 
+[project.optional-dependencies]
+dev = ["ruff", "coverage", "build", "twine"]
+
 [tool.setuptools]
 packages = ["phyx"]
 
 [tool.setuptools.package-data]
 phyx = ["lib/*.phyx"]
+
+[tool.ruff]
+line-length = 127
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

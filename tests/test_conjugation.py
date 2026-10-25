@@ -6,10 +6,10 @@ import io
 import unittest
 
 from phyx.conjugation import CONJUGATIONS, inflect, lemma_of, split_root
+from phyx.errors import ParseError
 from phyx.hints import explain_word
 from phyx.interpreter import run_source
 from phyx.parser import parse
-from phyx.errors import ParseError
 
 
 class TutorialTableTests(unittest.TestCase):
