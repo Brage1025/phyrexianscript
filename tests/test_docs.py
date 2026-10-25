@@ -39,8 +39,8 @@ class DocDriftTests(unittest.TestCase):
         data = json.loads(_read("editors", "package.json"))
         self.assertEqual(data["name"], "phyx")
         langs = data["contributes"]["languages"]
-        self.assertTrue(any(l.get("id") == "phyx" for l in langs))
-        exts = {e for l in langs for e in l.get("extensions", [])}
+        self.assertTrue(any(lang.get("id") == "phyx" for lang in langs))
+        exts = {e for lang in langs for e in lang.get("extensions", [])}
         self.assertIn(".phyx", exts)
         self.assertIn(".vphyx", exts)
         grammars = data["contributes"]["grammars"]

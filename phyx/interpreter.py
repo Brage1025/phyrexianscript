@@ -104,11 +104,11 @@ class Interpreter:
         try:
             self.exec_block(program, self.globals)
         except _Return:
-            raise RuntimeFault("'iţpənn (return) used outside of an ability")
+            raise RuntimeFault("'iţpənn (return) used outside of an ability") from None
         except _Break:
-            raise RuntimeFault("lups (stop) used outside of a loop")
+            raise RuntimeFault("lups (stop) used outside of a loop") from None
         except _Continue:
-            raise RuntimeFault("ɢnagɮ (next) used outside of a loop")
+            raise RuntimeFault("ɢnagɮ (next) used outside of a loop") from None
         except RuntimeFault as err:
             # The overflow is raised on whichever call happened to be deepest.
             # A line would name that call and the compiled engine has none.
@@ -320,20 +320,20 @@ class Interpreter:
                 except RecursionError:
                     raise RuntimeFault("the abilities called each other too deeply") from None
                 except _Break:
-                    raise RuntimeFault(f"lups (stop) used outside of a loop in '{ability.name}'")
+                    raise RuntimeFault(f"lups (stop) used outside of a loop in '{ability.name}'") from None
                 except _Continue:
-                    raise RuntimeFault(f"ɢnagɮ (next) used outside of a loop in '{ability.name}'")
+                    raise RuntimeFault(f"ɢnagɮ (next) used outside of a loop in '{ability.name}'") from None
             local = Env(parent=ability.closure)
-            for name, value in zip(ability.params, args):
+            for name, value in zip(ability.params, args, strict=False):
                 local.vars[name] = value
             try:
                 self.exec_block(ability.body, local)
             except _Return as ret:
                 return ret.value
             except _Break:
-                raise RuntimeFault(f"lups (stop) used outside of a loop in '{ability.name}'")
+                raise RuntimeFault(f"lups (stop) used outside of a loop in '{ability.name}'") from None
             except _Continue:
-                raise RuntimeFault(f"ɢnagɮ (next) used outside of a loop in '{ability.name}'")
+                raise RuntimeFault(f"ɢnagɮ (next) used outside of a loop in '{ability.name}'") from None
             return None
         except RuntimeFault as err:
             if ability.impl is None and not err.frames:

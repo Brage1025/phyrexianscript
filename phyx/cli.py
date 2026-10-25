@@ -15,8 +15,8 @@ import json
 import os
 import sys
 import urllib.request
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 from . import LANGUAGE, LANGUAGE_ALIASES, __version__
 from . import ast as phyx_ast

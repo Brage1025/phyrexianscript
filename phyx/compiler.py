@@ -495,7 +495,7 @@ def fn_id(name: str) -> str:
 class Scope:
     kind: str  # "module" | "func"
     persist: bool = False
-    parent: "Scope | None" = None
+    parent: Scope | None = None
     params: set[str] = field(default_factory=set)
     locals_: set[str] = field(default_factory=set)
     funs: dict[str, ast.FuncDef] = field(default_factory=dict)
@@ -525,7 +525,7 @@ class Scope:
     def bound(self) -> set[str]:
         return set(self.params) | set(self.locals_) | set(self.funs)
 
-    def find(self, name: str) -> "Scope | None":
+    def find(self, name: str) -> Scope | None:
         s: Scope | None = self
         while s is not None:
             if name in s.params or name in s.locals_ or name in s.funs:
@@ -1240,10 +1240,10 @@ class Emitter:
     ) -> list[str]:
         emits = [
             bool(lines) or (repeat[i] and not _is_reused_atom(node, py))
-            for i, (node, (py, lines)) in enumerate(zip(nodes, captured))
+            for i, (node, (py, lines)) in enumerate(zip(nodes, captured, strict=False))
         ]
         pys: list[str] = []
-        for i, (node, (py, lines)) in enumerate(zip(nodes, captured)):
+        for i, (node, (py, lines)) in enumerate(zip(nodes, captured, strict=False)):
             later = any(emits[j] for j in range(i + 1, len(emits)))
             self.lines.extend(lines)
             if later and not isinstance(node, ast.Literal):
