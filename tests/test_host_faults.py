@@ -225,8 +225,14 @@ class InterruptTests(unittest.TestCase):
             timer.cancel()
 
 
-def _posix_memory() -> bool:
-    if sys.platform == "win32":
+RLIMIT_AS_SKIP = (
+    "RLIMIT_AS is only enforced on Linux "
+    "(macOS refuses to set it, Windows has no resource module)"
+)
+
+
+def _rlimit_as_enforced() -> bool:
+    if not sys.platform.startswith("linux"):
         return False
     try:
         import resource
@@ -236,7 +242,7 @@ def _posix_memory() -> bool:
 
 
 class MemoryTests(unittest.TestCase):
-    @unittest.skipUnless(_posix_memory(), "resource.setrlimit is POSIX-only")
+    @unittest.skipUnless(_rlimit_as_enforced(), RLIMIT_AS_SKIP)
     def test_out_of_memory_is_a_fault_on_both_engines(self):
         child = textwrap.dedent(
             """\
@@ -273,7 +279,7 @@ class MemoryTests(unittest.TestCase):
                 self.assertNotIn("Traceback", text)
                 self.assertNotIn("MemoryError", text)
 
-    @unittest.skipUnless(_posix_memory(), "resource.setrlimit is POSIX-only")
+    @unittest.skipUnless(_rlimit_as_enforced(), RLIMIT_AS_SKIP)
     def test_handler_can_catch_out_of_memory(self):
         child = textwrap.dedent(
             """\
