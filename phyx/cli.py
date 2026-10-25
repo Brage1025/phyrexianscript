@@ -19,12 +19,10 @@ from pathlib import Path
 from typing import Iterable
 
 from . import LANGUAGE, LANGUAGE_ALIASES, __version__
-from .errors import PhyrexianError, format_error
+from . import ast as phyx_ast
 from .compiler import compile_to_python
-from .interpreter import Interpreter, run_source
-from .values import format_number
-from .lexer import transliterate, untransliterate
-from .parser import parse
+from .errors import PhyrexianError, format_error
+from .fmt import format_source
 from .fonts import (
     FONT_FAMILY,
     ensure_basilica,
@@ -33,18 +31,20 @@ from .fonts import (
     is_font_file,
     local_font,
 )
+from .hints import explain_missing, explain_word, search_lexicon
+from .interpreter import Interpreter
+from .lexer import transliterate, untransliterate
+from .lint import format_notes, lint_program
+from .lsp import serve as serve_lsp
+from .parser import parse
+from .paths import stdlib_dir
 from .render import render_html
 from .repl import Repl
-from .vertical import from_vertical, to_vertical
-from .fmt import format_source
-from .hints import explain_missing, explain_word, search_lexicon
-from .lint import format_notes, lint_program
-from .paths import stdlib_dir
 from .scaffold import create as create_scaffold
 from .testing import run_suite
+from .values import format_number
+from .vertical import from_vertical, to_vertical
 from .vocabulary import CONSTANTS, MARKERS, VERBS
-from .lsp import serve as serve_lsp
-from . import ast as phyx_ast
 
 SUBCOMMANDS = {
     "run", "check", "render", "transpose", "translit",
