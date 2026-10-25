@@ -12,6 +12,10 @@ Dictionary (https://fxbuson.github.io/PhyrexianDictionary/):
 * text is read vertically: symbols top-to-bottom, lines left-to-right
 """
 
+import tomllib
+from importlib.metadata import PackageNotFoundError, version
+from pathlib import Path
+
 from .errors import PhyrexianError, format_error
 from .interpreter import Interpreter, run_source
 from .lexer import tokenize, transliterate
@@ -32,6 +36,23 @@ __all__ = [
     "LANGUAGE_ALIASES",
 ]
 
-__version__ = "1.6.4"
+def _distribution_version() -> str:
+    """Installed metadata, else ``pyproject.toml``, else a marked placeholder."""
+    try:
+        return version("phyx")
+    except PackageNotFoundError:
+        pass
+    pyproject = Path(__file__).resolve().parent.parent / "pyproject.toml"
+    try:
+        with pyproject.open("rb") as handle:
+            found = tomllib.load(handle)["project"]["version"]
+    except (OSError, tomllib.TOMLDecodeError, KeyError, TypeError):
+        return "0+unknown"
+    if not isinstance(found, str):
+        return "0+unknown"
+    return found
+
+
+__version__ = _distribution_version()
 LANGUAGE = "φyrx"
 LANGUAGE_ALIASES = ("PhyrxScript", "PhyrexianScript")
