@@ -63,6 +63,6 @@ class DocDriftTests(unittest.TestCase):
         for name in (
             "spec.md", "guide.md", "python.md", "cookbook.md", "rationale.md",
             "index.md", "tour.md", "stdlib.md", "toolchain.md", "reference.md",
-            "remaining.md",
+            "roadmap.md",
         ):
             self.assertTrue((DOCS / name).is_file(), name)

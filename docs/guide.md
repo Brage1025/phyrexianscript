@@ -95,7 +95,7 @@ The number-words `'ii` (1), `ķu` (2), `ķi` (3) are constants. There is no deci
 
 A word is a **verb** if it is in the standard lexicon (`babg`, `ţə''`, `'uxq`, …) or a `ťe` name in this file (or in a file this file `bukð`s). Otherwise it is a **name**, and must already have been bound with `ţə''` when the sentence runs.
 
-You may not bind a reserved word. `python -m phyx words` is the authoritative list; `python -m phyx explain if` maps English to the marker; `python -m phyx lookup add` searches the lexicon (no fetch required). `python -m phyx lint FILE` names a dropped `'iţpənn` and unused objects.
+You may not bind a reserved word. `python -m phyx words` is the authoritative list; `python -m phyx explain if` maps English to the marker; `python -m phyx lookup add` searches the lexicon (no fetch required). `python -m phyx lint FILE` names a dropped `'iţpənn`, an unused object, an English keyword used as a name, and an ability defined in this file, of arity 1 or more, written with fewer objects than it wants (quote it with `naķm` if you wanted the ability as a value).
 
 ```
 ^xe-5-x-ţə''.         x = 5
