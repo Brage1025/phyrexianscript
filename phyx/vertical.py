@@ -59,7 +59,8 @@ def from_vertical(text: str, gap: int = 1) -> str:
                     raise ValueError(
                         f"vertical layout: character {row[x + g]!r} sits between columns "
                         f"(row {rows.index(row) + 1}, position {x + g + 1}); columns must be "
-                        f"{gap} space{'s' if gap != 1 else ''} apart")
+                        f"{gap} space{'s' if gap != 1 else ''} apart"
+                    )
         lines.append("".join(chars).rstrip())
     while lines and lines[-1] == "":
         lines.pop()

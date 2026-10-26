@@ -2,7 +2,7 @@ repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.17.0
     hooks:
-      # Check only. --no-fix keeps a commit from applying the remaining
-      # rules, and ruff-format is left for a separate branch.
+      # Check only. --no-fix keeps a commit from applying the remaining rules.
       - id: ruff
         args: ["--no-fix"]
+      - id: ruff-format

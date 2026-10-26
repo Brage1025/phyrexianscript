@@ -61,7 +61,7 @@ class RenderTests(unittest.TestCase):
 
         src = font_source(fake)
         self.assertNotIn("data:font", src)
-        self.assertIn("local(\"Phyrexian\")", src)
+        self.assertIn('local("Phyrexian")', src)
 
     def test_official_font_embeds_when_present(self):
         from phyx.fonts import is_font_file, local_font
@@ -252,7 +252,10 @@ class CliTests(unittest.TestCase):
 
     def test_script_args_and_shebang(self):
         code, out, err = self._run(
-            "run", str(EXAMPLES / "10_command.phyx"), "red", "blue",
+            "run",
+            str(EXAMPLES / "10_command.phyx"),
+            "red",
+            "blue",
         )
         self.assertEqual(code, 0, err)
         self.assertIn("šdeχd-keθəɢð", out)
@@ -280,24 +283,17 @@ class CliTests(unittest.TestCase):
         self.assertIn("timed after compile", out)
 
     def test_list_library_map(self):
-        src = (
-            '^lo-"lib_ťewn.phyx"-bukð.\n'
-            "^ťe-n-dub:\n"
-            "    ^lo-n-ķus'ər-'iţpənn.\n"
-            "!1-2-3-3-ťewn-dub-naķm-map.\n"
-        )
+        src = "^lo-\"lib_ťewn.phyx\"-bukð.\n^ťe-n-dub:\n    ^lo-n-ķus'ər-'iţpənn.\n!1-2-3-3-ťewn-dub-naķm-map.\n"
         from phyx.interpreter import run_source
+
         buf = io.StringIO()
         run_source(src, stdout=buf, base_dir=EXAMPLES)
         self.assertEqual(buf.getvalue().strip(), "2-4-6-3-ťewn")
 
     def test_sort_sum_min_max(self):
         from phyx.interpreter import run_source
-        src = (
-            '^lo-"lib_ťewn.phyx"-bukð.\n'
-            '^lo-"lib_asərθ.phyx"-bukð.\n'
-            "!3-1-2-3-ťewn-sort,1-2-3-3-ťewn-sum,ķi-9-min,ķi-9-max.\n"
-        )
+
+        src = '^lo-"lib_ťewn.phyx"-bukð.\n^lo-"lib_asərθ.phyx"-bukð.\n!3-1-2-3-ťewn-sort,1-2-3-3-ťewn-sum,ķi-9-min,ķi-9-max.\n'
         buf = io.StringIO()
         run_source(src, stdout=buf, base_dir=EXAMPLES)
         self.assertEqual(buf.getvalue().strip(), "1-2-3-3-ťewn 6 3 9")

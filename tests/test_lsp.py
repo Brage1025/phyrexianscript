@@ -16,11 +16,7 @@ from phyx.scaffold import create
 
 class LspHelperTests(unittest.TestCase):
     def test_completions_include_lexicon_and_ability(self):
-        src = (
-            "^ťe-n-fib:\n"
-            "    ^lo-n-'iţpənn.\n"
-            "!5-fib.\n"
-        )
+        src = "^ťe-n-fib:\n    ^lo-n-'iţpənn.\n!5-fib.\n"
         labels = {item["label"] for item in completions_for(src)}
         self.assertIn("ba", labels)
         self.assertIn("babg", labels)
@@ -28,11 +24,7 @@ class LspHelperTests(unittest.TestCase):
         self.assertIn("fib", labels)
 
     def test_jump_to_te(self):
-        src = (
-            "^ťe-n-fib:\n"
-            "    ^lo-n-'iţpənn.\n"
-            "!5-fib.\n"
-        )
+        src = "^ťe-n-fib:\n    ^lo-n-'iţpənn.\n!5-fib.\n"
         # Cursor on the call ``fib`` in ``!5-fib.``
         loc = definition_at(src, 2, 3)
         self.assertIsNotNone(loc)
@@ -65,32 +57,38 @@ class LspHelperTests(unittest.TestCase):
 class LspProtocolTests(unittest.TestCase):
     def test_initialize_and_completion(self):
         server = Server()
-        init = server.handle({
-            "jsonrpc": "2.0",
-            "id": 1,
-            "method": "initialize",
-            "params": {},
-        })
+        init = server.handle(
+            {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "initialize",
+                "params": {},
+            }
+        )
         self.assertIn("completionProvider", init["result"]["capabilities"])
-        server.handle({
-            "jsonrpc": "2.0",
-            "method": "textDocument/didOpen",
-            "params": {
-                "textDocument": {
-                    "uri": "file:///tmp/x.phyx",
-                    "text": "^ťe-n-fib:\n    ^lo-n-'iţpənn.\n!5-fib.\n",
-                }
-            },
-        })
-        reply = server.handle({
-            "jsonrpc": "2.0",
-            "id": 2,
-            "method": "textDocument/completion",
-            "params": {
-                "textDocument": {"uri": "file:///tmp/x.phyx"},
-                "position": {"line": 2, "character": 3},
-            },
-        })
+        server.handle(
+            {
+                "jsonrpc": "2.0",
+                "method": "textDocument/didOpen",
+                "params": {
+                    "textDocument": {
+                        "uri": "file:///tmp/x.phyx",
+                        "text": "^ťe-n-fib:\n    ^lo-n-'iţpənn.\n!5-fib.\n",
+                    }
+                },
+            }
+        )
+        reply = server.handle(
+            {
+                "jsonrpc": "2.0",
+                "id": 2,
+                "method": "textDocument/completion",
+                "params": {
+                    "textDocument": {"uri": "file:///tmp/x.phyx"},
+                    "position": {"line": 2, "character": 3},
+                },
+            }
+        )
         labels = {item["label"] for item in reply["result"]}
         self.assertIn("fib", labels)
         self.assertIn("ťe", labels)

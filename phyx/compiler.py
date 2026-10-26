@@ -115,7 +115,7 @@ def _pow(a, b, line=0):
         raise RuntimeFault("lu'f (energize) cannot raise to a negative power", line)
     if b > 10_000:
         raise RuntimeFault("lu'f (energize): the exponent is too great", line)
-    return a ** b
+    return a**b
 
 
 def _eq(a, b, line=0):
@@ -298,12 +298,7 @@ def _repeated_operands(word: str, args: list[ast.Expr]) -> list[bool]:
         return [False] * n
     if word in ("ķus'ər", "əxķus'ər") and n == 1 and _provably_int(args[0]):
         return [False]
-    if (
-        word in _PLAIN_BIN
-        and n == 2
-        and _provably_int(args[0])
-        and _provably_int(args[1])
-    ):
+    if word in _PLAIN_BIN and n == 2 and _provably_int(args[0]) and _provably_int(args[1]):
         return [False, False]
     if word in _BIN or word in ("ķus'ər", "əxķus'ər"):
         return [True] * n
@@ -424,6 +419,7 @@ def _is_emitted_literal(py: str) -> bool:
     if body.lstrip("-").isdigit():
         return True
     return len(py) >= 2 and py[0] == py[-1] and py[0] in "'\""
+
 
 _NS_NAMES = {
     "_add": _add,
@@ -840,10 +836,7 @@ class Emitter:
     def _dyn_load(self, scope: Scope, name: str, line: int) -> str:
         gvars = "_rt.globals.vars" if self.persist and scope.kind == "func" else "None"
         locs = scope.locs_name or "None"
-        return (
-            f"_load_dyn({locs}, {self._tuple(self._chain(scope))}, "
-            f"{gvars}, {name!r}, {line})"
-        )
+        return f"_load_dyn({locs}, {self._tuple(self._chain(scope))}, {gvars}, {name!r}, {line})"
 
     def _dyn_store(self, scope: Scope, name: str, val: str, const: bool, line: int) -> str:
         gvars = "_rt.globals.vars" if self.persist and scope.kind == "func" else "None"
@@ -851,8 +844,7 @@ class Emitter:
         locs = scope.locs_name or "None"
         k = self._owner_const_set(scope, name)
         return self.bind(
-            f"_store_dyn({locs}, {self._tuple(self._chain(scope))}, "
-            f"{gvars}, {consts}, {k}, {name!r}, {val}, {const}, {line})"
+            f"_store_dyn({locs}, {self._tuple(self._chain(scope))}, {gvars}, {consts}, {k}, {name!r}, {val}, {const}, {line})"
         )
 
     def _owner_const_set(self, scope: Scope, name: str) -> str:
@@ -952,9 +944,7 @@ class Emitter:
             self.emit("pass")
 
     def emit_func(self, stmt: ast.FuncDef, outer: Scope) -> None:
-        child: Scope = getattr(stmt, "_phyx_scope", None) or Scope(
-            kind="func", parent=outer, params=set(stmt.params)
-        )
+        child: Scope = getattr(stmt, "_phyx_scope", None) or Scope(kind="func", parent=outer, params=set(stmt.params))
         user_params = [py_id(p) for p in stmt.params]
         if child.needs_rt:
             params = ", ".join(["_rt"] + user_params)
@@ -994,9 +984,7 @@ class Emitter:
             impl = wrap
         py = py_id(stmt.name)
         args = ", ".join(repr(p) for p in stmt.params)
-        self.emit(
-            f"{py} = Ability({stmt.name!r}, [{args}], [], None, {impl})"
-        )
+        self.emit(f"{py} = Ability({stmt.name!r}, [{args}], [], None, {impl})")
         if outer.kind == "module":
             self.emit(f"_rt.export_ability({stmt.name!r}, {py})")
 
@@ -1079,9 +1067,7 @@ class Emitter:
             cond = self.expr(stmt.cond, scope, bind=False)
             self.emit(f"if not ({cond}):")
             self.indent += 1
-            self.emit(
-                f"raise RuntimeFault('ǩaπa (must) was not satisfied'{msg}, {stmt.line})"
-            )
+            self.emit(f"raise RuntimeFault('ǩaπa (must) was not satisfied'{msg}, {stmt.line})")
             self.indent -= 1
             return
         if isinstance(stmt, ast.Try):
@@ -1111,9 +1097,7 @@ class Emitter:
     def emit_expr_as_stmt(self, expr: ast.Expr, scope: Scope, in_ability: bool, loop_depth: int) -> None:
         if isinstance(expr, ast.Return):
             if not in_ability:
-                self.emit(
-                    f"raise RuntimeFault(\"'iţpənn (return) used outside of an ability\", {expr.line})"
-                )
+                self.emit(f'raise RuntimeFault("\'iţpənn (return) used outside of an ability", {expr.line})')
                 return
             if expr.value is None:
                 self.emit("return None")
@@ -1122,17 +1106,13 @@ class Emitter:
             return
         if isinstance(expr, ast.Break):
             if loop_depth <= 0:
-                self.emit(
-                    f"raise RuntimeFault('lups (stop) used outside of a loop', {expr.line})"
-                )
+                self.emit(f"raise RuntimeFault('lups (stop) used outside of a loop', {expr.line})")
             else:
                 self.emit("break")
             return
         if isinstance(expr, ast.Continue):
             if loop_depth <= 0:
-                self.emit(
-                    f"raise RuntimeFault('ɢnagɮ (next) used outside of a loop', {expr.line})"
-                )
+                self.emit(f"raise RuntimeFault('ɢnagɮ (next) used outside of a loop', {expr.line})")
             else:
                 self.emit("continue")
             return
@@ -1179,9 +1159,7 @@ class Emitter:
             return self.emit_call(expr, scope, bind=bind)
         if isinstance(expr, ast.UserCall):
             child_bind = bind or _has_assign(expr)
-            args = self._in_order(
-                expr.args, scope, child_bind, [False] * len(expr.args)
-            )
+            args = self._in_order(expr.args, scope, child_bind, [False] * len(expr.args))
             arglist = ", ".join(args)
             found = scope.find(expr.name)
             if found is not None and expr.name in found.funs:
@@ -1256,15 +1234,11 @@ class Emitter:
     def emit_call(self, expr: ast.Call, scope: Scope, bind: bool = True) -> str:
         word = expr.verb.word
         line = expr.line
-        guarded = (word in _BIN and len(expr.args) == 2) or (
-            word in _UNARY and len(expr.args) == 1
-        )
+        guarded = (word in _BIN and len(expr.args) == 2) or (word in _UNARY and len(expr.args) == 1)
         repeat = _repeated_operands(word, expr.args) if guarded else [False] * len(expr.args)
         args = self._in_order(expr.args, scope, bind, repeat)
         if word in _BIN and len(args) == 2:
-            return self._int_binop(
-                word, expr.args[0], expr.args[1], args[0], args[1], line, bind=bind
-            )
+            return self._int_binop(word, expr.args[0], expr.args[1], args[0], args[1], line, bind=bind)
         if word in _UNARY and len(args) == 1:
             return self._int_unop(word, expr.args[0], args[0], line, bind=bind)
         if word == "ʁšθakɴ" and len(args) == 3:
@@ -1321,9 +1295,7 @@ class Emitter:
                 expr = f"({a} {_PLAIN_BIN[word]} {b} if {types} else {helper}({a}, {b}, {line}))"
         return self.maybe_bind(expr, bind)
 
-    def _int_unop(
-        self, word: str, a_expr: ast.Expr, a: str, line: int, bind: bool = True
-    ) -> str:
+    def _int_unop(self, word: str, a_expr: ast.Expr, a: str, line: int, bind: bool = True) -> str:
         if word == "əx":
             # Python `not` is not φyrx truth. `_not` calls truthy().
             expr = f"_not({a}, {line})"
@@ -1368,9 +1340,7 @@ class Emitter:
         # enclosing scope has not bound yet raises NameError (3.14+).
         self.emit("except NameError:")
         self.indent += 1
-        self.emit(
-            f"raise RuntimeFault({f'unknown word {name!r}'!r}, {line}, hint={hint!r})"
-        )
+        self.emit(f"raise RuntimeFault({f'unknown word {name!r}'!r}, {line}, hint={hint!r})")
         self.indent -= 1
         return tmp
 
@@ -1387,9 +1357,7 @@ class Emitter:
         outer = late.parent
         if outer is None:  # pragma: no cover - 'u shadows something outside this scope
             hint = hint_for_unknown(name)
-            self.emit(
-                f"raise RuntimeFault({f'unknown word {name!r}'!r}, {line}, hint={hint!r})"
-            )
+            self.emit(f"raise RuntimeFault({f'unknown word {name!r}'!r}, {line}, hint={hint!r})")
             self.emit(f"{tmp} = None")
         else:
             loaded = self.load(name, outer, line)
@@ -1417,10 +1385,7 @@ class Emitter:
     def _store_own_late(self, name: str, val: str, scope: Scope, line: int) -> str:
         """``'u`` in the ability that owns the slot. It does not walk outward."""
         slot = scope.late_slot[name]
-        rhs = (
-            f"_fix_here({scope.const_set}, {scope.seen_set}, {name!r}, "
-            f"{val}, True, {line})"
-        )
+        rhs = f"_fix_here({scope.const_set}, {scope.seen_set}, {name!r}, {val}, True, {line})"
         self.emit(f"{slot} = {rhs}")
         return slot
 
@@ -1462,10 +1427,7 @@ class Emitter:
         line: int,
     ) -> str:
         """'u in an ability binds here, even when an outer name has the same spelling."""
-        rhs = (
-            f"_fix_here({scope.const_set}, {scope.seen_set}, {name!r}, "
-            f"{val}, {const}, {line})"
-        )
+        rhs = f"_fix_here({scope.const_set}, {scope.seen_set}, {name!r}, {val}, {const}, {line})"
         if name in scope.captured and scope.box:
             self.emit(f"{scope.box}[{name!r}] = {rhs}")
             return f"{scope.box}[{name!r}]"
@@ -1541,9 +1503,7 @@ class Emitter:
         if isinstance(stmt, ast.Try):
             body_p = self._mark_block(stmt.body, scope, proven, skip_funcs=False)
             if stmt.handler:
-                hand_p = self._mark_block(
-                    stmt.handler, scope, proven | {BLAME_WORD}, skip_funcs=False
-                )
+                hand_p = self._mark_block(stmt.handler, scope, proven | {BLAME_WORD}, skip_funcs=False)
                 return body_p & hand_p
             return body_p
         return proven
@@ -1615,14 +1575,8 @@ class Emitter:
     ) -> str:
         py = py_id(name)
         found = scope.find(name)
-        if (
-            scope.kind == "func"
-            and const
-            and (name in scope.params or name in scope.funs)
-        ):
-            already = (
-                f"'{name}' already has a value here and cannot be fixed in the past ('u)"
-            )
+        if scope.kind == "func" and const and (name in scope.params or name in scope.funs):
+            already = f"'{name}' already has a value here and cannot be fixed in the past ('u)"
             self.emit(f"raise RuntimeFault({already!r}, {line})")
             return "None"
         if (
@@ -1650,11 +1604,7 @@ class Emitter:
                 rhs = val
             self.emit(f"{scope.box}[{name!r}] = {rhs}")
             return f"{scope.box}[{name!r}]"
-        persist_env = scope.kind == "module" or (
-            found is not None
-            and found.kind == "module"
-            and name not in found.funs
-        )
+        persist_env = scope.kind == "module" or (found is not None and found.kind == "module" and name not in found.funs)
         need_env = persist_env and (self.persist or name in self.const_anywhere)
         if const:
             rhs = f"_rt.fix({name!r}, {val}, {line})"

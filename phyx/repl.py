@@ -113,9 +113,7 @@ class Repl:
         self.ascii_mode = ascii_mode
         self.intro = intro
         self.done = False
-        self.interp = Interpreter(
-            stdout=self.out, stdin=self.inp, ascii_mode=ascii_mode, persistent=True
-        )
+        self.interp = Interpreter(stdout=self.out, stdin=self.inp, ascii_mode=ascii_mode, persistent=True)
 
     def write(self, text: str) -> None:
         self.out.write(text)

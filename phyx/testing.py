@@ -83,9 +83,7 @@ def run_test_file(path: Path, *, ascii_mode: bool = False) -> TestResult:
             return TestResult(
                 path,
                 False,
-                f"stdout does not match {sidecar.name}\n"
-                f"  expected {want!r}\n"
-                f"  got      {got!r}",
+                f"stdout does not match {sidecar.name}\n  expected {want!r}\n  got      {got!r}",
             )
     return TestResult(path, True, got)
 

@@ -34,6 +34,7 @@ These pass on the compiled engine, which is the default, and again with the tree
 python -m unittest discover -s tests -v
 python -m phyx test
 ruff check .
+ruff format --check .
 ```
 
 The same two test commands with `PHYX_TREEWALK=1`:

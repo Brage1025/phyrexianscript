@@ -122,13 +122,43 @@ GLOSS_EXTRA: dict[str, str] = {
 
 # Names that are English *statement* keywords.  Bound names such as ``fn``
 # (a stored ability) are not mistakes — only these, used as names, are.
-ENGLISH_NAME_TRAPS: frozenset[str] = frozenset({
-    "if", "else", "elif", "unless", "while", "for", "def", "function",
-    "assert", "try", "except", "catch", "return", "break", "continue",
-    "true", "false", "none", "null", "and", "or", "not",
-    "print", "import", "class", "async", "await", "lambda",
-    "from", "with", "yield", "pass", "raise",
-})
+ENGLISH_NAME_TRAPS: frozenset[str] = frozenset(
+    {
+        "if",
+        "else",
+        "elif",
+        "unless",
+        "while",
+        "for",
+        "def",
+        "function",
+        "assert",
+        "try",
+        "except",
+        "catch",
+        "return",
+        "break",
+        "continue",
+        "true",
+        "false",
+        "none",
+        "null",
+        "and",
+        "or",
+        "not",
+        "print",
+        "import",
+        "class",
+        "async",
+        "await",
+        "lambda",
+        "from",
+        "with",
+        "yield",
+        "pass",
+        "raise",
+    }
+)
 
 
 def search_lexicon(query: str) -> list[tuple[str, str, str, str]]:
@@ -223,13 +253,7 @@ def levenshtein(a: str, b: str) -> int:
 def candidates(extra: list[str] | tuple[str, ...] = ()) -> list[str]:
     seen: set[str] = set()
     out: list[str] = []
-    for w in (
-        list(VERBS)
-        + list(MARKERS)
-        + list(CONSTANTS)
-        + list(TYPE_WORDS.values())
-        + list(extra)
-    ):
+    for w in list(VERBS) + list(MARKERS) + list(CONSTANTS) + list(TYPE_WORDS.values()) + list(extra):
         if w not in seen:
             seen.add(w)
             out.append(w)
@@ -267,25 +291,16 @@ def hint_for_unknown(word: str, extra: list[str] | tuple[str, ...] = ()) -> str:
     """What to do next when a name is not bound."""
     lemma = lemma_of(word)
     if lemma is not None and lemma != word:
-        return (
-            f"'{word}' is a conjugation of {_label(lemma)}. "
-            f"python -m phyx explain {lemma}"
-        )
+        return f"'{word}' is a conjugation of {_label(lemma)}. python -m phyx explain {lemma}"
     low = word.lower()
     if low in ENGLISH_TO_PHYX:
         phy = ENGLISH_TO_PHYX[low]
-        return (
-            f"'{word}' is English, not Phyrexian. Write {_label(phy)}.  "
-            f"python -m phyx explain {phy}"
-        )
+        return f"'{word}' is English, not Phyrexian. Write {_label(phy)}.  python -m phyx explain {phy}"
     found = did_you_mean(word, extra)
     if found:
         shown = " or ".join(_label(w) for w in found)
         return f"did you mean {shown}?  python -m phyx explain {found[0]}"
-    return (
-        f"bind it first: ^xe-VALUE-{word}-ţə''.  "
-        "Or run `python -m phyx words` for the lexicon."
-    )
+    return f"bind it first: ^xe-VALUE-{word}-ţə''.  Or run `python -m phyx words` for the lexicon."
 
 
 def explain_word(query: str) -> str | None:
@@ -306,8 +321,13 @@ def explain_word(query: str) -> str | None:
             "(tutorial ch. 3); tense is the mood marker, not the verb"
         )
         key = conj.lemma
-    elif key not in VERBS and key not in MARKERS and key not in CONSTANTS \
-            and key not in TYPE_WORDS.values() and key not in GLOSS_EXTRA:
+    elif (
+        key not in VERBS
+        and key not in MARKERS
+        and key not in CONSTANTS
+        and key not in TYPE_WORDS.values()
+        and key not in GLOSS_EXTRA
+    ):
         if low in ENGLISH_TO_PHYX:
             via = raw
             key = ENGLISH_TO_PHYX[low]
@@ -331,9 +351,10 @@ def explain_word(query: str) -> str | None:
         lines.append("        first word of a phrase after ^")
     elif key in VERBS:
         v = VERBS[key]
-        ar = "N items, then a count" if v.arity == -1 else (
-            "no objects" if v.arity == 0 else
-            ("1 object" if v.arity == 1 else f"{v.arity} objects")
+        ar = (
+            "N items, then a count"
+            if v.arity == -1
+            else ("no objects" if v.arity == 0 else ("1 object" if v.arity == 1 else f"{v.arity} objects"))
         )
         lines.append(f"{v.word}    verb / {ar}    {v.gloss}")
         lines.append(f"        {v.doc}")
@@ -345,10 +366,7 @@ def explain_word(query: str) -> str | None:
         lines.append(f"{key}    type word for {eng} (returned by πøkk)")
     elif key in GLOSS_EXTRA:
         lines.append(f"{key}    {GLOSS_EXTRA[key]}")
-    english = sorted(
-        en for en, phy in ENGLISH_TO_PHYX.items()
-        if phy == key or phy.startswith(key + "-")
-    )
+    english = sorted(en for en, phy in ENGLISH_TO_PHYX.items() if phy == key or phy.startswith(key + "-"))
     if english:
         lines.append("        English: " + ", ".join(english))
     lines.append("        python -m phyx words    for the full lexicon")
@@ -358,7 +376,4 @@ def explain_word(query: str) -> str | None:
 def explain_missing(query: str) -> str:
     guesses = did_you_mean(query)
     extra = f" Nearby: {', '.join(guesses)}." if guesses else ""
-    return (
-        f"nothing named {query!r} in φyrx.{extra}  "
-        "python -m phyx words    python -m phyx lookup " + query
-    )
+    return f"nothing named {query!r} in φyrx.{extra}  python -m phyx words    python -m phyx lookup " + query

@@ -34,10 +34,7 @@ def create(name: str, *, ascii_mode: bool = False, directory: Path | str | None 
     if raw.lower().endswith(".phyx") or raw.lower().endswith(".vphyx"):
         raw = Path(raw).stem
     if not _NAME.fullmatch(raw):
-        raise ValueError(
-            "NAME must be letters, digits, and underscore "
-            "(so it can be a ťe and a file on every OS)"
-        )
+        raise ValueError("NAME must be letters, digits, and underscore (so it can be a ťe and a file on every OS)")
     if raw in RESERVED or lemma_of(raw) is not None:
         raise ValueError(f"'{raw}' is a word of the language and cannot name an ability")
     folder = Path(directory) if directory is not None else Path.cwd()

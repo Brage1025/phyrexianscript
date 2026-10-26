@@ -177,7 +177,7 @@ CASES: dict[str, list[dict]] = {
         {"source": "^xe-1-2-2-ťewn-l-ţə''.\n!9-l-0-tapq-ţə''.\n!l.", "stdout": "9\n9-2-2-ťewn\n"},
         {"source": "!1-2-ţə''.", "fault": "the target of ţə'' (put) must be a name or a 'tapq' place", "kind": "ParseError"},
         {
-            "source": '!9-"ab"-0-tapq-ţə\'\'.',
+            "source": "!9-\"ab\"-0-tapq-ţə''.",
             "fault": "text cannot be changed in place; build a new text instead",
             "kind": "RuntimeFault",
         },
@@ -194,7 +194,7 @@ CASES: dict[str, list[dict]] = {
             "kind": "RuntimeFault",
         },
         {
-            "source": '^xe-0-tekt-b-ţə\'\'.\n^xe-1-b-0-ťewn-tapq-ţə\'\'.',
+            "source": "^xe-0-tekt-b-ţə''.\n^xe-1-b-0-ťewn-tapq-ţə''.",
             "fault": "a book cannot be keyed by a list ('ţə''')",
             "kind": "RuntimeFault",
         },
@@ -301,7 +301,7 @@ CASES: dict[str, list[dict]] = {
         {"source": '!"ab"-0-čxət\'.', "fault": "cannot exile from rukx (text)", "kind": "RuntimeFault"},
     ],
     "'iixtfu'q": [
-        {"source": '!1-2-2-ťewn-\'iixtfu\'q,"ab"-\'iixtfu\'q.', "stdout": "1 a\n"},
+        {"source": "!1-2-2-ťewn-'iixtfu'q,\"ab\"-'iixtfu'q.", "stdout": "1 a\n"},
         {"source": "!0-ťewn-'iixtfu'q.", "fault": "an empty list has no beginning", "kind": "RuntimeFault"},
         {"source": "!1-'iixtfu'q.", "fault": "asərθ (number) has no beginning", "kind": "RuntimeFault"},
     ],
@@ -412,7 +412,7 @@ CASES: dict[str, list[dict]] = {
         },
         {
             "source": '^lo-"c.phyx"-bukð.',
-            "files": {"c.phyx": '^xe-"d.phyx"-p-ţə\'\'.\n^lo-p-bukð.\n', "d.phyx": '^lo-"c.phyx"-bukð.\n'},
+            "files": {"c.phyx": "^xe-\"d.phyx\"-p-ţə''.\n^lo-p-bukð.\n", "d.phyx": '^lo-"c.phyx"-bukð.\n'},
             "fault": "bukð (play/cast): 'c.phyx' is already being cast (cycle)",
             "kind": "RuntimeFault",
         },
@@ -475,7 +475,7 @@ CASES: dict[str, list[dict]] = {
             "kind": "RuntimeFault",
         },
         {
-            "source": "^lo-\"\ud800\"-\"out.rukx\"-mɴyrx.",
+            "source": '^lo-"\ud800"-"out.rukx"-mɴyrx.',
             "fault": (
                 "mɴyrx (spread) cannot write 'out.rukx': 'utf-8' codec can't encode "
                 "character '\\ud800' in position 0: surrogates not allowed"

@@ -176,8 +176,7 @@ def font_source(local_font: Path | None) -> str:
     return ",\n       ".join(parts)
 
 
-def render_html(source: str, title: str = "", local_font: Path | None = None,
-                size: int = 34, indent_unit: int = 4) -> str:
+def render_html(source: str, title: str = "", local_font: Path | None = None, size: int = 34, indent_unit: int = 4) -> str:
     source = unicodedata.normalize("NFC", source.lstrip("\ufeff"))
     if source.startswith("#!"):
         nl = source.find("\n")

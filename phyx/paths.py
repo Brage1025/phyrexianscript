@@ -102,15 +102,9 @@ def resolve_spread(path_str: str, base_dir: Path | str | None) -> Path:
 
 def cast_hint(path_str: str, base_dir: Path | str | None) -> str:
     places = ", ".join(str(p) for p in search_dirs(base_dir))
-    return (
-        f"bukð looked for '{path_str}' in: {places}. "
-        "python -m phyx lib    lists the standard herds."
-    )
+    return f"bukð looked for '{path_str}' in: {places}. python -m phyx lib    lists the standard herds."
 
 
 def note_hint(path_str: str, base_dir: Path | str | None) -> str:
     places = ", ".join(str(p) for p in note_search_dirs(base_dir))
-    return (
-        f"brøtjt looked for '{path_str}' in: {places}. "
-        "mɴyrx writes next to the program, not along this search."
-    )
+    return f"brøtjt looked for '{path_str}' in: {places}. mɴyrx writes next to the program, not along this search."

@@ -225,10 +225,7 @@ class InterruptTests(unittest.TestCase):
             timer.cancel()
 
 
-RLIMIT_AS_SKIP = (
-    "RLIMIT_AS is only enforced on Linux "
-    "(macOS refuses to set it, Windows has no resource module)"
-)
+RLIMIT_AS_SKIP = "RLIMIT_AS is only enforced on Linux (macOS refuses to set it, Windows has no resource module)"
 
 
 def _rlimit_as_enforced() -> bool:
@@ -363,7 +360,7 @@ class NestingTests(unittest.TestCase):
                 recursion = None if name == "ifs" else RUN_RECURSION
                 proc = _cli(
                     ["repl"],
-                    stdin=src + "\n!\"ok\".\n.quit\n",
+                    stdin=src + '\n!"ok".\n.quit\n',
                     recursion=recursion,
                 )
                 text = proc.stdout + proc.stderr

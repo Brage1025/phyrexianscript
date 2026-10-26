@@ -43,12 +43,10 @@ class ArithmeticTests(unittest.TestCase):
 
 class LogicTests(unittest.TestCase):
     def test_comparisons(self):
-        self.assertEqual(run("!1-2-grmɒɣg,2-1-korxgr,1-1-ǆ'ynpp,1-əxbytp-ǆ'ynpp."),
-                         "əxbytp əxbytp əxbytp bytp\n")
+        self.assertEqual(run("!1-2-grmɒɣg,2-1-korxgr,1-1-ǆ'ynpp,1-əxbytp-ǆ'ynpp."), "əxbytp əxbytp əxbytp bytp\n")
 
     def test_logic(self):
-        self.assertEqual(run("!əxbytp-bytp-xə,əxbytp-bytp-ðə,bytp-əx,0-əx,\"\"-əx."),
-                         "bytp əxbytp əxbytp əxbytp əxbytp\n")
+        self.assertEqual(run('!əxbytp-bytp-xə,əxbytp-bytp-ðə,bytp-əx,0-əx,""-əx.'), "bytp əxbytp əxbytp əxbytp əxbytp\n")
 
     def test_choose(self):
         self.assertEqual(run('!1-"a"-"b"-ʁšθakɴ,0-"a"-"b"-ʁšθakɴ.'), "a b\n")
@@ -85,9 +83,9 @@ class ControlFlowTests(unittest.TestCase):
     def test_if_chain(self):
         src = (
             "^ťe-n-sign:\n"
-            "    ^ba-n-0-grmɒɣg:lo-\"neg\"-'iţpənn.\n"
+            '    ^ba-n-0-grmɒɣg:lo-"neg"-\'iţpənn.\n'
             "    ^qit-ba-n-0-ǆ'ynpp:lo-\"zero\"-'iţpənn.\n"
-            "    ^qit:lo-\"pos\"-'iţpənn.\n"
+            '    ^qit:lo-"pos"-\'iţpənn.\n'
             "!əx1-sign,0-sign,1-sign.\n"
         )
         self.assertEqual(run(src), "neg zero pos\n")
@@ -108,8 +106,8 @@ class ControlFlowTests(unittest.TestCase):
 
     def test_for_over_list_text_book(self):
         self.assertEqual(run("^aχəw'-x-dl-3-ronɣ:!x."), "0\n1\n2\n")
-        self.assertEqual(run("^aχəw'-c-dl-\"ab\":!c."), "a\nb\n")
-        self.assertEqual(run("^aχəw'-k-dl-\"x\"-1-\"y\"-2-2-tekt:!k."), "x\ny\n")
+        self.assertEqual(run('^aχəw\'-c-dl-"ab":!c.'), "a\nb\n")
+        self.assertEqual(run('^aχəw\'-k-dl-"x"-1-"y"-2-2-tekt:!k.'), "x\ny\n")
 
     def test_for_over_number_fails(self):
         with self.assertRaisesRegex(RuntimeFault, "cannot walk"):
@@ -130,12 +128,7 @@ class ControlFlowTests(unittest.TestCase):
 
 class AbilityTests(unittest.TestCase):
     def test_recursion_and_hoisting(self):
-        src = (
-            "!5-fact.\n"
-            "^ťe-n-fact:\n"
-            "    ^ba-n-2-grmɒɣg:lo-1-'iţpənn.\n"
-            "    ^lo-n-n-1-mɒɣg-fact-tøwp-'iţpənn.\n"
-        )
+        src = "!5-fact.\n^ťe-n-fact:\n    ^ba-n-2-grmɒɣg:lo-1-'iţpənn.\n    ^lo-n-n-1-mɒɣg-fact-tøwp-'iţpənn.\n"
         self.assertEqual(run(src), "78\n")  # 120
 
     def test_return_without_value_is_void(self):
@@ -143,26 +136,14 @@ class AbilityTests(unittest.TestCase):
 
     def test_locals_do_not_leak_but_globals_are_visible(self):
         src = (
-            "^xe-1-g-ţə''.\n"
-            "^ťe-f:\n"
-            "    ^xe-5-local-ţə''.\n"
-            "    ^xe-g-1-babg-g-ţə''.\n"
-            "    ^lo-local-'iţpənn.\n"
-            "!f,g.\n"
-            "!local.\n"
+            "^xe-1-g-ţə''.\n^ťe-f:\n    ^xe-5-local-ţə''.\n    ^xe-g-1-babg-g-ţə''.\n    ^lo-local-'iţpənn.\n!f,g.\n!local.\n"
         )
         with self.assertRaisesRegex(RuntimeFault, "unknown word 'local'"):
             run(src)
         self.assertEqual(run(src.rsplit("\n!local.", 1)[0]), "5 2\n")
 
     def test_nested_abilities_close_over_scope(self):
-        src = (
-            "^ťe-n-outer:\n"
-            "    ^ťe-inner:\n"
-            "        ^lo-n-ķus'ər-'iţpənn.\n"
-            "    ^lo-inner-'iţpənn.\n"
-            "!4-outer.\n"
-        )
+        src = "^ťe-n-outer:\n    ^ťe-inner:\n        ^lo-n-ķus'ər-'iţpənn.\n    ^lo-inner-'iţpənn.\n!4-outer.\n"
         self.assertEqual(run(src), "8\n")
 
     def test_too_deep(self):
@@ -171,21 +152,11 @@ class AbilityTests(unittest.TestCase):
 
     def test_compiled_recursion_of_8000_returns(self):
         # 1f40 is 8000. The compiled engine uses one host frame per call.
-        src = (
-            "^ťe-n-cnt:\n"
-            "    ^ba-n-0-grmɒɣg:lo-0-'iţpənn.\n"
-            "    ^lo-n-1-mɒɣg-cnt-'iţpənn.\n"
-            "!1f40-cnt.\n"
-        )
+        src = "^ťe-n-cnt:\n    ^ba-n-0-grmɒɣg:lo-0-'iţpənn.\n    ^lo-n-1-mɒɣg-cnt-'iţpənn.\n!1f40-cnt.\n"
         self.assertEqual(run(src, treewalk=False), "0\n")
 
     def test_phyx_recursion_sets_the_ceiling(self):
-        deep = (
-            "^ťe-n-cnt:\n"
-            "    ^ba-n-0-grmɒɣg:lo-0-'iţpənn.\n"
-            "    ^lo-n-1-mɒɣg-cnt-'iţpənn.\n"
-            "!100-cnt.\n"
-        )
+        deep = "^ťe-n-cnt:\n    ^ba-n-0-grmɒɣg:lo-0-'iţpənn.\n    ^lo-n-1-mɒɣg-cnt-'iţpənn.\n!100-cnt.\n"
         shallow = deep.replace("!100-cnt.", "!20-cnt.")
         previous = os.environ.get("PHYX_RECURSION")
         os.environ["PHYX_RECURSION"] = "200"
@@ -206,13 +177,7 @@ class AbilityTests(unittest.TestCase):
                 os.environ["PHYX_RECURSION"] = previous
 
     def test_ability_is_truthy_and_can_be_activated(self):
-        src = (
-            "^ťe-a-b-add:\n"
-            "    ^lo-a-b-babg-'iţpənn.\n"
-            "^xe-add-fn-ţə''.\n"
-            '^ba-fn:!"yes".\n'
-            "!3-4-2-ťewn-fn-čtəčpliɣn.\n"
-        )
+        src = "^ťe-a-b-add:\n    ^lo-a-b-babg-'iţpənn.\n^xe-add-fn-ţə''.\n^ba-fn:!\"yes\".\n!3-4-2-ťewn-fn-čtəčpliɣn.\n"
         self.assertEqual(run(src), "yes\n7\n")
 
     def test_activate_arity_mismatch(self):
@@ -220,12 +185,7 @@ class AbilityTests(unittest.TestCase):
             run("^ťe-a-b-add:\n    ^lo-a-b-babg-'iţpənn.\n^xe-add-fn-ţə''.\n!1-1-ťewn-fn-čtəčpliɣn.")
 
     def test_quote_zero_arity_and_activate(self):
-        src = (
-            "^ťe-greet:\n"
-            '    !"hi".\n'
-            "^xe-greet-naķm-fn-ţə''.\n"
-            "^lo-0-ťewn-fn-čtəčpliɣn.\n"
-        )
+        src = "^ťe-greet:\n    !\"hi\".\n^xe-greet-naķm-fn-ţə''.\n^lo-0-ťewn-fn-čtəčpliɣn.\n"
         self.assertEqual(run(src), "hi\n")
 
     def test_command_args(self):
@@ -245,9 +205,7 @@ class CollectionTests(unittest.TestCase):
         )
         self.assertEqual(
             run(src),
-            "9-2-3-4-4-ťewn 4 9 4 4 əxbytp bytp\n"
-            "2 9-3-4-3-ťewn\n"
-            "3-4-2-ťewn 9-3-2-ťewn əxbytp\n",
+            "9-2-3-4-4-ťewn 4 9 4 4 əxbytp bytp\n2 9-3-4-3-ťewn\n3-4-2-ťewn 9-3-2-ťewn əxbytp\n",
         )
 
     def test_index_errors(self):
@@ -259,14 +217,13 @@ class CollectionTests(unittest.TestCase):
     def test_book_ops(self):
         src = (
             '^xe-"a"-1-"b"-2-2-tekt-b-ţə\'\'.\n'
-            '^xe-3-b-"c"-tapq-ţə\'\'.\n'
+            "^xe-3-b-\"c\"-tapq-ţə''.\n"
             '!b-"c"-tapq,b-samk,"a"-b-dl,"z"-b-dl,b-rukxtekt.\n'
             '!b-"a"-čxət\',b.\n'
         )
         self.assertEqual(
             run(src),
-            '3 3 əxbytp bytp "a"-"b"-"c"-3-ťewn\n'
-            '1 "b"-2-"c"-3-2-tekt\n',
+            '3 3 əxbytp bytp "a"-"b"-"c"-3-ťewn\n1 "b"-2-"c"-3-2-tekt\n',
         )
         with self.assertRaisesRegex(RuntimeFault, "no entry"):
             run('!0-tekt-"k"-tapq.')
@@ -282,8 +239,9 @@ class CollectionTests(unittest.TestCase):
         self.assertEqual(run('!"ff"-asərθ,"əx10"-asərθ,əxbytp-asərθ,0a-xušv-"!"-babg.'), "0ff əx10 1 0a!\n")
         mono_a = "\N{MATHEMATICAL MONOSPACE CAPITAL A}"
         self.assertEqual(run(f'!"{mono_a}"-asərθ.'), "0a\n")
-        self.assertEqual(run("!1-πøkk,\"\"-πøkk,bytp-πøkk,əixiww-πøkk,0-ťewn-πøkk,0-tekt-πøkk."),
-                         "asərθ rukx wija'x əixiww ťewn tekt\n")
+        self.assertEqual(
+            run('!1-πøkk,""-πøkk,bytp-πøkk,əixiww-πøkk,0-ťewn-πøkk,0-tekt-πøkk.'), "asərθ rukx wija'x əixiww ťewn tekt\n"
+        )
         with self.assertRaises(RuntimeFault):
             run('!"xyz"-asərθ.')
 
@@ -307,20 +265,14 @@ class IOTests(unittest.TestCase):
 
 class ErrorTests(unittest.TestCase):
     def test_mistake_is_caught_with_blame(self):
-        src = (
-            "^baqilx:\n"
-            '    ^xe-"bad"-ɬšeɴazv.\n'
-            '    !"no".\n'
-            "^qit:\n"
-            "    !dekp.\n"
-        )
+        src = '^baqilx:\n    ^xe-"bad"-ɬšeɴazv.\n    !"no".\n^qit:\n    !dekp.\n'
         self.assertEqual(run(src), "bad\n")
 
     def test_runtime_fault_is_caught(self):
-        self.assertEqual(run("^baqilx:\n    !1-0-χɬkevk.\n^qit:\n    !\"caught\".\n"), "caught\n")
+        self.assertEqual(run('^baqilx:\n    !1-0-χɬkevk.\n^qit:\n    !"caught".\n'), "caught\n")
 
     def test_try_without_handler_swallows(self):
-        self.assertEqual(run("^baqilx:\n    !1-0-χɬkevk.\n!\"after\".\n"), "after\n")
+        self.assertEqual(run('^baqilx:\n    !1-0-χɬkevk.\n!"after".\n'), "after\n")
 
     def test_uncaught_mistake_carries_value_and_line(self):
         with self.assertRaises(UserMistake) as cm:
@@ -329,17 +281,12 @@ class ErrorTests(unittest.TestCase):
         self.assertEqual(cm.exception.line, 2)
 
     def test_assert(self):
-        self.assertEqual(run("^ǩaπa-1-1-ǆ'ynpp.\n!\"ok\"."), "ok\n")
+        self.assertEqual(run('^ǩaπa-1-1-ǆ\'ynpp.\n!"ok".'), "ok\n")
         with self.assertRaisesRegex(RuntimeFault, "must.*: nope"):
             run('^ǩaπa-bytp,"nope".')
 
     def test_control_flow_passes_through_try(self):
-        src = (
-            "^aχəw'-i-dl-5-ronɣ:\n"
-            "    ^baqilx:\n"
-            "        ^ba-i-2-ǆ'ynpp:lo-lups.\n"
-            "    !i.\n"
-        )
+        src = "^aχəw'-i-dl-5-ronɣ:\n    ^baqilx:\n        ^ba-i-2-ǆ'ynpp:lo-lups.\n    !i.\n"
         self.assertEqual(run(src), "0\n1\n")
 
 

@@ -121,7 +121,8 @@ class Parser:
         if path in self._ingesting:
             raise ParseError(
                 f"bukð (play/cast): '{path_str}' is already being cast (cycle)",
-                at.line, at.col,
+                at.line,
+                at.col,
             )
         try:
             text = path.read_text(encoding="utf-8")
@@ -166,8 +167,7 @@ class Parser:
                 raise ParseError("ťe (can) needs the name of the ability", nxt.line, nxt.col)
             name = words[-1]
             if name.value in RESERVED or lemma_of(name.value) is not None:
-                raise ParseError(f"'{name.value}' is a word of the language and cannot name an ability",
-                                 name.line, name.col)
+                raise ParseError(f"'{name.value}' is a word of the language and cannot name an ability", name.line, name.col)
             if name.value in self._defined_here:
                 raise ParseError(f"the ability '{name.value}' is defined twice", name.line, name.col)
             self._defined_here.add(name.value)
@@ -181,8 +181,7 @@ class Parser:
         if first.kind == "EOF":
             return []
         if first.kind != "START":
-            raise ParseError(f"a sentence must begin with ^, ! or ?, found {self._describe(first)}",
-                             first.line, first.col)
+            raise ParseError(f"a sentence must begin with ^, ! or ?, found {self._describe(first)}", first.line, first.col)
         if first.indent != 0:
             raise ParseError("the first sentence must not be indented", first.line, first.col)
         stmts = self.parse_block(0)
@@ -202,7 +201,9 @@ class Parser:
                 raise ParseError(
                     f"a sentence must begin with ^, ! or ?, found {self._describe(tok)}"
                     " (is the previous sentence missing its final '.'?)",
-                    tok.line, tok.col)
+                    tok.line,
+                    tok.col,
+                )
             if tok.indent < indent:
                 break
             if tok.indent > indent:
@@ -223,8 +224,7 @@ class Parser:
             return
         if isinstance(prev, ast.If):
             tail = prev
-            while tail.orelse and len(tail.orelse) == 1 and isinstance(tail.orelse[0], ast.If) \
-                    and tail.orelse[0].chained:
+            while tail.orelse and len(tail.orelse) == 1 and isinstance(tail.orelse[0], ast.If) and tail.orelse[0].chained:
                 tail = tail.orelse[0]
             if tail.orelse is not None:
                 raise ParseError("qit (instead) was already given for this ba (if) sentence", els.line)
@@ -312,8 +312,7 @@ class Parser:
             self.skip_seps()
             cond = self.parse_condition(sub_marker)
             body = self.parse_body(line)
-            nested = ast.If(cond, body, negate=MARKERS[sub_marker][0] == "unless",
-                            chained=True, line=line)
+            nested = ast.If(cond, body, negate=MARKERS[sub_marker][0] == "unless", chained=True, line=line)
             return ast.Else([nested], line=line)
         body = self.parse_body(line)
         return ast.Else(body, line=line)
@@ -328,13 +327,11 @@ class Parser:
     def parse_for(self, marker: str, line: int) -> ast.Stmt:
         var = self.expect("WORD", "the name of each item")
         if var.value in RESERVED:
-            raise ParseError(f"'{var.value}' is a word of the language and cannot name an item",
-                             var.line, var.col)
+            raise ParseError(f"'{var.value}' is a word of the language and cannot name an item", var.line, var.col)
         self.skip_seps()
         prep = self.expect("WORD", f"'{IN_WORD}' (in)")
         if prep.value != IN_WORD:
-            raise ParseError(f"aχəw' (each) reads: aχəw'-ITEM-{IN_WORD}-COLLECTION; found '{prep.value}'",
-                             prep.line, prep.col)
+            raise ParseError(f"aχəw' (each) reads: aχəw'-ITEM-{IN_WORD}-COLLECTION; found '{prep.value}'", prep.line, prep.col)
         iterable = self.parse_condition(marker, what="collection")
         body = self.parse_body(line)
         return ast.For(var.value, iterable, body, line=line)
@@ -360,8 +357,7 @@ class Parser:
             raise ParseError(f"the ability '{name}' repeats an object name", line)
         if self.peek().kind != "COLON":
             tok = self.peek()
-            raise ParseError(f"an ability definition needs ':' and a body, found {self._describe(tok)}",
-                             tok.line, tok.col)
+            raise ParseError(f"an ability definition needs ':' and a body, found {self._describe(tok)}", tok.line, tok.col)
         body = self.parse_body(line)
         return ast.FuncDef(name, params, body, line=line)
 
@@ -383,9 +379,7 @@ class Parser:
         exprs = self.parse_phrase()
         if len(exprs) != 1:
             tok = self.peek()
-            raise ParseError(
-                f"{marker} needs exactly one {what}, this phrase leaves {len(exprs)} values",
-                tok.line, tok.col)
+            raise ParseError(f"{marker} needs exactly one {what}, this phrase leaves {len(exprs)} values", tok.line, tok.col)
         return exprs[0]
 
     def _end_or_error(self, marker: str) -> None:
@@ -418,11 +412,9 @@ class Parser:
                 return [self._single(self.parse_sentence(self.advance()))]
             return [self._single(self.parse_sentence(None))]
         if nxt.kind != "START":
-            raise ParseError(f"a sentence must begin with ^, ! or ?, found {self._describe(nxt)}",
-                             nxt.line, nxt.col)
+            raise ParseError(f"a sentence must begin with ^, ! or ?, found {self._describe(nxt)}", nxt.line, nxt.col)
         if nxt.indent <= colon.indent:
-            raise ParseError("the body after ':' must be indented deeper than its header",
-                             nxt.line, nxt.col)
+            raise ParseError("the body after ':' must be indented deeper than its header", nxt.line, nxt.col)
         return self.parse_block(nxt.indent)
 
     @staticmethod
@@ -456,8 +448,8 @@ class Parser:
                         f"e.g. 1-2-{verb_word}  (a comma before the verb fences objects off)"
                     ),
                 )
-            items = stack[len(stack) - n:]
-            del stack[len(stack) - n:]
+            items = stack[len(stack) - n :]
+            del stack[len(stack) - n :]
             return items
 
         while True:
@@ -473,8 +465,8 @@ class Parser:
                 continue
             if tok.kind == "START":
                 raise ParseError(
-                    f"a new sentence starts with '{tok.value}' before the previous one ended with '.'",
-                    tok.line, tok.col)
+                    f"a new sentence starts with '{tok.value}' before the previous one ended with '.'", tok.line, tok.col
+                )
             if tok.kind in ("NUMBER", "STRING"):
                 stack.append(ast.Literal(tok.value, line=tok.line))
                 self.advance()
@@ -503,11 +495,17 @@ class Parser:
                     stack.append(ast.Continue(line=tok.line))
                 elif verb.arity == -1:
                     count_expr = pop(1, word, verb.gloss, tok)[0]
-                    if not isinstance(count_expr, ast.Literal) or not isinstance(count_expr.value, int) \
-                            or isinstance(count_expr.value, bool) or count_expr.value < 0:
+                    if (
+                        not isinstance(count_expr, ast.Literal)
+                        or not isinstance(count_expr.value, int)
+                        or isinstance(count_expr.value, bool)
+                        or count_expr.value < 0
+                    ):
                         raise ParseError(
-                            f"'{word}' ({verb.gloss}) must be preceded by a plain numeral giving "
-                            "how many items to gather", tok.line, tok.col)
+                            f"'{word}' ({verb.gloss}) must be preceded by a plain numeral giving how many items to gather",
+                            tok.line,
+                            tok.col,
+                        )
                     n = count_expr.value * (2 if lemma == "tekt" else 1)
                     available = len(stack) - barrier
                     if available < n:
@@ -518,16 +516,15 @@ class Parser:
                                 f"(key and value each) before the count {shown}"
                             )
                         else:
-                            wanted = (
-                                f"{shown} item{'s' if count_expr.value != 1 else ''} "
-                                f"before the count {shown}"
-                            )
+                            wanted = f"{shown} item{'s' if count_expr.value != 1 else ''} before the count {shown}"
                         raise ParseError(
                             f"'{word}' ({verb.gloss}) wants {wanted}, "
                             f"but only {available} {'is' if available == 1 else 'are'} there. "
                             f"Write the items first, then the count, then {word} "
                             f"(empty: 0-{word})",
-                            tok.line, tok.col)
+                            tok.line,
+                            tok.col,
+                        )
                     items = pop(n, word, verb.gloss, tok)
                     stack.append(ast.Call(verb, items, line=tok.line))
                 else:
@@ -552,12 +549,13 @@ class Parser:
 
             if word in MARKERS:
                 raise ParseError(
-                    f"'{word}' ({MARKERS[word][1].split(' — ')[0]}) is a mood marker and can only "
-                    "begin a phrase", tok.line, tok.col)
+                    f"'{word}' ({MARKERS[word][1].split(' — ')[0]}) is a mood marker and can only begin a phrase",
+                    tok.line,
+                    tok.col,
+                )
 
             if word == "rukx":
-                raise ParseError("rukx (note) starts a comment and must directly follow '^'",
-                                 tok.line, tok.col)
+                raise ParseError("rukx (note) starts a comment and must directly follow '^'", tok.line, tok.col)
 
             stack.append(ast.Name(word, line=tok.line))
 

@@ -33,8 +33,7 @@ class VersionRuleTests(unittest.TestCase):
         self.assertEqual(
             phyx.__version__,
             _project_version(),
-            'phyx.__version__ does not match pyproject.toml; '
-            'run python -m pip install -e ".[dev]" again',
+            'phyx.__version__ does not match pyproject.toml; run python -m pip install -e ".[dev]" again',
         )
 
     def test_spec_heading_is_the_language_version(self):
