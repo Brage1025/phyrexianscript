@@ -75,21 +75,38 @@ def is_letter(ch: str) -> bool:
 # ``t`` + ``h`` never get merged by accident.
 TRANSLIT: dict[str, str] = {
     # vowels
-    "A": "ɒ", "O": "ø", "E": "ə",
+    "A": "ɒ",
+    "O": "ø",
+    "E": "ə",
     # sibilants / affricates / glides
-    "S": "š", "Z": "ž", "C": "č", "J": "ǆ", "W": "ẅ",
+    "S": "š",
+    "Z": "ž",
+    "C": "č",
+    "J": "ǆ",
+    "W": "ẅ",
     # laterals and nasals
-    "LH": "ɬ", "LZ": "ɮ", "NG": "ŋ", "NN": "ɴ",
+    "LH": "ɬ",
+    "LZ": "ɮ",
+    "NG": "ŋ",
+    "NN": "ɴ",
     # dental fricatives
-    "TH": "θ", "DH": "ð",
+    "TH": "θ",
+    "DH": "ð",
     # metallic consonants: single capital = clanked (plosive),
     # capital + H = sliced (aspirated)
-    "P": "π", "PH": "φ",
-    "T": "ť", "TT": "ţ",
-    "K": "ǩ", "KH": "ķ",
-    "GG": "ǧ", "GH": "ǥ",
+    "P": "π",
+    "PH": "φ",
+    "T": "ť",
+    "TT": "ţ",
+    "K": "ǩ",
+    "KH": "ķ",
+    "GG": "ǧ",
+    "GH": "ǥ",
     # back consonants
-    "G": "ɣ", "X": "χ", "Q": "ɢ", "R": "ʁ",
+    "G": "ɣ",
+    "X": "χ",
+    "Q": "ɢ",
+    "R": "ʁ",
 }
 REVERSE_TRANSLIT: dict[str, str] = {}
 for _k, _v in TRANSLIT.items():
@@ -202,7 +219,7 @@ def _tokenize(source: str, ascii_mode: bool = False) -> list[Token]:
                     buf.append(line[j])
                     j += 1
                 if j >= n:
-                    raise LexError("quoted sentence never closes (missing \")", line_no, col)
+                    raise LexError('quoted sentence never closes (missing ")', line_no, col)
                 tokens.append(Token("STRING", "".join(buf), line_no, col, indent))
                 i = j + 1
                 continue
@@ -218,7 +235,8 @@ def _tokenize(source: str, ascii_mode: bool = False) -> list[Token]:
                 if j < n and is_letter(line[j]) and hex_digit(line[j]) is None:
                     raise LexError(
                         f"numeral {raw!r} runs straight into a word; separate them with -",
-                        line_no, col,
+                        line_no,
+                        col,
                     )
                 tokens.append(Token("NUMBER", int(ascii_hex, 16), line_no, col, indent))
                 i = j
@@ -241,18 +259,19 @@ def _tokenize(source: str, ascii_mode: bool = False) -> list[Token]:
                         if k < n and is_letter(line[k]) and hex_digit(line[k]) is None:
                             raise LexError(
                                 f"numeral {raw!r} runs straight into a word; separate them with -",
-                                line_no, col,
+                                line_no,
+                                col,
                             )
                         tokens.append(Token("NUMBER", -int(ascii_hex, 16), line_no, col, indent))
                         i = k
                         continue
                     raise LexError(
                         f"word {word!r} runs straight into a numeral; separate them with -",
-                        line_no, col,
+                        line_no,
+                        col,
                     )
                 # ``^rukx`` — a note.  Everything to the end of the line is ignored.
-                if word == COMMENT_WORD and tokens and tokens[-1].kind == "START" \
-                        and tokens[-1].line == line_no:
+                if word == COMMENT_WORD and tokens and tokens[-1].kind == "START" and tokens[-1].line == line_no:
                     tokens.pop()
                     i = n
                     continue

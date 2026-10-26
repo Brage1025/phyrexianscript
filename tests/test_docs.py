@@ -61,8 +61,16 @@ class DocDriftTests(unittest.TestCase):
 
     def test_spec_and_guide_exist(self):
         for name in (
-            "spec.md", "guide.md", "python.md", "cookbook.md", "rationale.md",
-            "index.md", "tour.md", "stdlib.md", "toolchain.md", "reference.md",
+            "spec.md",
+            "guide.md",
+            "python.md",
+            "cookbook.md",
+            "rationale.md",
+            "index.md",
+            "tour.md",
+            "stdlib.md",
+            "toolchain.md",
+            "reference.md",
             "roadmap.md",
         ):
             self.assertTrue((DOCS / name).is_file(), name)

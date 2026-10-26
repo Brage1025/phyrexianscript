@@ -13,15 +13,32 @@ class LexerTests(unittest.TestCase):
     def test_punctuation_and_words(self):
         self.assertEqual(
             kinds("^xe-5-x-ţə''."),
-            [("START", "^"), ("WORD", "xe"), ("SEP", "-"), ("NUMBER", 5), ("SEP", "-"),
-             ("WORD", "x"), ("SEP", "-"), ("WORD", "ţə''"), ("END", ".")],
+            [
+                ("START", "^"),
+                ("WORD", "xe"),
+                ("SEP", "-"),
+                ("NUMBER", 5),
+                ("SEP", "-"),
+                ("WORD", "x"),
+                ("SEP", "-"),
+                ("WORD", "ţə''"),
+                ("END", "."),
+            ],
         )
 
     def test_numbers_are_hexadecimal(self):
-        self.assertEqual(kinds("!10-0ff-əx1a."), [
-            ("START", "!"), ("NUMBER", 16), ("SEP", "-"), ("NUMBER", 255), ("SEP", "-"),
-            ("NUMBER", -26), ("END", "."),
-        ])
+        self.assertEqual(
+            kinds("!10-0ff-əx1a."),
+            [
+                ("START", "!"),
+                ("NUMBER", 16),
+                ("SEP", "-"),
+                ("NUMBER", 255),
+                ("SEP", "-"),
+                ("NUMBER", -26),
+                ("END", "."),
+            ],
+        )
 
     def test_number_glued_to_word_is_an_error(self):
         with self.assertRaises(LexError):

@@ -26,9 +26,7 @@ class CompletenessTests(unittest.TestCase):
 class SessionTests(unittest.TestCase):
     def _run(self, *lines: str, ascii_mode: bool = False) -> str:
         out = io.StringIO()
-        Repl(stdin=io.StringIO(), stdout=out, ascii_mode=ascii_mode, intro=False).run(
-            lines=list(lines)
-        )
+        Repl(stdin=io.StringIO(), stdout=out, ascii_mode=ascii_mode, intro=False).run(lines=list(lines))
         return out.getvalue()
 
     def test_put_and_speak(self):

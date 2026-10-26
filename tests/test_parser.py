@@ -98,17 +98,7 @@ class SentenceTests(unittest.TestCase):
         self.assertIsInstance(stmt.body[0], ast.Print)
 
     def test_indented_body_and_else_chain(self):
-        src = (
-            "^ba-a:\n"
-            "    !1.\n"
-            "^qit-ba-b:\n"
-            "    !2.\n"
-            "^qit-bu-c:\n"
-            "    !3.\n"
-            "^qit:\n"
-            "    !4.\n"
-            "!5.\n"
-        )
+        src = "^ba-a:\n    !1.\n^qit-ba-b:\n    !2.\n^qit-bu-c:\n    !3.\n^qit:\n    !4.\n!5.\n"
         top = parse(src)
         self.assertEqual(len(top), 2)
         first = top[0]

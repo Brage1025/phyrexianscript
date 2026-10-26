@@ -24,10 +24,14 @@ PERSON = {1: "me", 2: "you", 3: "they", 4: "one"}
 
 ROUND = {"i": "y", "e": "ø"}
 METAL = {
-    "p": "π", "π": "φ",
-    "t": "ť", "ť": "ţ",
-    "k": "ǩ", "ǩ": "ķ",
-    "q": "ǧ", "ǧ": "ǥ",
+    "p": "π",
+    "π": "φ",
+    "t": "ť",
+    "ť": "ţ",
+    "k": "ǩ",
+    "ǩ": "ķ",
+    "q": "ǧ",
+    "ǧ": "ǥ",
 }
 
 # (doing, receiving): round stem, metal stem, metal last, inserted vowel(s)

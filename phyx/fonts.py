@@ -20,25 +20,13 @@ from pathlib import Path
 FONT_FAMILY = "Phyrexian"
 FONT_FULL_NAME = "Phyrexian Regular"
 FONT_FILE = "Phyrexian-Regular.ttf"
-FONT_REMOTE = (
-    "https://raw.githubusercontent.com/fxbuson/PhyrexianDictionary/main/fonts/"
-    + FONT_FILE
-)
-FONT_CDN = (
-    "https://cdn.jsdelivr.net/gh/fxbuson/PhyrexianDictionary@main/fonts/"
-    + FONT_FILE
-)
+FONT_REMOTE = "https://raw.githubusercontent.com/fxbuson/PhyrexianDictionary/main/fonts/" + FONT_FILE
+FONT_CDN = "https://cdn.jsdelivr.net/gh/fxbuson/PhyrexianDictionary@main/fonts/" + FONT_FILE
 
 BASILICA_FAMILY = "Basilica"
 BASILICA_FILE = "Basilica.otf"
-BASILICA_REMOTE = (
-    "https://raw.githubusercontent.com/fxbuson/PhyrexianDictionary/main/fonts/"
-    + BASILICA_FILE
-)
-BASILICA_CDN = (
-    "https://cdn.jsdelivr.net/gh/fxbuson/PhyrexianDictionary@main/fonts/"
-    + BASILICA_FILE
-)
+BASILICA_REMOTE = "https://raw.githubusercontent.com/fxbuson/PhyrexianDictionary/main/fonts/" + BASILICA_FILE
+BASILICA_CDN = "https://cdn.jsdelivr.net/gh/fxbuson/PhyrexianDictionary@main/fonts/" + BASILICA_FILE
 
 _SFNT_MAGIC = (b"\x00\x01\x00\x00", b"OTTO", b"true", b"typ1")
 _WOFF_MAGIC = (b"wOFF", b"wOF2")

@@ -132,30 +132,23 @@ def _collect_arities(stmts: list[ast.Stmt], arities: dict[str, int]) -> None:
 def _short_message(name: str, want: int, got: int) -> str:
     noun = "object" if want == 1 else "objects"
     return (
-        f"ability '{name}' wants {want} {noun} but got {got} "
-        f"— quote it with {QUOTE_WORD} if you wanted the ability as a value"
+        f"ability '{name}' wants {want} {noun} but got {got} — quote it with {QUOTE_WORD} if you wanted the ability as a value"
     )
 
 
 def _quoted(parent: ast.Expr | None, index: int) -> bool:
-    return (
-        isinstance(parent, ast.Call)
-        and parent.verb.word == QUOTE_WORD
-        and index == 0
-    )
+    return isinstance(parent, ast.Call) and parent.verb.word == QUOTE_WORD and index == 0
 
 
 def _activated(parent: ast.Expr | None, index: int) -> bool:
     """The ability operand of ``čtəčpliɣn`` (args, then the ability)."""
-    return (
-        isinstance(parent, ast.Call)
-        and parent.verb.word == _ACTIVATE_WORD
-        and index == 1
-    )
+    return isinstance(parent, ast.Call) and parent.verb.word == _ACTIVATE_WORD and index == 1
 
 
 def _note_short_ability(
-    exprs: list[ast.Expr], arities: dict[str, int], notes: list[Note],
+    exprs: list[ast.Expr],
+    arities: dict[str, int],
+    notes: list[Note],
 ) -> None:
     """An ability name left on the phrase was the parser's "not enough objects" branch.
 
@@ -228,19 +221,23 @@ def _lint_program(program: list[ast.Stmt]) -> list[Note]:
                     _walk_stmt(s, used, returns)
                 for p in stmt.params:
                     if p not in used:
-                        notes.append(Note(
-                            stmt.line,
-                            f"ability '{stmt.name}' never uses object '{p}'",
-                        ))
+                        notes.append(
+                            Note(
+                                stmt.line,
+                                f"ability '{stmt.name}' never uses object '{p}'",
+                            )
+                        )
                 if not returns:
                     last = _last_stmt(stmt.body)
                     if last is not None and _discarded_value(last):
-                        notes.append(Note(
-                            last.line or stmt.line,
-                            f"ability '{stmt.name}' computes a value and drops it — "
-                            "end the sentence with 'iţpənn to give the value back "
-                            "(without it the ability yields əixiww / void)",
-                        ))
+                        notes.append(
+                            Note(
+                                last.line or stmt.line,
+                                f"ability '{stmt.name}' computes a value and drops it — "
+                                "end the sentence with 'iţpənn to give the value back "
+                                "(without it the ability yields əixiww / void)",
+                            )
+                        )
                 visit_block(stmt.body)
             elif isinstance(stmt, ast.If):
                 _note_english_name(stmt.cond, notes)
@@ -283,14 +280,14 @@ def _lint_program(program: list[ast.Stmt]) -> list[Note]:
 def _note_english_name(expr: ast.Expr, notes: list[Note]) -> None:
     if isinstance(expr, ast.Name):
         low = expr.name.lower()
-        if low in ENGLISH_NAME_TRAPS and expr.name not in VERBS \
-                and expr.name not in MARKERS and expr.name not in CONSTANTS:
+        if low in ENGLISH_NAME_TRAPS and expr.name not in VERBS and expr.name not in MARKERS and expr.name not in CONSTANTS:
             phy = ENGLISH_TO_PHYX[low]
-            notes.append(Note(
-                expr.line,
-                f"'{expr.name}' is English; the Phyrexian word is '{phy}' "
-                f"(python -m phyx explain {phy})",
-            ))
+            notes.append(
+                Note(
+                    expr.line,
+                    f"'{expr.name}' is English; the Phyrexian word is '{phy}' (python -m phyx explain {phy})",
+                )
+            )
         return
     if isinstance(expr, ast.Call):
         for a in expr.args:

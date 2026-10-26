@@ -54,12 +54,7 @@ class EnglishMarkerTests(unittest.TestCase):
 
 class CompilerShapeTests(unittest.TestCase):
     def test_pure_fib_is_ordinary_python(self):
-        src = (
-            "^ťe-n-fib:\n"
-            "    ^ba-n-ķu-grmɒɣg:lo-n-'iţpənn.\n"
-            "    ^lo-n-'ii-mɒɣg-fib-n-ķu-mɒɣg-fib-babg-'iţpənn.\n"
-            "!5-fib.\n"
-        )
+        src = "^ťe-n-fib:\n    ^ba-n-ķu-grmɒɣg:lo-n-'iţpənn.\n    ^lo-n-'ii-mɒɣg-fib-n-ķu-mɒɣg-fib-babg-'iţpənn.\n!5-fib.\n"
         py = compile_to_python(parse(src))
         self.assertIn("return", py)
         self.assertIn("__phyx_names", py)
@@ -68,47 +63,27 @@ class CompilerShapeTests(unittest.TestCase):
         self.assertNotIn("while True:", py)
 
     def test_literal_sum_skips_the_type_test(self):
-        py = compile_to_python(parse(
-            "^ťe-f:\n"
-            "    ^lo-1-2-babg-'iţpənn.\n"
-            "!f.\n"
-        ))
+        py = compile_to_python(parse("^ťe-f:\n    ^lo-1-2-babg-'iţpənn.\n!f.\n"))
         self.assertIn("(1 + 2)", py)
         self.assertNotIn("_add", py)
 
     def test_name_keeps_the_type_test(self):
-        py = compile_to_python(parse(
-            "^ťe-n-f:\n"
-            "    ^lo-n-1-babg-'iţpənn.\n"
-            "!1-f.\n"
-        ))
+        py = compile_to_python(parse("^ťe-n-f:\n    ^lo-n-1-babg-'iţpənn.\n!1-f.\n"))
         self.assertIn("_add(", py)
         self.assertIn("type(", py)
 
     def test_int_only_results_skip_the_outer_type_test(self):
-        py = compile_to_python(parse(
-            "^ťe-n-f:\n"
-            "    ^lo-n-1-mɒɣg-n-2-mɒɣg-babg-'iţpənn.\n"
-            "!3-f.\n"
-        ))
+        py = compile_to_python(parse("^ťe-n-f:\n    ^lo-n-1-mɒɣg-n-2-mɒɣg-babg-'iţpənn.\n!3-f.\n"))
         self.assertIn("_sub(", py)
         self.assertNotIn("_add", py)
 
     def test_division_of_literals_keeps_the_zero_check(self):
-        py = compile_to_python(parse(
-            "^ťe-d:\n"
-            "    ^lo-1-2-χɬkevk-'iţpənn.\n"
-            "!d.\n"
-        ))
+        py = compile_to_python(parse("^ťe-d:\n    ^lo-1-2-χɬkevk-'iţpənn.\n!d.\n"))
         self.assertIn("_div(", py)
         self.assertNotIn("type(", py)
 
     def test_pure_not_uses_the_truthy_helper(self):
-        py = compile_to_python(parse(
-            "^ťe-n-f:\n"
-            "    ^lo-n-əx-'iţpənn.\n"
-            "!0-f.\n"
-        ))
+        py = compile_to_python(parse("^ťe-n-f:\n    ^lo-n-əx-'iţpənn.\n!0-f.\n"))
         self.assertIn("_not(", py)
         self.assertNotIn("not n", py)
 
@@ -130,28 +105,19 @@ class CompilerShapeTests(unittest.TestCase):
     def test_equality_does_not_treat_truth_as_one(self):
         out = io.StringIO()
         run_source(
-            "^ťe-eq:\n"
-            "    ^lo-1-əxbytp-ǆ'ynpp-'iţpənn.\n"
-            "!eq.\n",
+            "^ťe-eq:\n    ^lo-1-əxbytp-ǆ'ynpp-'iţpənn.\n!eq.\n",
             stdout=out,
         )
         self.assertEqual(out.getvalue().strip(), "bytp")
 
     def test_less_than_does_not_order_truth_as_a_number(self):
         with self.assertRaises(RuntimeFault):
-            run_source(
-                "^ťe-lt:\n"
-                "    ^lo-0-əxbytp-grmɒɣg-'iţpənn.\n"
-                "!lt.\n"
-            )
+            run_source("^ťe-lt:\n    ^lo-0-əxbytp-grmɒɣg-'iţpənn.\n!lt.\n")
 
     def test_still_runs(self):
         out = io.StringIO()
         run_source(
-            "^ťe-n-fib:\n"
-            "    ^ba-n-ķu-grmɒɣg:lo-n-'iţpənn.\n"
-            "    ^lo-n-'ii-mɒɣg-fib-n-ķu-mɒɣg-fib-babg-'iţpənn.\n"
-            "!8-fib.\n",
+            "^ťe-n-fib:\n    ^ba-n-ķu-grmɒɣg:lo-n-'iţpənn.\n    ^lo-n-'ii-mɒɣg-fib-n-ķu-mɒɣg-fib-babg-'iţpənn.\n!8-fib.\n",
             stdout=out,
         )
         self.assertEqual(out.getvalue().strip(), "15")
@@ -159,7 +125,7 @@ class CompilerShapeTests(unittest.TestCase):
     def test_compiled_blocks_are_never_empty(self):
         sources = [
             "^xe-1.\n",
-            "^baqilx:\n    ^xe-fbx.\n!\"after\".\n",
+            '^baqilx:\n    ^xe-fbx.\n!"after".\n',
             "^ba-bytp:\n    ^xe-1.\n",
             "^ťe-f:\n    ^xe-1.\n!f.\n",
         ]
@@ -186,13 +152,7 @@ def _suites(node: ast.AST) -> list[list[ast.stmt]]:
 
 class FrameTests(unittest.TestCase):
     def test_ability_stack_is_named(self):
-        src = (
-            "^ťe-boom:\n"
-            "    ^ǩaπa-bytp.\n"
-            "^ťe-go:\n"
-            "    ^lo-boom.\n"
-            "^lo-go.\n"
-        )
+        src = "^ťe-boom:\n    ^ǩaπa-bytp.\n^ťe-go:\n    ^lo-boom.\n^lo-go.\n"
         try:
             run_source(src)
         except RuntimeFault as err:
@@ -204,11 +164,7 @@ class FrameTests(unittest.TestCase):
             self.fail("expected RuntimeFault")
 
     def test_treewalk_frames(self):
-        src = (
-            "^ťe-boom:\n"
-            "    ^ǩaπa-bytp.\n"
-            "^lo-boom.\n"
-        )
+        src = "^ťe-boom:\n    ^ǩaπa-bytp.\n^lo-boom.\n"
         try:
             run_source(src, treewalk=True)
         except RuntimeFault as err:
@@ -264,26 +220,16 @@ class FmtTests(unittest.TestCase):
 
 class LintTests(unittest.TestCase):
     def test_dropped_return(self):
-        program = parse(
-            "^ťe-n-odd:\n"
-            "    ^lo-n-ķu-geft.\n"
-        )
+        program = parse("^ťe-n-odd:\n    ^lo-n-ķu-geft.\n")
         notes = lint_program(program)
         self.assertTrue(any("'iţpənn" in n.message for n in notes))
 
     def test_procedure_is_silent(self):
-        program = parse(
-            "^ťe-greet:\n"
-            '    !"šdeχd".\n'
-        )
+        program = parse('^ťe-greet:\n    !"šdeχd".\n')
         self.assertEqual(lint_program(program), [])
 
     def test_fn_as_a_bound_name_is_fine(self):
-        program = parse(
-            "^ťe-greet:\n"
-            '    !"šdeχd".\n'
-            "^xe-greet-naķm-fn-ţə''.\n"
-        )
+        program = parse("^ťe-greet:\n    !\"šdeχd\".\n^xe-greet-naķm-fn-ţə''.\n")
         self.assertEqual(lint_program(program), [])
 
     def test_english_if_as_a_name_is_a_note(self):
@@ -291,42 +237,24 @@ class LintTests(unittest.TestCase):
         self.assertTrue(any("'if' is English" in n.message for n in lint_program(program)))
 
     def test_unused_param(self):
-        program = parse(
-            "^ťe-a-b-f:\n"
-            "    ^lo-a-'iţpənn.\n"
-        )
+        program = parse("^ťe-a-b-f:\n    ^lo-a-'iţpənn.\n")
         notes = lint_program(program)
         self.assertTrue(any("never uses object 'b'" in n.message for n in notes))
 
     def test_partial_ability_is_a_note(self):
-        program = parse(
-            "^ťe-a-b-addtwo:\n"
-            "    ^lo-a-b-babg-'iţpənn.\n"
-            "!1-addtwo.\n"
-        )
+        program = parse("^ťe-a-b-addtwo:\n    ^lo-a-b-babg-'iţpənn.\n!1-addtwo.\n")
         notes = lint_program(program)
         self.assertEqual(len(notes), 1)
         self.assertEqual(notes[0].line, 3)
         self.assertEqual(
             notes[0].message,
-            "ability 'addtwo' wants 2 objects but got 1 "
-            "— quote it with naķm if you wanted the ability as a value",
+            "ability 'addtwo' wants 2 objects but got 1 — quote it with naķm if you wanted the ability as a value",
         )
 
     def test_quoted_ability_is_silent(self):
         sources = [
-            (
-                "^ťe-a-b-addtwo:\n"
-                "    ^lo-a-b-babg-'iţpənn.\n"
-                "^xe-addtwo-naķm-fn-ţə''.\n"
-            ),
-            (
-                "^ťe-n-dub:\n"
-                "    ^lo-n-ķus'ər-'iţpənn.\n"
-                "^ťe-xs-fn-map:\n"
-                "    ^lo-xs-fn-'iţpənn.\n"
-                "!1-2-3-3-ťewn-dub-naķm-map.\n"
-            ),
+            ("^ťe-a-b-addtwo:\n    ^lo-a-b-babg-'iţpənn.\n^xe-addtwo-naķm-fn-ţə''.\n"),
+            ("^ťe-n-dub:\n    ^lo-n-ķus'ər-'iţpənn.\n^ťe-xs-fn-map:\n    ^lo-xs-fn-'iţpənn.\n!1-2-3-3-ťewn-dub-naķm-map.\n"),
         ]
         for source in sources:
             with self.subTest(source=source):
@@ -334,26 +262,15 @@ class LintTests(unittest.TestCase):
 
     def test_activated_ability_is_silent(self):
         sources = [
-            (
-                "^ťe-a-b-addtwo:\n"
-                "    ^lo-a-b-babg-'iţpənn.\n"
-                "!1-2-2-ťewn-addtwo-čtəčpliɣn.\n"
-            ),
-            (
-                "^ťe-xs-fn-map:\n"
-                "    ^lo-xs-1-ťewn-fn-čtəčpliɣn-'iţpənn.\n"
-            ),
+            ("^ťe-a-b-addtwo:\n    ^lo-a-b-babg-'iţpənn.\n!1-2-2-ťewn-addtwo-čtəčpliɣn.\n"),
+            ("^ťe-xs-fn-map:\n    ^lo-xs-1-ťewn-fn-čtəčpliɣn-'iţpənn.\n"),
         ]
         for source in sources:
             with self.subTest(source=source):
                 self.assertEqual(lint_program(parse(source)), [])
 
     def test_complete_call_is_silent(self):
-        program = parse(
-            "^ťe-a-b-addtwo:\n"
-            "    ^lo-a-b-babg-'iţpənn.\n"
-            "!1-2-addtwo.\n"
-        )
+        program = parse("^ťe-a-b-addtwo:\n    ^lo-a-b-babg-'iţpənn.\n!1-2-addtwo.\n")
         self.assertEqual(lint_program(program), [])
 
 

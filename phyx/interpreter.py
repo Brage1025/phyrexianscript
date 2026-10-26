@@ -33,10 +33,17 @@ class _Continue(Exception):
 
 
 class Interpreter:
-    def __init__(self, stdout: IO[str] | None = None, stdin: IO[str] | None = None,
-                 seed: int | None = None, base_dir: Path | str | None = None,
-                 ascii_mode: bool = False, argv: list[str] | None = None,
-                 persistent: bool = False, treewalk: bool | None = None):
+    def __init__(
+        self,
+        stdout: IO[str] | None = None,
+        stdin: IO[str] | None = None,
+        seed: int | None = None,
+        base_dir: Path | str | None = None,
+        ascii_mode: bool = False,
+        argv: list[str] | None = None,
+        persistent: bool = False,
+        treewalk: bool | None = None,
+    ):
         self.out = stdout if stdout is not None else sys.stdout
         self.inp = stdin if stdin is not None else sys.stdin
         self.rng = random.Random(seed)
@@ -91,6 +98,7 @@ class Interpreter:
     def _run_here(self, program: list[ast.Stmt]) -> None:
         if not self._treewalk:
             from .compiler import run_compiled
+
             persist = self.persistent or bool(self._include_stack)
             run_compiled(self, program, persist=persist)
             return

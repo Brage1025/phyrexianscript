@@ -51,9 +51,7 @@ def token_at(source: str, line: int, character: int, *, ascii_mode: bool = False
     for tok in toks:
         if tok.line != target_line or tok.kind == "EOF":
             continue
-        text = tok.value if isinstance(tok.value, str) else (
-            str(tok.value) if tok.value is not None else ""
-        )
+        text = tok.value if isinstance(tok.value, str) else (str(tok.value) if tok.value is not None else "")
         start = tok.col
         end = tok.col + max(len(text), 1)
         inside = start <= target_col < end
@@ -160,9 +158,7 @@ def completions_for(
         add(v.word, 3, v.gloss, v.doc)
     for w, val in CONSTANTS.items():
         add(w, 21, "constant", to_source(val))
-    for name, (_path, _line) in abilities_in(
-        source, base_dir=base_dir, ascii_mode=ascii_mode, origin=origin
-    ).items():
+    for name, (_path, _line) in abilities_in(source, base_dir=base_dir, ascii_mode=ascii_mode, origin=origin).items():
         add(name, 3, "ťe", "user ability")
     return items
 
@@ -221,27 +217,31 @@ def diagnostics_for(
         msg = err.message
         if err.hint:
             msg = f"{msg} — {err.hint}"
-        return [{
-            "range": {
-                "start": {"line": line, "character": col},
-                "end": {"line": line, "character": col + 1},
-            },
-            "severity": 1,
-            "source": "phyx",
-            "message": msg,
-        }]
+        return [
+            {
+                "range": {
+                    "start": {"line": line, "character": col},
+                    "end": {"line": line, "character": col + 1},
+                },
+                "severity": 1,
+                "source": "phyx",
+                "message": msg,
+            }
+        ]
     out: list[dict] = []
     for note in lint_program(program):
         line = max((note.line or 1) - 1, 0)
-        out.append({
-            "range": {
-                "start": {"line": line, "character": 0},
-                "end": {"line": line, "character": 1},
-            },
-            "severity": 2,
-            "source": "phyx",
-            "message": note.message,
-        })
+        out.append(
+            {
+                "range": {
+                    "start": {"line": line, "character": 0},
+                    "end": {"line": line, "character": 1},
+                },
+                "severity": 2,
+                "source": "phyx",
+                "message": note.message,
+            }
+        )
     return out
 
 

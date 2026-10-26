@@ -36,6 +36,7 @@ def verb(word: str):
     def register(fn: Impl) -> Impl:
         IMPLS[word] = fn
         return fn
+
     return register
 
 
@@ -61,8 +62,7 @@ def _index(coll: list | str, key: object, verb_word: str) -> int:
     n = len(coll)
     i = key if key >= 0 else n + key  # type: ignore[operator]
     if not 0 <= i < n:  # type: ignore[operator]
-        raise RuntimeFault(
-            f"the {kind_of(coll)} has {to_source(n)} items; there is no item {to_source(key)}")
+        raise RuntimeFault(f"the {kind_of(coll)} has {to_source(n)} items; there is no item {to_source(key)}")
     return i  # type: ignore[return-value]
 
 
@@ -71,9 +71,7 @@ def _hashable(key: object, verb_word: str) -> BookKey:
     try:
         hash(tagged)
     except TypeError:
-        raise RuntimeFault(
-            f"a book cannot be keyed by a {kind_of(key)} ('{verb_word}')"
-        ) from None
+        raise RuntimeFault(f"a book cannot be keyed by a {kind_of(key)} ('{verb_word}')") from None
     return tagged
 
 
@@ -153,7 +151,7 @@ def _pow(interp, args):
         raise RuntimeFault("lu'f (energize) cannot raise to a negative power")
     if b > 10_000:
         raise RuntimeFault("lu'f (energize): the exponent is too great")
-    return a ** b
+    return a**b
 
 
 @verb("'uɬč")
@@ -447,9 +445,7 @@ def _activate(interp, args):
     if not isinstance(ability, Ability):
         raise RuntimeFault(f"'čtəčpliɣn' (activate) wants an ability, got {_kinds(ability)}")
     if not isinstance(argv, list):
-        raise RuntimeFault(
-            f"'čtəčpliɣn' wants a list of objects before the ability, got {_kinds(argv)}"
-        )
+        raise RuntimeFault(f"'čtəčpliɣn' wants a list of objects before the ability, got {_kinds(argv)}")
     if len(argv) != len(ability.params):
         raise RuntimeFault(
             f"'{ability.name}' wants {len(ability.params)} object"
@@ -485,9 +481,7 @@ def _spread(interp, args):
     """Write text onto a path (dictionary: fire/spread). Yields the text."""
     text, path = args
     if not isinstance(text, str) or not isinstance(path, str):
-        raise RuntimeFault(
-            f"'mɴyrx' (spread) writes text onto a path, got {_kinds(text, path)}"
-        )
+        raise RuntimeFault(f"'mɴyrx' (spread) writes text onto a path, got {_kinds(text, path)}")
     p = resolve_spread(path, interp.base_dir)
     try:
         p.parent.mkdir(parents=True, exist_ok=True)

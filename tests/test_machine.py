@@ -28,10 +28,5 @@ class TuringMachineTests(unittest.TestCase):
 class CompletenessTests(unittest.TestCase):
     def test_unbounded_while_and_tape(self):
         # grow a list until it holds 8 items — unbounded store + while
-        src = (
-            "^xe-0-ťewn-tape-ţə''.\n"
-            "^baxuφ-tape-samk-8-grmɒɣg:\n"
-            "    ^xe-tape-tape-samk-bɬølπ.\n"
-            "!tape-samk.\n"
-        )
+        src = "^xe-0-ťewn-tape-ţə''.\n^baxuφ-tape-samk-8-grmɒɣg:\n    ^xe-tape-tape-samk-bɬølπ.\n!tape-samk.\n"
         self.assertEqual(run(src).strip(), "8")

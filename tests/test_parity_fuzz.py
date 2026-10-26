@@ -78,11 +78,31 @@ _NAMES = (
     "hotel",
 )
 _SYLLABLES = (
-    "ba", "be", "bi", "bo", "bu",
-    "ka", "ke", "ki", "ko", "ku",
-    "ma", "me", "mi", "mo", "mu",
-    "ra", "re", "ri", "ro", "ru",
-    "sa", "se", "si", "so", "su",
+    "ba",
+    "be",
+    "bi",
+    "bo",
+    "bu",
+    "ka",
+    "ke",
+    "ki",
+    "ko",
+    "ku",
+    "ma",
+    "me",
+    "mi",
+    "mo",
+    "mu",
+    "ra",
+    "re",
+    "ri",
+    "ro",
+    "ru",
+    "sa",
+    "se",
+    "si",
+    "so",
+    "su",
 )
 _VERB_WORDS = tuple(VERBS)
 
@@ -289,7 +309,7 @@ def reduce_program(source: str, still_bad) -> str:
         removed = False
         index = 0
         while index < len(lines):
-            trial = lines[:index] + lines[index + 1:]
+            trial = lines[:index] + lines[index + 1 :]
             text = "\n".join(trial).strip()
             if text and still_bad(text + "\n"):
                 lines = trial
@@ -371,10 +391,12 @@ def _book_phrase(rng: random.Random, *, wrong: bool) -> str:
     if rng.randrange(3) == 0:
         left = _atom(rng, wrong=False)
         right = _atom(rng, wrong=False)
-        return rng.choice((
-            f"1-{left}-əxbytp-{right}-2-tekt",
-            f"0-{left}-bytp-{right}-2-tekt",
-        ))
+        return rng.choice(
+            (
+                f"1-{left}-əxbytp-{right}-2-tekt",
+                f"0-{left}-bytp-{right}-2-tekt",
+            )
+        )
     key = rng.choice(('"k"', "0", "1", "əxbytp", "bytp"))
     return f"{key}-{_atom(rng, wrong=False)}-1-tekt"
 
@@ -516,7 +538,7 @@ def _value_phrase(word: str, rng: random.Random, *, wrong: bool) -> str:
     if word == "dl":
         if wrong:
             return f"{hx(1)}-{hx(1)}-dl"
-        return '1-1-2-2-ťewn-dl'
+        return "1-1-2-2-ťewn-dl"
     if word in _NEG_BINARY and not wrong and rng.randrange(2) == 0:
         return rng.choice(_NEG_BINARY[word])
     if word in ("χɬkevk", "geft") and wrong:
@@ -546,8 +568,16 @@ def _shown(phrase: str) -> str:
 
 
 _CONTROL = {
-    "'iţpənn", "lups", "ɢnagɮ", "ɬšeɴazv", "qab'", "bukð",
-    "čtəčpliɣn", "naķm", "brøtjt", "mɴyrx",
+    "'iţpənn",
+    "lups",
+    "ɢnagɮ",
+    "ɬšeɴazv",
+    "qab'",
+    "bukð",
+    "čtəčpliɣn",
+    "naķm",
+    "brøtjt",
+    "mɴyrx",
 }
 
 
@@ -564,12 +594,7 @@ def _cast_source(seed: int, folder: Path) -> str:
         encoding="utf-8",
         newline="\n",
     )
-    return (
-        f'^"{name}"-bukð.\n'
-        "!brought.\n"
-        "!alfa.\n"
-        + _caught("1-bukð")
-    )
+    return f'^"{name}"-bukð.\n!brought.\n!alfa.\n' + _caught("1-bukð")
 
 
 def _notes_source(seed: int) -> str:
@@ -578,10 +603,7 @@ def _notes_source(seed: int) -> str:
     return (
         f'^"hello"-"{name}"-mɴyrx-kept-ţə\'\'.\n'
         f'!"{name}"-brøtjt.\n'
-        "!kept.\n"
-        + _caught(f'"{missing}"-brøtjt')
-        + _caught("1-2-mɴyrx")
-        + _caught("1-brøtjt")
+        "!kept.\n" + _caught(f'"{missing}"-brøtjt') + _caught("1-2-mɴyrx") + _caught("1-brøtjt")
     )
 
 
@@ -596,45 +618,25 @@ def _activate_source() -> str:
         '    !"yo".\n'
         "^xe-hi-naķm-g-ţə''.\n"
         "^lo-0-ťewn-g-čtəčpliɣn.\n"
-        "^xe-hi.\n"
-        + _caught("1-fn-čtəčpliɣn")
-        + _caught("1-naķm")
+        "^xe-hi.\n" + _caught("1-fn-čtəčpliɣn") + _caught("1-naķm")
     )
 
 
 def _return_source() -> str:
-    return (
-        "^ťe-ret:\n"
-        "    ^lo-1-'iţpənn.\n"
-        "!ret.\n"
-    )
+    return "^ťe-ret:\n    ^lo-1-'iţpənn.\n!ret.\n"
 
 
 def _break_source() -> str:
-    return (
-        "^aχəw'-item-dl-4-ronɣ:\n"
-        "    ^ba-item-2-ǆ'ynpp:\n"
-        "        ^xe-lups.\n"
-        "    !item.\n"
-    )
+    return "^aχəw'-item-dl-4-ronɣ:\n    ^ba-item-2-ǆ'ynpp:\n        ^xe-lups.\n    !item.\n"
 
 
 def _continue_source() -> str:
-    return (
-        "^aχəw'-item-dl-3-ronɣ:\n"
-        "    ^ba-item-1-ǆ'ynpp:\n"
-        "        ^xe-ɢnagɮ.\n"
-        "    !item.\n"
-    )
+    return "^aχəw'-item-dl-3-ronɣ:\n    ^ba-item-1-ǆ'ynpp:\n        ^xe-ɢnagɮ.\n    !item.\n"
 
 
 def _raise_source() -> str:
     # qit with dekp, and qit that does not read dekp.
-    return (
-        _caught('"boom"-ɬšeɴazv')
-        + _caught("1-0-χɬkevk")
-        + "^baqilx:\n    ^1-0-geft.\n^qit:\n    !1.\n"
-    )
+    return _caught('"boom"-ɬšeɴazv') + _caught("1-0-χɬkevk") + "^baqilx:\n    ^1-0-geft.\n^qit:\n    !1.\n"
 
 
 def program_for_verb(word: str, rng: random.Random, seed: int, folder: Path) -> str:
@@ -662,6 +664,7 @@ def program_for_verb(word: str, rng: random.Random, seed: int, folder: Path) -> 
 # ---------------------------------------------------------------- scenarios
 # Each one is a finite program. Together they walk the Scope section.
 
+
 def _walk_out() -> str:
     # An assignment walks outward through enclosing abilities.
     return (
@@ -678,69 +681,31 @@ def _walk_out() -> str:
 
 def _parameter() -> str:
     # A parameter is a binding from the moment the body runs, and shadows.
-    return (
-        "^5-alfa-ţə''.\n"
-        "^ťe-alfa-show:\n"
-        "    !alfa.\n"
-        "    ^alfa-1-babg-alfa-ţə''.\n"
-        "    !alfa.\n"
-        "!7-show.\n"
-        "!alfa.\n"
-    )
+    return "^5-alfa-ţə''.\n^ťe-alfa-show:\n    !alfa.\n    ^alfa-1-babg-alfa-ţə''.\n    !alfa.\n!7-show.\n!alfa.\n"
 
 
 def _const_rebind() -> str:
-    return (
-        "^'u-1-alfa-ţə''.\n"
-        + _caught("2-alfa-ţə''")
-    )
+    return "^'u-1-alfa-ţə''.\n" + _caught("2-alfa-ţə''")
 
 
 def _const_shadow() -> str:
     # 'u fixes the running scope and does not walk outward.
-    return (
-        "^5-alfa-ţə''.\n"
-        "^ťe-kept:\n"
-        "    ^'u-2-alfa-ţə''.\n"
-        "    !alfa.\n"
-        "^xe-kept.\n"
-        "!alfa.\n"
-    )
+    return "^5-alfa-ţə''.\n^ťe-kept:\n    ^'u-2-alfa-ţə''.\n    !alfa.\n^xe-kept.\n!alfa.\n"
 
 
 def _local_stays() -> str:
     # No outer binding: the assignment creates a local, and it does not leak.
-    return (
-        "^ťe-kept:\n"
-        "    ^3-alfa-ţə''.\n"
-        "    !alfa.\n"
-        "^xe-kept.\n"
-        + _caught("alfa")
-    )
+    return "^ťe-kept:\n    ^3-alfa-ţə''.\n    !alfa.\n^xe-kept.\n" + _caught("alfa")
 
 
 def _bind_when_run() -> str:
     # The choice is made when the assignment runs, not when ťe is read.
-    return (
-        "^ťe-kept:\n"
-        "    ^9-alfa-ţə''.\n"
-        "    !alfa.\n"
-        "^4-alfa-ţə''.\n"
-        "^xe-kept.\n"
-        "!alfa.\n"
-    )
+    return "^ťe-kept:\n    ^9-alfa-ţə''.\n    !alfa.\n^4-alfa-ţə''.\n^xe-kept.\n!alfa.\n"
 
 
 def _read_then_plain_assign() -> str:
     # A later plain assignment does not hide the outer name from an earlier read.
-    return (
-        "^5-alfa-ţə''.\n"
-        "^ťe-kept:\n"
-        "    !alfa.\n"
-        "    ^2-alfa-ţə''.\n"
-        "^xe-kept.\n"
-        "!alfa.\n"
-    )
+    return "^5-alfa-ţə''.\n^ťe-kept:\n    !alfa.\n    ^2-alfa-ţə''.\n^xe-kept.\n!alfa.\n"
 
 
 def _bind_inside() -> str:
@@ -766,77 +731,39 @@ def _bind_inside() -> str:
 
 
 def _skipped_branch() -> str:
-    return (
-        "^ba-bytp:\n"
-        "    ^1-alfa-ţə''.\n"
-        + _caught("alfa")
-    )
+    return "^ba-bytp:\n    ^1-alfa-ţə''.\n" + _caught("alfa")
 
 
 def _try_shares() -> str:
     # The tried body and the qit handler share the scope that contains them.
-    return (
-        "^baqilx:\n"
-        "    ^1-alfa-ţə''.\n"
-        '    ^"x"-ɬšeɴazv.\n'
-        "^qit:\n"
-        "    !alfa,dekp.\n"
-    )
+    return "^baqilx:\n    ^1-alfa-ţə''.\n    ^\"x\"-ɬšeɴazv.\n^qit:\n    !alfa,dekp.\n"
 
 
 def _empty_for() -> str:
     # An empty loop does not bind the item.
-    return (
-        "^aχəw'-alfa-dl-0-ronɣ:\n"
-        "    !alfa.\n"
-        + _caught("alfa")
-    )
+    return "^aχəw'-alfa-dl-0-ronɣ:\n    !alfa.\n" + _caught("alfa")
 
 
 def _for_and_ask() -> str:
     # The item and the target of ? stay bound once the sentence has run.
-    return (
-        "^aχəw'-alfa-dl-3-ronɣ:\n"
-        "    !alfa.\n"
-        "!alfa.\n"
-        '?"name"-bravo.\n'
-        "!bravo.\n"
-    )
+    return '^aχəw\'-alfa-dl-3-ronɣ:\n    !alfa.\n!alfa.\n?"name"-bravo.\n!bravo.\n'
 
 
 def _handler_keeps() -> str:
     # dekp, and any name or ability bound in the handler, stay bound.
     return (
-        "^baqilx:\n"
-        "    ^1-0-χɬkevk.\n"
-        "^qit:\n"
-        "    ^7-alfa-ţə''.\n"
-        "    ^ťe-kept:\n"
-        "        ^lo-4-'iţpənn.\n"
-        "!alfa.\n"
-        "!kept.\n"
-        "!dekp.\n"
+        "^baqilx:\n    ^1-0-χɬkevk.\n^qit:\n    ^7-alfa-ţə''.\n    ^ťe-kept:\n        ^lo-4-'iţpənn.\n!alfa.\n!kept.\n!dekp.\n"
     )
 
 
 # Reviewer case (b). Both engines now report the same fault.
 LOOP_CONST = (
-    "^ťe-fbx:\n"
-    "    ^aχəw'-w-dl-2-ronɣ:\n"
-    "        !w.\n"
-    "        ^aχəw'-y-dl-2-ronɣ:\n"
-    "            ^'u-2-w-ţə''.\n"
-    "^xe-fbx.\n"
+    "^ťe-fbx:\n    ^aχəw'-w-dl-2-ronɣ:\n        !w.\n        ^aχəw'-y-dl-2-ronɣ:\n            ^'u-2-w-ţə''.\n^xe-fbx.\n"
 )
 
 
 def _later_const_assign() -> str:
-    return (
-        "^ťe-kept:\n"
-        "    ^'u-2-alfa-ţə''.\n"
-        "    ^3-alfa-ţə''.\n"
-        "^xe-kept.\n"
-    )
+    return "^ťe-kept:\n    ^'u-2-alfa-ţə''.\n    ^3-alfa-ţə''.\n^xe-kept.\n"
 
 
 def _names_around() -> str:
@@ -858,22 +785,12 @@ def _names_around() -> str:
 
 
 def _read_unbound() -> str:
-    return _caught("missing") + (
-        "^ťe-kept:\n"
-        "    !missing.\n"
-        "^xe-kept.\n"
-    )
+    return _caught("missing") + ("^ťe-kept:\n    !missing.\n^xe-kept.\n")
 
 
 def _uncalled() -> str:
     # A fault in an ability that is never called must not matter.
-    return (
-        "^ťe-kept:\n"
-        "    ^lo-1-0-χɬkevk-'iţpənn.\n"
-        "^ťe-other:\n"
-        "    !missing.\n"
-        "!1.\n"
-    )
+    return "^ťe-kept:\n    ^lo-1-0-χɬkevk-'iţpənn.\n^ťe-other:\n    !missing.\n!1.\n"
 
 
 def _under_apply(rng: random.Random) -> str:
@@ -898,44 +815,22 @@ def _under_apply(rng: random.Random) -> str:
 
 
 def _nested() -> str:
-    return (
-        "^ťe-n-outer:\n"
-        "    ^ťe-m-inner:\n"
-        "        ^lo-m-1-babg-'iţpənn.\n"
-        "    ^lo-n-inner-'iţpənn.\n"
-        "!4-outer.\n"
-        "!1-inner.\n"
-    )
+    return "^ťe-n-outer:\n    ^ťe-m-inner:\n        ^lo-m-1-babg-'iţpənn.\n    ^lo-n-inner-'iţpənn.\n!4-outer.\n!1-inner.\n"
 
 
 def _defined_late() -> str:
     # ťe names are visible throughout the file, including before the sentence.
-    return (
-        "!3-4-add.\n"
-        "^ťe-a-b-add:\n"
-        "    ^lo-a-b-babg-'iţpənn.\n"
-    )
+    return "!3-4-add.\n^ťe-a-b-add:\n    ^lo-a-b-babg-'iţpənn.\n"
 
 
 def _qab_ability(rng: random.Random) -> str:
     code = rng.choice((0, 2, 3, 7, -1))
-    return (
-        "^ťe-stop:\n"
-        f"    ^{hx(code)}-qab'.\n"
-        "^xe-stop.\n"
-        '!"no".\n'
-    )
+    return f'^ťe-stop:\n    ^{hx(code)}-qab\'.\n^xe-stop.\n!"no".\n'
 
 
 def _qab_try(rng: random.Random) -> str:
     code = rng.choice((0, 4, 5))
-    return (
-        "^baqilx:\n"
-        f"    ^{hx(code)}-qab'.\n"
-        "^qit:\n"
-        "    !dekp.\n"
-        '!"after".\n'
-    )
+    return f'^baqilx:\n    ^{hx(code)}-qab\'.\n^qit:\n    !dekp.\n!"after".\n'
 
 
 def _qab_bad() -> str:
@@ -955,22 +850,11 @@ def _book_key() -> str:
 def _span(seed: int, first_span_seed: int) -> str:
     over_ron = _caught(f"{hx(0x100001)}-ronɣ")
     over_mul = _caught(f'"ab"-{hx(0x100000)}-tøwp')
-    empty = (
-        f"!{hx(-1)}-ronɣ-samk.\n"
-        '!""-əx3-tøwp-samk.\n'
-        "!0-ťewn-0-tøwp-samk.\n"
-        "!0-ťewn-əx2-tøwp-samk.\n"
-    )
+    empty = f'!{hx(-1)}-ronɣ-samk.\n!""-əx3-tøwp-samk.\n!0-ťewn-0-tøwp-samk.\n!0-ťewn-əx2-tøwp-samk.\n'
     if seed != first_span_seed:
         return over_ron + over_mul + empty
     # Exactly the documented limit, once. samk keeps the spoken value small.
-    return (
-        f"!{hx(0x100000)}-ronɣ-samk.\n"
-        f'!"a"-{hx(0x100000)}-tøwp-samk.\n'
-        + over_ron
-        + over_mul
-        + empty
-    )
+    return f'!{hx(0x100000)}-ronɣ-samk.\n!"a"-{hx(0x100000)}-tøwp-samk.\n' + over_ron + over_mul + empty
 
 
 def _ask() -> str:
@@ -978,34 +862,15 @@ def _ask() -> str:
 
 
 def _assert() -> str:
-    return (
-        '^ǩaπa-1-1-ǆ\'ynpp,"yes".\n'
-        + _caught('ǩaπa-bytp,"no"')
-    )
+    return '^ǩaπa-1-1-ǆ\'ynpp,"yes".\n' + _caught('ǩaπa-bytp,"no"')
 
 
 def _else_if() -> str:
-    return (
-        "^ba-bytp:\n"
-        "    !1.\n"
-        "^qit-ba-əxbytp:\n"
-        "    !2.\n"
-        "^qit:\n"
-        "    !3.\n"
-    )
+    return "^ba-bytp:\n    !1.\n^qit-ba-əxbytp:\n    !2.\n^qit:\n    !3.\n"
 
 
 def _unless() -> str:
-    return (
-        "^bu-bytp:\n"
-        "    !1.\n"
-        "^əx-bytp:\n"
-        "    !2.\n"
-        "^ba-bytp:\n"
-        "    !3.\n"
-        "^qit:\n"
-        "    !4.\n"
-    )
+    return "^bu-bytp:\n    !1.\n^əx-bytp:\n    !2.\n^ba-bytp:\n    !3.\n^qit:\n    !4.\n"
 
 
 def _comma() -> str:
@@ -1017,9 +882,7 @@ def _while_bounds() -> str:
         "^0-kount-ţə''.\n"
         "^baxuφ-kount-0-grmɒɣg:\n"
         "    ^1-alfa-ţə''.\n"
-        "    ^kount-1-babg-kount-ţə''.\n"
-        + _caught("alfa")
-        + "^0-kount-ţə''.\n"
+        "    ^kount-1-babg-kount-ţə''.\n" + _caught("alfa") + "^0-kount-ţə''.\n"
         "^baxuφ-kount-3-grmɒɣg:\n"
         "    !kount.\n"
         "    ^kount-1-babg-kount-ţə''.\n"
@@ -1051,13 +914,10 @@ def _logic() -> str:
         "!bytp-əxbytp-ðə.\n"
         "!1-əxbytp-ǆ'ynpp.\n"
         "!əxbytp-1-2-ʁšθakɴ.\n"
-        "!bytp-\"a\"-\"b\"-ʁšθakɴ.\n"
+        '!bytp-"a"-"b"-ʁšθakɴ.\n'
         f"!{hx(0xFFFF)}-1-babg.\n"
         f"!{hx(0x100000)}-əx1-mɒɣg.\n"
-        "!2-əx3-tøwp.\n"
-        + _caught('1-"a"-grmɒɣg')
-        + _caught("1-0-χɬkevk")
-        + _caught("1-0-geft")
+        "!2-əx3-tøwp.\n" + _caught('1-"a"-grmɒɣg') + _caught("1-0-χɬkevk") + _caught("1-0-geft")
     )
 
 
@@ -1070,14 +930,7 @@ def _persistent() -> tuple[str, str]:
 
 
 def _small_recursion() -> str:
-    return (
-        "^ťe-n-down:\n"
-        "    ^ba-n-1-grmɒɣg:\n"
-        "        ^lo-n-'iţpənn.\n"
-        "    ^lo-n-1-mɒɣg-down-'iţpənn.\n"
-        "!2-down.\n"
-        "!1.\n"
-    )
+    return "^ťe-n-down:\n    ^ba-n-1-grmɒɣg:\n        ^lo-n-'iţpənn.\n    ^lo-n-1-mɒɣg-down-'iţpənn.\n!2-down.\n!1.\n"
 
 
 def _mix(rng: random.Random) -> str:
@@ -1122,6 +975,7 @@ def _scenarios(first_span_seed: int):
     def bind(fn):
         def run(rng, seed, folder):
             return fn()
+
         return run
 
     return (
@@ -1245,13 +1099,7 @@ def _format_counter(counter: dict[str, int]) -> str:
 
 # ---------------------------------------------------------------- known bugs
 # (a) A read, then 'u of the same name, inside one ability.
-BUG_J = (
-    "^ťe-fbx:\n"
-    "    !w.\n"
-    "    ^'u-2-w-ţə''.\n"
-    "^aχəw'-w-dl-3-ronɣ:\n"
-    "    ^xe-fbx.\n"
-)
+BUG_J = "^ťe-fbx:\n    !w.\n    ^'u-2-w-ţə''.\n^aχəw'-w-dl-3-ronɣ:\n    ^xe-fbx.\n"
 BUG_J_WALKER = ("0\n1\n2\n", None)
 
 # 'iţpənn outside an ability, and lups / ɢnagɮ outside a loop, are grammar
@@ -1296,14 +1144,7 @@ BUG_Q_WALKER = (
 # The same text without a persistent session is LOOP_CONST, and the engines
 # agree. In a persistent session the tree-walker prints 0 and then faults on
 # the 'u. The compiled engine faults with an unknown word on the print.
-BUG_R = (
-    "^ťe-fbx:\n"
-    "    ^aχəw'-w-dl-2-ronɣ:\n"
-    "        !w.\n"
-    "        ^aχəw'-y-dl-2-ronɣ:\n"
-    "            ^'u-2-w-ţə''.\n"
-    "^xe-fbx.\n"
-)
+BUG_R = "^ťe-fbx:\n    ^aχəw'-w-dl-2-ronɣ:\n        !w.\n        ^aχəw'-y-dl-2-ronɣ:\n            ^'u-2-w-ţə''.\n^xe-fbx.\n"
 BUG_R_WALKER = (
     "0\n",
     (
@@ -1369,13 +1210,7 @@ BUG_T_WALKER = (
 
 # Both engines fault once the call depth passes the host ceiling.
 # The line is omitted: it would point at whichever call happened to overflow.
-BUG_K = (
-    "^ťe-n-go:\n"
-    "    ^ba-n-1-grmɒɣg:\n"
-    "        ^lo-0-'iţpənn.\n"
-    "    ^lo-n-1-mɒɣg-go-'iţpənn.\n"
-    "!80-go.\n"
-)
+BUG_K = "^ťe-n-go:\n    ^ba-n-1-grmɒɣg:\n        ^lo-0-'iţpənn.\n    ^lo-n-1-mɒɣg-go-'iţpənn.\n!80-go.\n"
 BUG_K_WALKER = (
     "",
     ("RuntimeFault", "the abilities called each other too deeply", None, None),
@@ -1515,9 +1350,7 @@ class ParityFuzzTests(unittest.TestCase):
         # not part of the marked core and keep a core that stays marked.
         with tempfile.TemporaryDirectory() as directory:
             folder = Path(directory)
-            self.assertFalse(
-                _pair_differs(BUG_J, seed=0, base_dir=folder, recursion=None)
-            )
+            self.assertFalse(_pair_differs(BUG_J, seed=0, base_dir=folder, recursion=None))
             source = "!1.\n" + BUG_J
 
             def still_marked(text: str) -> bool:
@@ -1568,9 +1401,7 @@ class ParityFuzzTests(unittest.TestCase):
                     try:
                         parse(text, base_dir=folder)
                     except PhyrexianError as err:
-                        self.fail(
-                            f"seed {seed} is not a valid program: {err.message}\n{text}"
-                        )
+                        self.fail(f"seed {seed} is not a valid program: {err.message}\n{text}")
                     scan(text, verbs, forms)
                 try:
                     compiled, walked = run_case(case, folder)
@@ -1579,8 +1410,7 @@ class ParityFuzzTests(unittest.TestCase):
                     continue
                 if _raw_python(compiled) or _raw_python(walked):
                     failures.append(
-                        f"seed {seed} raised a Python exception\n"
-                        f"compiled {compiled!r}\nwalker {walked!r}\n{case.source}"
+                        f"seed {seed} raised a Python exception\ncompiled {compiled!r}\nwalker {walked!r}\n{case.source}"
                     )
                     continue
                 faults[_fault_kind(walked)] = faults.get(_fault_kind(walked), 0) + 1
@@ -1592,7 +1422,10 @@ class ParityFuzzTests(unittest.TestCase):
                     minimal = reduce_program(
                         case.source,
                         lambda source, seed=seed, recursion=case.recursion: _pair_differs(
-                            source, seed=seed, base_dir=folder, recursion=recursion,
+                            source,
+                            seed=seed,
+                            base_dir=folder,
+                            recursion=recursion,
                         ),
                     )
                 if _normalise(minimal) in _KNOWN:
@@ -1621,9 +1454,7 @@ class ParityFuzzTests(unittest.TestCase):
             self.assertFalse(
                 missing_verbs or missing_forms,
                 "generator missed "
-                + (
-                    f"verbs {missing_verbs} " if missing_verbs else ""
-                )
+                + (f"verbs {missing_verbs} " if missing_verbs else "")
                 + (f"statements {missing_forms}" if missing_forms else ""),
             )
             self.assertGreaterEqual(len(seeds), 300)

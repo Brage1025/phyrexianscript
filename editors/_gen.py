@@ -1,4 +1,5 @@
 """One-shot: write TextMate + Vim grammars from phyx.vocabulary."""
+
 from __future__ import annotations
 
 import json

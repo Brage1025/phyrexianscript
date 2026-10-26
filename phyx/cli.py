@@ -47,9 +47,25 @@ from .vertical import from_vertical, to_vertical
 from .vocabulary import CONSTANTS, MARKERS, VERBS
 
 SUBCOMMANDS = {
-    "run", "check", "render", "transpose", "translit",
-    "fetch", "lookup", "words", "repl", "eval", "bench", "dis",
-    "explain", "fmt", "lint", "test", "lib", "new", "lsp",
+    "run",
+    "check",
+    "render",
+    "transpose",
+    "translit",
+    "fetch",
+    "lookup",
+    "words",
+    "repl",
+    "eval",
+    "bench",
+    "dis",
+    "explain",
+    "fmt",
+    "lint",
+    "test",
+    "lib",
+    "new",
+    "lsp",
 }
 
 DICT_REMOTE = "https://raw.githubusercontent.com/fxbuson/PhyrexianDictionary/gh-pages/_data/PhyrexianAPI.json"
@@ -210,11 +226,7 @@ def cmd_render(args: argparse.Namespace) -> int:
     page = render_html(source, title=title, local_font=font, size=args.size)
     out = Path(args.output) if args.output else Path(args.file).with_suffix(".html")
     out.write_text(page, encoding="utf-8")
-    note = (
-        f"embedded {FONT_FAMILY}"
-        if is_font_file(font)
-        else "font loaded from the Phyrexian Dictionary CDN"
-    )
+    note = f"embedded {FONT_FAMILY}" if is_font_file(font) else "font loaded from the Phyrexian Dictionary CDN"
     print(f"wrote {out} ({note})")
     return 0
 
@@ -274,10 +286,7 @@ def cmd_bench(args: argparse.Namespace) -> int:
     hex_n = format_number(n)
     hex_loops = format_number(loops)
     fib_src = (
-        "^ťe-n-fib:\n"
-        "    ^ba-n-ķu-grmɒɣg:lo-n-'iţpənn.\n"
-        "    ^lo-n-'ii-mɒɣg-fib-n-ķu-mɒɣg-fib-babg-'iţpənn.\n"
-        f"!{hex_n}-fib.\n"
+        f"^ťe-n-fib:\n    ^ba-n-ķu-grmɒɣg:lo-n-'iţpənn.\n    ^lo-n-'ii-mɒɣg-fib-n-ķu-mɒɣg-fib-babg-'iţpənn.\n!{hex_n}-fib.\n"
     )
     loop_src = (
         "^ťe-k-sum:\n"
@@ -326,8 +335,8 @@ def cmd_bench(args: argparse.Namespace) -> int:
     pl = best(lambda: py_loop(loops))
     cl = best(lambda: sum_impl(sum_rt, loops))
     print(f"φyrx {__version__}  (compiles to CPython; timed after compile)")
-    print(f"fib({n})   python {pf*1000:7.2f} ms   φyrx {cf*1000:7.2f} ms   {cf/pf:4.1f}×")
-    print(f"loop {loops} python {pl*1000:7.2f} ms   φyrx {cl*1000:7.2f} ms   {cl/pl:4.1f}×")
+    print(f"fib({n})   python {pf * 1000:7.2f} ms   φyrx {cf * 1000:7.2f} ms   {cf / pf:4.1f}×")
+    print(f"loop {loops} python {pl * 1000:7.2f} ms   φyrx {cl * 1000:7.2f} ms   {cl / pl:4.1f}×")
     print("bench always times the compiled engine.")
     return 0
 
@@ -505,7 +514,8 @@ def build_parser() -> argparse.ArgumentParser:
         description=f"{LANGUAGE} ({also}) — a programming language written in Phyrexian.",
     )
     ap.add_argument(
-        "-V", "--version",
+        "-V",
+        "--version",
         action="version",
         version=f"{LANGUAGE} {__version__} ({also})",
     )
@@ -513,26 +523,24 @@ def build_parser() -> argparse.ArgumentParser:
 
     def source_opts(p: argparse.ArgumentParser) -> None:
         p.add_argument("file", help="program file (.phyx, or .vphyx for vertical layout)")
-        p.add_argument("--ascii", action="store_true",
-                       help="source uses ASCII capitals for special letters (see `translit`)")
+        p.add_argument("--ascii", action="store_true", help="source uses ASCII capitals for special letters (see `translit`)")
         grp = p.add_mutually_exclusive_group()
-        grp.add_argument("--vertical", dest="vertical", action="store_true", default=None,
-                         help="source is laid out vertically (columns)")
-        grp.add_argument("--horizontal", dest="vertical", action="store_false",
-                         help="source is laid out as text rows (default for .phyx)")
+        grp.add_argument(
+            "--vertical", dest="vertical", action="store_true", default=None, help="source is laid out vertically (columns)"
+        )
+        grp.add_argument(
+            "--horizontal", dest="vertical", action="store_false", help="source is laid out as text rows (default for .phyx)"
+        )
 
     p = sub.add_parser("run", help="run a program")
     source_opts(p)
-    p.add_argument("script_args", nargs="*", metavar="ARG",
-                   help="bound to the verb 'uxq (command) inside the program")
+    p.add_argument("script_args", nargs="*", metavar="ARG", help="bound to the verb 'uxq (command) inside the program")
     p.set_defaults(fn=cmd_run)
 
     p = sub.add_parser("eval", help="run a program from a string (also: phyx -c CODE)")
-    p.add_argument("--ascii", action="store_true",
-                   help="source uses ASCII capitals for special letters")
+    p.add_argument("--ascii", action="store_true", help="source uses ASCII capitals for special letters")
     p.add_argument("code", help="complete φyrx sentences")
-    p.add_argument("script_args", nargs="*", metavar="ARG",
-                   help="bound to 'uxq")
+    p.add_argument("script_args", nargs="*", metavar="ARG", help="bound to 'uxq")
     p.set_defaults(fn=cmd_eval)
 
     p = sub.add_parser("check", help="parse a program without running it")
@@ -598,14 +606,12 @@ def build_parser() -> argparse.ArgumentParser:
     p.set_defaults(fn=cmd_bench)
 
     p = sub.add_parser("repl", help="interactive session (default when no command is given)")
-    p.add_argument("--ascii", action="store_true",
-                   help="type special letters as ASCII capitals")
+    p.add_argument("--ascii", action="store_true", help="type special letters as ASCII capitals")
     p.set_defaults(fn=cmd_repl)
 
     p = sub.add_parser("test", help="run φyrx tests (test_*.phyx; ǩaπa and optional .expected)")
     p.add_argument("paths", nargs="*", help="files or directories (default: tests/)")
-    p.add_argument("--ascii", action="store_true",
-                   help="source uses ASCII capitals for special letters")
+    p.add_argument("--ascii", action="store_true", help="source uses ASCII capitals for special letters")
     p.set_defaults(fn=cmd_test)
 
     p = sub.add_parser("lib", help="list the shipped standard herds")
@@ -614,8 +620,7 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("new", help="write NAME.phyx and a sibling test_NAME.phyx")
     p.add_argument("name", help="ability and file name (letters, digits, underscore)")
     p.add_argument("-d", "--directory", help="folder to write into (default: current directory)")
-    p.add_argument("--ascii", action="store_true",
-                   help="write ASCII capitals for special letters")
+    p.add_argument("--ascii", action="store_true", help="write ASCII capitals for special letters")
     p.set_defaults(fn=cmd_new)
 
     p = sub.add_parser("lsp", help="language server (stdin/stdout JSON-RPC)")

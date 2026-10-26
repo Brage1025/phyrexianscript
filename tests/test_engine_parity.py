@@ -51,11 +51,19 @@ def _run_one(source, *, treewalk, argv=None, stdin="", base_dir=None, persistent
 def run_both(source, argv=None, stdin="", base_dir=None, persistent=False):
     """Run ``source`` on the compiled engine and the tree-walker."""
     compiled = _run_one(
-        source, treewalk=False, argv=argv, stdin=stdin, base_dir=base_dir,
+        source,
+        treewalk=False,
+        argv=argv,
+        stdin=stdin,
+        base_dir=base_dir,
         persistent=persistent,
     )
     walked = _run_one(
-        source, treewalk=True, argv=argv, stdin=stdin, base_dir=base_dir,
+        source,
+        treewalk=True,
+        argv=argv,
+        stdin=stdin,
+        base_dir=base_dir,
         persistent=persistent,
     )
     return compiled, walked
@@ -82,14 +90,14 @@ def _run_chunks(chunks, *, treewalk):
 def assertParity(source, argv=None, stdin="", base_dir=None, persistent=False):
     """Fail when the two engines disagree, printing both results."""
     compiled, walked = run_both(
-        source, argv=argv, stdin=stdin, base_dir=base_dir, persistent=persistent,
+        source,
+        argv=argv,
+        stdin=stdin,
+        base_dir=base_dir,
+        persistent=persistent,
     )
     if compiled != walked:
-        raise AssertionError(
-            "compiled engine and tree-walker disagree\n"
-            f"compiled: {compiled!r}\n"
-            f"tree-walker: {walked!r}"
-        )
+        raise AssertionError(f"compiled engine and tree-walker disagree\ncompiled: {compiled!r}\ntree-walker: {walked!r}")
 
 
 def _load_source(path: Path) -> str:
@@ -249,15 +257,8 @@ class EngineBugTests(unittest.TestCase):
             ("caught nothing can be distributed into zero parts\nafter\n", None),
         )
         assertParity(BUG_A)
-        uncaught = (
-            "^ťe-a-b-dv:\n"
-            "    ^lo-a-b-χɬkevk-'iţpənn.\n"
-            "!0-0-dv.\n"
-        )
-        hint = (
-            "χɬkevk is floor division; the second object is the number of parts "
-            "and cannot be 0"
-        )
+        uncaught = "^ťe-a-b-dv:\n    ^lo-a-b-χɬkevk-'iţpənn.\n!0-0-dv.\n"
+        hint = "χɬkevk is floor division; the second object is the number of parts and cannot be 0"
         self.assertEqual(
             run_both(uncaught)[1],
             ("", ("RuntimeFault", "nothing can be distributed into zero parts", 2, hint)),
@@ -296,11 +297,11 @@ class EngineBugTests(unittest.TestCase):
     def test_pure_operators_match_on_the_other_faults(self):
         cases = [
             (
-                "^ťe-a-b-op:\n    ^lo-a-b-mɒɣg-'iţpənn.\n!\"x\"-1-op.\n",
+                '^ťe-a-b-op:\n    ^lo-a-b-mɒɣg-\'iţpənn.\n!"x"-1-op.\n',
                 ("", ("RuntimeFault", "'mɒɣg' needs a number, got rukx (text)", 2, None)),
             ),
             (
-                "^ťe-a-b-op:\n    ^lo-a-b-mɒɣg-'iţpənn.\n!1-\"x\"-op.\n",
+                '^ťe-a-b-op:\n    ^lo-a-b-mɒɣg-\'iţpənn.\n!1-"x"-op.\n',
                 ("", ("RuntimeFault", "'mɒɣg' needs a number, got rukx (text)", 2, None)),
             ),
             (
@@ -316,15 +317,15 @@ class EngineBugTests(unittest.TestCase):
                 ("", ("RuntimeFault", "lu'f (energize): the exponent is too great", 2, None)),
             ),
             (
-                "^ťe-a-b-m:\n    ^lo-a-b-tøwp-'iţpənn.\n!3-\"ab\"-m.\n",
+                '^ťe-a-b-m:\n    ^lo-a-b-tøwp-\'iţpənn.\n!3-"ab"-m.\n',
                 ("", ("RuntimeFault", "cannot multiply asərθ (number) and rukx (text)", 2, None)),
             ),
             (
-                "^ťe-a-b-m:\n    ^lo-a-b-tøwp-'iţpənn.\n!\"ab\"-3-m.\n",
+                '^ťe-a-b-m:\n    ^lo-a-b-tøwp-\'iţpənn.\n!"ab"-3-m.\n',
                 ("ababab\n", None),
             ),
             (
-                "^ťe-a-n:\n    ^lo-a-əx-'iţpənn.\n!0-n.\n!\"\"-n.\n",
+                '^ťe-a-n:\n    ^lo-a-əx-\'iţpənn.\n!0-n.\n!""-n.\n',
                 ("əxbytp\nəxbytp\n", None),
             ),
         ]
@@ -336,7 +337,7 @@ class EngineBugTests(unittest.TestCase):
     def test_condition_calls_an_ability_once_per_turn(self):
         source = (
             "^ťe-tick:\n"
-            "    !\"t\".\n"
+            '    !"t".\n'
             "    ^lo-'ii-'iţpənn.\n"
             "^xe-0-i-ţə''.\n"
             "^baxuφ-i-tick-babg-3-grmɒɣg:\n"
@@ -368,13 +369,7 @@ class EngineBugTests(unittest.TestCase):
         assertParity(BUG_F)
 
     def test_scope_module_name_assigned_before_the_ability(self):
-        source = (
-            "^0-y-ţə''.\n"
-            "^ťe-bump:\n"
-            "    ^y-1-babg-y-ţə''.\n"
-            "^xe-bump.\n"
-            "!\"y =\",y.\n"
-        )
+        source = "^0-y-ţə''.\n^ťe-bump:\n    ^y-1-babg-y-ţə''.\n^xe-bump.\n!\"y =\",y.\n"
         self.assertEqual(run_both(source)[1], ("y = 1\n", None))
         assertParity(source)
 
@@ -392,25 +387,12 @@ class EngineBugTests(unittest.TestCase):
         assertParity(source)
 
     def test_scope_loop_variable_is_rebound(self):
-        source = (
-            "^ťe-bump:\n"
-            "    ^i-1-babg-i-ţə''.\n"
-            "^1-2-2-ťewn-xs-ţə''.\n"
-            "^aχəw'-i-dl-xs:\n"
-            "    ^xe-bump.\n"
-            "!\"i =\",i.\n"
-        )
+        source = "^ťe-bump:\n    ^i-1-babg-i-ţə''.\n^1-2-2-ťewn-xs-ţə''.\n^aχəw'-i-dl-xs:\n    ^xe-bump.\n!\"i =\",i.\n"
         self.assertEqual(run_both(source)[1], ("i = 3\n", None))
         assertParity(source)
 
     def test_scope_question_target_is_rebound(self):
-        source = (
-            "^ťe-setit:\n"
-            "    ^\"z\"-ans-ţə''.\n"
-            "?\"q \"-ans.\n"
-            "^xe-setit.\n"
-            "!ans.\n"
-        )
+        source = '^ťe-setit:\n    ^"z"-ans-ţə\'\'.\n?"q "-ans.\n^xe-setit.\n!ans.\n'
         self.assertEqual(run_both(source, stdin="hi\n")[1], ("q z\n", None))
         assertParity(source, stdin="hi\n")
 
@@ -418,7 +400,7 @@ class EngineBugTests(unittest.TestCase):
         source = (
             "^ťe-outer:\n"
             "    ^baqilx:\n"
-            "        ^xe-\"yes\"-ɬšeɴazv.\n"
+            '        ^xe-"yes"-ɬšeɴazv.\n'
             "    ^qit:\n"
             "        ^ťe-inner:\n"
             "            ^\"no\"-dekp-ţə''.\n"
@@ -447,26 +429,12 @@ class EngineBugTests(unittest.TestCase):
         self.assertEqual(compiled, walked)
 
     def test_scope_name_assigned_inside_ba_is_the_module_binding(self):
-        source = (
-            "^ťe-setit:\n"
-            "    ^1-y-ţə''.\n"
-            "^ba-əxbytp:\n"
-            "    ^0-y-ţə''.\n"
-            "^xe-setit.\n"
-            "!\"y =\",y.\n"
-        )
+        source = "^ťe-setit:\n    ^1-y-ţə''.\n^ba-əxbytp:\n    ^0-y-ţə''.\n^xe-setit.\n!\"y =\",y.\n"
         self.assertEqual(run_both(source)[1], ("y = 1\n", None))
         assertParity(source)
 
     def test_scope_skipped_assignment_does_not_bind(self):
-        source = (
-            "^ťe-setit:\n"
-            "    ^1-y-ţə''.\n"
-            "^ba-bytp:\n"
-            "    ^0-y-ţə''.\n"
-            "^xe-setit.\n"
-            "!\"y =\",y.\n"
-        )
+        source = "^ťe-setit:\n    ^1-y-ţə''.\n^ba-bytp:\n    ^0-y-ţə''.\n^xe-setit.\n!\"y =\",y.\n"
         walked = run_both(source)[1]
         self.assertEqual(walked[0], "")
         self.assertEqual(walked[1][0], "RuntimeFault")
@@ -474,13 +442,7 @@ class EngineBugTests(unittest.TestCase):
         assertParity(source)
 
     def test_scope_fresh_local_does_not_escape_the_ability(self):
-        source = (
-            "^ťe-f:\n"
-            "    ^1-z-ţə''.\n"
-            "    ^lo-z-'iţpənn.\n"
-            "!f.\n"
-            "!z.\n"
-        )
+        source = "^ťe-f:\n    ^1-z-ţə''.\n    ^lo-z-'iţpənn.\n!f.\n!z.\n"
         walked = run_both(source)[1]
         self.assertEqual(walked[0], "1\n")
         self.assertEqual(walked[1][0], "RuntimeFault")
@@ -488,26 +450,12 @@ class EngineBugTests(unittest.TestCase):
         assertParity(source)
 
     def test_scope_parameter_is_not_the_outer_name(self):
-        source = (
-            "^ťe-y-f:\n"
-            "    ^y-1-babg-y-ţə''.\n"
-            "    ^lo-y-'iţpənn.\n"
-            "^7-y-ţə''.\n"
-            "!3-f.\n"
-            "!y.\n"
-        )
+        source = "^ťe-y-f:\n    ^y-1-babg-y-ţə''.\n    ^lo-y-'iţpənn.\n^7-y-ţə''.\n!3-f.\n!y.\n"
         self.assertEqual(run_both(source)[1], ("4\n7\n", None))
         assertParity(source)
 
     def test_scope_while_name_assigned_after_the_ability(self):
-        source = (
-            "^ťe-bump:\n"
-            "    ^n-1-babg-n-ţə''.\n"
-            "^0-n-ţə''.\n"
-            "^baxuφ-n-3-grmɒɣg:\n"
-            "    ^xe-bump.\n"
-            "!n.\n"
-        )
+        source = "^ťe-bump:\n    ^n-1-babg-n-ţə''.\n^0-n-ţə''.\n^baxuφ-n-3-grmɒɣg:\n    ^xe-bump.\n!n.\n"
         self.assertEqual(run_both(source)[1], ("3\n", None))
         assertParity(source)
 
@@ -527,97 +475,42 @@ class EngineBugTests(unittest.TestCase):
 
     def test_handler_shares_the_enclosing_scope(self):
         # dekp is bound in the running scope and stays bound after qit.
-        source = (
-            "^baqilx:\n"
-            "    ^xe-\"yes\"-ɬšeɴazv.\n"
-            "^qit:\n"
-            "    !dekp.\n"
-            "!dekp.\n"
-        )
+        source = '^baqilx:\n    ^xe-"yes"-ɬšeɴazv.\n^qit:\n    !dekp.\n!dekp.\n'
         self.assertEqual(run_both(source)[1], ("yes\nyes\n", None))
         assertParity(source)
 
     def test_handler_name_stays_bound(self):
-        source = (
-            "^baqilx:\n"
-            "    ^xe-\"yes\"-ɬšeɴazv.\n"
-            "^qit:\n"
-            "    ^1-x-ţə''.\n"
-            "!x.\n"
-        )
+        source = "^baqilx:\n    ^xe-\"yes\"-ɬšeɴazv.\n^qit:\n    ^1-x-ţə''.\n!x.\n"
         self.assertEqual(run_both(source)[1], ("1\n", None))
         assertParity(source)
 
     def test_ability_defined_before_the_handler_rebinds_dekp(self):
-        source = (
-            "^ťe-f:\n"
-            "    ^\"no\"-dekp-ţə''.\n"
-            "^baqilx:\n"
-            "    ^xe-\"yes\"-ɬšeɴazv.\n"
-            "^qit:\n"
-            "    ^xe-f.\n"
-            "    !dekp.\n"
-        )
+        source = '^ťe-f:\n    ^"no"-dekp-ţə\'\'.\n^baqilx:\n    ^xe-"yes"-ɬšeɴazv.\n^qit:\n    ^xe-f.\n    !dekp.\n'
         self.assertEqual(run_both(source)[1], ("no\n", None))
         assertParity(source)
 
     def test_handler_ability_stays_bound(self):
-        source = (
-            "^baqilx:\n"
-            "    ^xe-\"yes\"-ɬšeɴazv.\n"
-            "^qit:\n"
-            "    ^ťe-f:\n"
-            "        ^lo-1-'iţpənn.\n"
-            "!f.\n"
-        )
+        source = '^baqilx:\n    ^xe-"yes"-ɬšeɴazv.\n^qit:\n    ^ťe-f:\n        ^lo-1-\'iţpənn.\n!f.\n'
         self.assertEqual(run_both(source)[1], ("1\n", None))
         assertParity(source)
 
     def test_const_in_an_ability_shadows_an_outer_name(self):
-        source = (
-            "^0-y-ţə''.\n"
-            "^ťe-f:\n"
-            "    ^'u-1-y-ţə''.\n"
-            "    ^lo-y-'iţpənn.\n"
-            "!f.\n"
-            "!y.\n"
-        )
+        source = "^0-y-ţə''.\n^ťe-f:\n    ^'u-1-y-ţə''.\n    ^lo-y-'iţpənn.\n!f.\n!y.\n"
         self.assertEqual(run_both(source)[1], ("1\n0\n", None))
         assertParity(source)
 
     def test_read_before_const_sees_the_outer_name(self):
-        source = (
-            "^5-y-ţə''.\n"
-            "^ťe-f:\n"
-            "    !y.\n"
-            "    ^'u-2-y-ţə''.\n"
-            "^xe-f.\n"
-            "!y.\n"
-        )
+        source = "^5-y-ţə''.\n^ťe-f:\n    !y.\n    ^'u-2-y-ţə''.\n^xe-f.\n!y.\n"
         self.assertEqual(run_both(source)[1], ("5\n5\n", None))
         assertParity(source)
 
     def test_plain_assign_before_const_rebinds_the_outer_name(self):
-        source = (
-            "^5-y-ţə''.\n"
-            "^ťe-f:\n"
-            "    ^3-y-ţə''.\n"
-            "    ^'u-2-y-ţə''.\n"
-            "    !y.\n"
-            "^xe-f.\n"
-            "!y.\n"
-        )
+        source = "^5-y-ţə''.\n^ťe-f:\n    ^3-y-ţə''.\n    ^'u-2-y-ţə''.\n    !y.\n^xe-f.\n!y.\n"
         self.assertEqual(run_both(source)[1], ("2\n3\n", None))
         assertParity(source)
 
     def test_plain_assign_after_shadowing_const_is_a_fault(self):
-        source = (
-            "^5-y-ţə''.\n"
-            "^ťe-f:\n"
-            "    ^'u-2-y-ţə''.\n"
-            "    ^3-y-ţə''.\n"
-            "^xe-f.\n"
-        )
+        source = "^5-y-ţə''.\n^ťe-f:\n    ^'u-2-y-ţə''.\n    ^3-y-ţə''.\n^xe-f.\n"
         fault = (
             "RuntimeFault",
             "'y' was fixed in the past ('u) and cannot change",
@@ -642,15 +535,7 @@ class EngineBugTests(unittest.TestCase):
         assertParity(source)
 
     def test_nested_assign_of_a_shadowing_const_is_a_fault(self):
-        source = (
-            "^1-y-ţə''.\n"
-            "^ťe-outer:\n"
-            "    ^'u-2-y-ţə''.\n"
-            "    ^ťe-inner:\n"
-            "        ^3-y-ţə''.\n"
-            "    ^xe-inner.\n"
-            "^xe-outer.\n"
-        )
+        source = "^1-y-ţə''.\n^ťe-outer:\n    ^'u-2-y-ţə''.\n    ^ťe-inner:\n        ^3-y-ţə''.\n    ^xe-inner.\n^xe-outer.\n"
         fault = (
             "RuntimeFault",
             "'y' was fixed in the past ('u) and cannot change",
@@ -661,14 +546,7 @@ class EngineBugTests(unittest.TestCase):
         assertParity(source)
 
     def test_nested_assign_of_a_const_with_no_module_name_is_a_fault(self):
-        source = (
-            "^ťe-outer:\n"
-            "    ^'u-2-y-ţə''.\n"
-            "    ^ťe-inner:\n"
-            "        ^3-y-ţə''.\n"
-            "    ^xe-inner.\n"
-            "^xe-outer.\n"
-        )
+        source = "^ťe-outer:\n    ^'u-2-y-ţə''.\n    ^ťe-inner:\n        ^3-y-ţə''.\n    ^xe-inner.\n^xe-outer.\n"
         fault = (
             "RuntimeFault",
             "'y' was fixed in the past ('u) and cannot change",
@@ -693,12 +571,7 @@ class EngineBugTests(unittest.TestCase):
         assertParity(source)
 
     def test_stop_in_an_ability_called_from_a_loop_is_grammar(self):
-        source = (
-            "^ťe-f:\n"
-            "    ^lo-lups.\n"
-            "^aχəw'-x-dl-3-ronɣ:\n"
-            "    ^xe-f.\n"
-        )
+        source = "^ťe-f:\n    ^lo-lups.\n^aχəw'-x-dl-3-ronɣ:\n    ^xe-f.\n"
         fault = (
             "ParseError",
             "lups (stop) used outside of a loop",
@@ -709,13 +582,7 @@ class EngineBugTests(unittest.TestCase):
         assertParity(source)
 
     def test_plain_assignment_of_a_local_constant_is_a_fault(self):
-        source = (
-            "^ťe-f:\n"
-            "    ^'u-1-y-ţə''.\n"
-            "    ^2-y-ţə''.\n"
-            "    ^lo-y-'iţpənn.\n"
-            "!f.\n"
-        )
+        source = "^ťe-f:\n    ^'u-1-y-ţə''.\n    ^2-y-ţə''.\n    ^lo-y-'iţpənn.\n!f.\n"
         fault = (
             "RuntimeFault",
             "'y' was fixed in the past ('u) and cannot change",
@@ -726,12 +593,7 @@ class EngineBugTests(unittest.TestCase):
         assertParity(source)
 
     def test_const_after_a_plain_assignment_in_an_ability_is_a_fault(self):
-        source = (
-            "^ťe-f:\n"
-            "    ^1-y-ţə''.\n"
-            "    ^'u-2-y-ţə''.\n"
-            "!f.\n"
-        )
+        source = "^ťe-f:\n    ^1-y-ţə''.\n    ^'u-2-y-ţə''.\n!f.\n"
         fault = (
             "RuntimeFault",
             "'y' already has a value here and cannot be fixed in the past ('u)",
@@ -742,12 +604,7 @@ class EngineBugTests(unittest.TestCase):
         assertParity(source)
 
     def test_second_const_in_an_ability_is_a_fault(self):
-        source = (
-            "^ťe-f:\n"
-            "    ^'u-1-y-ţə''.\n"
-            "    ^'u-2-y-ţə''.\n"
-            "!f.\n"
-        )
+        source = "^ťe-f:\n    ^'u-1-y-ţə''.\n    ^'u-2-y-ţə''.\n!f.\n"
         fault = (
             "RuntimeFault",
             "'y' already has a value here and cannot be fixed in the past ('u)",
@@ -758,11 +615,7 @@ class EngineBugTests(unittest.TestCase):
         assertParity(source)
 
     def test_const_of_a_parameter_is_a_fault(self):
-        source = (
-            "^ťe-y-f:\n"
-            "    ^'u-1-y-ţə''.\n"
-            "!3-f.\n"
-        )
+        source = "^ťe-y-f:\n    ^'u-1-y-ţə''.\n!3-f.\n"
         fault = (
             "RuntimeFault",
             "'y' already has a value here and cannot be fixed in the past ('u)",
@@ -839,23 +692,18 @@ class EngineBugTests(unittest.TestCase):
         assertParity(source)
 
     def test_literal_sentence_is_evaluated(self):
-        source = "^xe-1.\n!\"after\".\n"
+        source = '^xe-1.\n!"after".\n'
         self.assertEqual(run_both(source)[1], ("after\n", None))
         assertParity(source)
 
     def test_name_sentence_inside_try_is_evaluated(self):
-        source = "^baqilx:\n    ^xe-fbx.\n!\"after\".\n"
+        source = '^baqilx:\n    ^xe-fbx.\n!"after".\n'
         self.assertEqual(run_both(source)[1], ("after\n", None))
         assertParity(source)
 
     def test_recursion_past_the_old_ceiling_agrees(self):
         # 400 is 1024 host calls, past CPython's default ceiling of 1000.
-        source = (
-            "^ťe-n-cnt:\n"
-            "    ^ba-n-0-grmɒɣg:lo-0-'iţpənn.\n"
-            "    ^lo-n-1-mɒɣg-cnt-'iţpənn.\n"
-            "!400-cnt.\n"
-        )
+        source = "^ťe-n-cnt:\n    ^ba-n-0-grmɒɣg:lo-0-'iţpənn.\n    ^lo-n-1-mɒɣg-cnt-'iţpənn.\n!400-cnt.\n"
         self.assertEqual(run_both(source)[1], ("0\n", None))
         assertParity(source)
 
@@ -968,7 +816,7 @@ class EngineBugTests(unittest.TestCase):
             "^xe-1-4-1-tekt-c-ţə''.\n"
             "^xe-8-c-əxbytp-tapq-ţə''.\n"
             "!c,c-samk.\n"
-            '^xe-"1"-7-1-8-2-tekt-t-ţə\'\'.\n'
+            "^xe-\"1\"-7-1-8-2-tekt-t-ţə''.\n"
             '!t-samk,t-"1"-tapq,t-1-tapq.\n'
         )
         stdout = (
@@ -1042,11 +890,7 @@ class EngineBugTests(unittest.TestCase):
         compiled = _bench_result(False)
         walked = _bench_result(True)
         if compiled != walked:
-            raise AssertionError(
-                "compiled engine and tree-walker disagree\n"
-                f"compiled: {compiled!r}\n"
-                f"tree-walker: {walked!r}"
-            )
+            raise AssertionError(f"compiled engine and tree-walker disagree\ncompiled: {compiled!r}\ntree-walker: {walked!r}")
 
 
 if __name__ == "__main__":

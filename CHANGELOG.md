@@ -19,6 +19,7 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ### Changed
 
+- The code base is formatted with ruff format, and CI checks it with `ruff format --check .`.
 - CI runs on every pull request and on pushes to `main` only. The extension job runs `node editors/check.js`. Dependabot groups GitHub Actions updates into one weekly pull request.
 - The root README Fan content section and the editor README replace the older Wizards wording with the Fan Content Policy disclaimer.
 - Behaviour change: a number and a truth are different book keys. `1` and `əxbytp` are two entries in `tekt`, `tapq`, `ţə''`, `čxət'` and `dl`, and `samk` counts both. `0` and `bytp` are different keys as well. `rukxtekt` returns each key with the kind it was written with, in the order it was first written.

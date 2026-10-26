@@ -36,6 +36,7 @@ __all__ = [
     "LANGUAGE_ALIASES",
 ]
 
+
 def _distribution_version() -> str:
     """Installed metadata, else ``pyproject.toml``, else a marked placeholder."""
     try:
