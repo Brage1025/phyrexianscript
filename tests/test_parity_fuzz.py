@@ -1140,6 +1140,8 @@ BUG_Q_WALKER = (
     ("ParseError", "ɢnagɮ (next) used outside of a loop", 2, _NEXT_HINT),
 )
 
+# BUG_R, BUG_S and BUG_T are tracked in https://github.com/Brage1025/phyrexianscript/issues/24
+
 # 'u of the enclosing loop's item, when that name also exists outside.
 # The same text without a persistent session is LOOP_CONST, and the engines
 # agree. In a persistent session the tree-walker prints 0 and then faults on
