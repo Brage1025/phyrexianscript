@@ -8,6 +8,7 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ### Added
 
+- The specification now defines every standard verb (arity, result, and faults) in section 5. `tests/test_spec_verbs.py` checks that each lexicon verb has a row and runs an example of each row on both engines.
 - `docs/releasing.md` is the release checklist: which files hold a version, how to rename Unreleased, and what the two publish workflows run.
 - `tests/test_versions.py` checks the version rule. `phyx.__version__` must match `pyproject.toml`, the spec heading must be the language major.minor, `## Unreleased` must be first, the next version heading must be the package version, and `editors/package.json` must be an `X.Y.Z` of its own.
 - CI runs the suite on Ubuntu, Windows, and macOS, and adds the tree-walker, `ruff check .`, a 3000-program fuzz, coverage on Ubuntu 3.13 with no threshold, and a wheel and sdist install outside the checkout.
