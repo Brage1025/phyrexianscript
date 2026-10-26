@@ -26,7 +26,7 @@ from .builtins import IMPLS, _hashable, _kinds, put_into
 from .errors import RuntimeFault, UserMistake, nesting_fault
 from .hints import hint_for_unknown
 from .limits import memory_fault, repeat_sequence, take_turns
-from .values import Ability, to_text, truthy, values_equal
+from .values import Ability, bare_key, to_text, truthy, values_equal
 from .vocabulary import BLAME_WORD, GET_WORD
 
 _DUMP = os.environ.get("PHYX_DUMP")
@@ -171,7 +171,7 @@ def _range(n, line=0):
 
 def _walk(coll, line=0):
     if isinstance(coll, dict):
-        return list(coll.keys())
+        return [bare_key(k) for k in coll]
     if isinstance(coll, (list, str)):
         return list(coll)
     raise RuntimeFault(f"aχəw' (each) cannot walk through {to_text(coll)}", line)

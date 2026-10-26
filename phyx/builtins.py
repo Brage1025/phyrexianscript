@@ -13,6 +13,8 @@ from .limits import memory_fault, repeat_sequence, take_turns
 from .paths import note_hint, resolve_note, resolve_spread
 from .values import (
     Ability,
+    BookKey,
+    bare_key,
     is_number,
     kind_of,
     parse_number_text,
@@ -64,14 +66,15 @@ def _index(coll: list | str, key: object, verb_word: str) -> int:
     return i  # type: ignore[return-value]
 
 
-def _hashable(key: object, verb_word: str) -> object:
+def _hashable(key: object, verb_word: str) -> BookKey:
+    tagged = BookKey(key)
     try:
-        hash(key)
+        hash(tagged)
     except TypeError:
         raise RuntimeFault(
             f"a book cannot be keyed by a {kind_of(key)} ('{verb_word}')"
         ) from None
-    return key
+    return tagged
 
 
 # ---------------------------------------------------------------- arithmetic
@@ -362,7 +365,7 @@ def _keys(interp, args):
     book = args[0]
     if not isinstance(book, dict):
         raise RuntimeFault(f"'rukxtekt' needs a book, got {_kinds(book)}")
-    return list(book.keys())
+    return [bare_key(k) for k in book]
 
 
 @verb("tluxt")

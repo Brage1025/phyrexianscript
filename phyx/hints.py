@@ -167,7 +167,7 @@ def search_lexicon(query: str) -> list[tuple[str, str, str, str]]:
             add(v.word, v.gloss, "verb", v.doc)
     for w, val in CONSTANTS.items():
         if w in seeds or matches(w, val):
-            add(w, repr(val), "constant", "")
+            add(w, _shown_constant(val), "constant", "")
     for form, conj in CONJUGATIONS.items():
         if form in needles or form in seeds:
             v = VERBS[conj.lemma]
@@ -191,8 +191,14 @@ def search_lexicon(query: str) -> list[tuple[str, str, str, str]]:
             v = VERBS[mapped]
             add(v.word, v.gloss, "verb", v.doc)
         elif mapped in CONSTANTS:
-            add(mapped, repr(CONSTANTS[mapped]), "constant", "")
+            add(mapped, _shown_constant(CONSTANTS[mapped]), "constant", "")
     return hits
+
+
+def _shown_constant(val: object) -> str:
+    from .values import to_source
+
+    return to_source(val)
 
 
 def levenshtein(a: str, b: str) -> int:
@@ -333,7 +339,7 @@ def explain_word(query: str) -> str | None:
         lines.append(f"        {v.doc}")
         lines.append("        objects first, this word last")
     elif key in CONSTANTS:
-        lines.append(f"{key}    constant    {CONSTANTS[key]!r}")
+        lines.append(f"{key}    constant    {_shown_constant(CONSTANTS[key])}")
     elif key in TYPE_WORDS.values():
         eng = next(k for k, val in TYPE_WORDS.items() if val == key)
         lines.append(f"{key}    type word for {eng} (returned by πøkk)")

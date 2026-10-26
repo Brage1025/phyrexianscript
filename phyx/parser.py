@@ -24,6 +24,7 @@ from .errors import ParseError, nesting_fault
 from .hints import ENGLISH_MARKERS
 from .lexer import Token, tokenize, transliterate
 from .paths import resolve_cast
+from .values import format_number
 from .vertical import from_vertical
 from .vocabulary import (
     BREAK_WORD,
@@ -510,16 +511,16 @@ class Parser:
                     n = count_expr.value * (2 if lemma == "tekt" else 1)
                     available = len(stack) - barrier
                     if available < n:
-                        count_hex = format(count_expr.value, "x")
+                        shown = format_number(count_expr.value)
                         if lemma == "tekt":
                             wanted = (
-                                f"{count_expr.value} {'entry' if count_expr.value == 1 else 'entries'} "
-                                f"(key and value each) before the count {count_hex}"
+                                f"{shown} {'entry' if count_expr.value == 1 else 'entries'} "
+                                f"(key and value each) before the count {shown}"
                             )
                         else:
                             wanted = (
-                                f"{count_expr.value} item{'s' if count_expr.value != 1 else ''} "
-                                f"before the count {count_hex}"
+                                f"{shown} item{'s' if count_expr.value != 1 else ''} "
+                                f"before the count {shown}"
                             )
                         raise ParseError(
                             f"'{word}' ({verb.gloss}) wants {wanted}, "
