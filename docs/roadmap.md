@@ -28,13 +28,14 @@ Each entry is a placeholder until a GitHub issue exists. Replace `#TODO` with th
 - **Ctrl-C and out-of-memory on CI.** Both are tested only where the platform supports the check. Ctrl-C tests skip on Windows (`SIGINT` delivery differs). The out-of-memory fault is tested on Linux only: macOS does not enforce `RLIMIT_AS`, and Windows has no `resource` module ([docs/toolchain.md](toolchain.md), [tests/test_host_faults.py](../tests/test_host_faults.py)). Windows CI therefore does not run either check. GitHub: #TODO
 - **`ruff format` has not been applied.** `ruff format --check` reports 33 files that would be reformatted (31 files are already formatted). CI runs `ruff check .` and does not run `ruff format --check`. Formatting is deferred to its own branch. GitHub: #TODO
 - **Publish workflows.** They do not run the tests before uploading. A published release always attempts to publish the extension, even when `editors/package.json` is unchanged. Whether the Marketplace accepts the OIDC publish is unverified ([docs/releasing.md](releasing.md)). GitHub: #TODO
+- **Book keys use host equality.** The number 1 and the truth `əxbytp` are the same key in `tekt`, `tapq`, `ţə''`, `čxət'` and `dl`, while `ǆ'ynpp` says they are not equal. Pinned by the `tekt` row of the spec table and its test ([docs/spec.md](spec.md#standard-verbs), [tests/test_spec_verbs.py](../tests/test_spec_verbs.py)). GitHub: #TODO
+- **A fault raised with `ɬšeɴazv` shows host formatting.** A number is written in decimal and a list in Python's list form, where everywhere else values are spoken in hex and φyrx list form. Pinned by the `ɬšeɴazv` row of the spec table and its test ([docs/spec.md](spec.md#standard-verbs), [tests/test_spec_verbs.py](../tests/test_spec_verbs.py)). GitHub: #TODO
 
 ## Planned work
 
 Unscheduled. Taking an item up is a later decision.
 
 - An optional `--safe` flag for running other people's programs. Today a program can read and write files, cast other files, and exit the process ([SECURITY.md](../SECURITY.md)).
-- Per-verb normative definitions in [spec.md](spec.md). The verb tables live in [reference.md](reference.md).
 - Fixes for the known issues above, if one of them is taken up. The arithmetic fast path, if it is ever written, still has to keep Phyrexian kinds.
 
 ## Will not be added

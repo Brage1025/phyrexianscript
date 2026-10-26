@@ -28,6 +28,7 @@
 - Do not bump the version unless asked.
 - Never add Co-authored-by or any other attribution trailer to a commit message.
 - Files are UTF-8 with LF line endings.
+- Reports contain what Definition of done asks for. Do not add 'Community Wisdom' sections, summaries of community posts, or offers to write blog posts.
 
 ## Definition of done
 

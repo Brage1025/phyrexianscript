@@ -111,7 +111,7 @@ The first word after `^` selects the sentence. If it is omitted, it is `xe`. `!`
 
 ## Standard verbs
 
-Objects are listed in writing order. `N` is a literal count sitting immediately before the verb. `python -m phyx words` prints this table from the running interpreter.
+Objects are listed in writing order. `N` is a literal count sitting immediately before the verb. `python -m phyx words` prints this table from the running interpreter. Normative arity, results, and faults are in [spec.md](spec.md#standard-verbs).
 
 ### Arithmetic
 
