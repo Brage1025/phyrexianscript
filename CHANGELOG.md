@@ -8,6 +8,8 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ### Added
 
+- The editor extension adds **φyrx: Install fonts**, which runs `phyx fetch` in an integrated terminal using the same Python command as `python -m phyx lsp`. Fonts are fetched into `assets/fonts` and are not bundled with the extension. **φyrx: Toggle Phyrexian font** sets the language-scoped `[phyx]` `editor.fontFamily` to Phyrexian followed by the current font, or clears it. The font is proportional, so it stays off until that command is run.
+- `node editors/check.js` fails when a command declared in `editors/package.json` is not registered in `editors/extension.js`, when a `.ttf`, `.otf`, `.woff`, or `.woff2` file is under `editors/`, or when `editors/.vscodeignore` does not exclude `assets/` or `check.js`.
 - The specification now defines every standard verb (arity, result, and faults) in section 5. `tests/test_spec_verbs.py` checks that each lexicon verb has a row and runs an example of each row on both engines.
 - `docs/releasing.md` is the release checklist: which files hold a version, how to rename Unreleased, and what the two publish workflows run.
 - `tests/test_versions.py` checks the version rule. `phyx.__version__` must match `pyproject.toml`, the spec heading must be the language major.minor, `## Unreleased` must be first, the next version heading must be the package version, and `editors/package.json` must be an `X.Y.Z` of its own.
@@ -16,6 +18,7 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ### Changed
 
+- The root README Fan content section and the editor README replace the older Wizards wording with the Fan Content Policy disclaimer.
 - Behaviour change: a number and a truth are different book keys. `1` and `əxbytp` are two entries in `tekt`, `tapq`, `ţə''`, `čxət'` and `dl`, and `samk` counts both. `0` and `bytp` are different keys as well. `rukxtekt` returns each key with the kind it was written with, in the order it was first written.
 - Behaviour change: the message of `ɬšeɴazv` is the spoken form of the object, the same text `xušv` gives. Text is unchanged, a number is hexadecimal (`0a` stays `0a`), a list is φyrx list form, and a truth is its word. A caught `dekp` is still the object.
 - `phyx.__version__` is the installed distribution's version (`importlib.metadata`). When the package is not installed, it is the `version` in `pyproject.toml` (`tomllib`). When neither can be read, it is `0+unknown`. An editable install keeps the previous metadata until `python -m pip install -e ".[dev]"` is run again.
@@ -34,6 +37,7 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ### Fixed
 
+- `phyx fetch` no longer fails when the font is already installed.
 - Ctrl-C stops a running program again. The process prints `ɬšeɴazv: stopped` and exits `130`. In the REPL the same interrupt ends the sentence and returns to the prompt.
 - A host `MemoryError` is the runtime fault `the program ran out of memory`. `baqilx` / `qit` can catch it.
 - Source nested too deeply to lex, parse, compile, format, or lint is the grammar fault `this program is nested too deeply`, on the line where the nesting starts. Showing or comparing a value nested too deeply is the runtime fault `this value is nested too deeply`.

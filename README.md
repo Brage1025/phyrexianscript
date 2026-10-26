@@ -13,8 +13,6 @@
 
 The toolchain is a small Python 3.11+ interpreter with no third-party dependencies. The language and interpreter are **MIT**. The optional font and dictionary JSON are **GPL-3.0** and are fetched, not vendored. Source: [github.com/Brage1025/phyrexianscript](https://github.com/Brage1025/phyrexianscript).
 
-Not affiliated with or endorsed by Wizards of the Coast.
-
 ```
 python -m phyx examples/01_welcome.phyx
 ```
@@ -136,3 +134,9 @@ Python 3.11 to 3.14, as the classifiers in `pyproject.toml` say. It runs on Linu
 Known issues: [docs/roadmap.md](docs/roadmap.md).
 
 [Specification](docs/spec.md). [Tour](docs/tour.md). [Reference](docs/reference.md).
+
+---
+
+## Fan content
+
+φyrx is unofficial Fan Content permitted under the Fan Content Policy. Not approved/endorsed by Wizards. Portions of the materials used are property of Wizards of the Coast. ©Wizards of the Coast LLC.

@@ -126,7 +126,12 @@ def install_user_font(src: Path, family: str) -> Path | None:
         return None
     dest_dir.mkdir(parents=True, exist_ok=True)
     dest = dest_dir / src.name
-    shutil.copy2(src, dest)
+    if not (dest.is_file() and dest.read_bytes() == src.read_bytes()):
+        try:
+            shutil.copy2(src, dest)
+        except OSError as err:
+            print(f"warning: could not install {dest}: {err}", file=sys.stderr)
+            return None
     try:
         import winreg
 

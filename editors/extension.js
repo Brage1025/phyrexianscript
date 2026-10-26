@@ -1,19 +1,46 @@
 const vscode = require("vscode");
-const { spawn } = require("child_process");
+const { spawn, spawnSync } = require("child_process");
 const path = require("path");
 
-function spawnLsp(folder) {
+function phyxCandidates(subcommand) {
   const extra = process.env.PHYX_PYTHON;
   const tries = [];
   if (extra) {
-    tries.push({ cmd: extra, args: extra.toLowerCase().includes("phyx") ? ["lsp"] : ["-m", "phyx", "lsp"] });
+    tries.push({
+      cmd: extra,
+      args: extra.toLowerCase().includes("phyx") ? [subcommand] : ["-m", "phyx", subcommand],
+    });
   }
-  tries.push({ cmd: "phyx", args: ["lsp"] });
-  tries.push({ cmd: "python", args: ["-m", "phyx", "lsp"] });
-  tries.push({ cmd: "py", args: ["-3", "-m", "phyx", "lsp"] });
+  tries.push({ cmd: "phyx", args: [subcommand] });
+  tries.push({ cmd: "python", args: ["-m", "phyx", subcommand] });
+  tries.push({ cmd: "py", args: ["-3", "-m", "phyx", subcommand] });
+  return tries;
+}
+
+function candidateRuns(candidate) {
+  const args = candidate.args.slice(0, -1).concat(["--version"]);
+  const result = spawnSync(candidate.cmd, args, {
+    windowsHide: true,
+    timeout: 20000,
+    stdio: "ignore",
+  });
+  return result.status === 0;
+}
+
+function resolvePhyx(subcommand) {
+  const tries = phyxCandidates(subcommand);
+  for (const candidate of tries) {
+    if (candidateRuns(candidate)) {
+      return candidate;
+    }
+  }
+  return tries[0];
+}
+
+function spawnLsp(folder) {
   const cwd = folder || path.dirname(__dirname);
   let last;
-  for (const t of tries) {
+  for (const t of phyxCandidates("lsp")) {
     try {
       last = spawn(t.cmd, t.args, { cwd, stdio: ["pipe", "pipe", "pipe"] });
       if (last.pid) {
@@ -24,6 +51,161 @@ function spawnLsp(folder) {
     }
   }
   return last;
+}
+
+function fontsDirFromOutput(text) {
+  const match = text.match(/->\s*(.+)/);
+  if (!match) {
+    return undefined;
+  }
+  return path.dirname(match[1].trim());
+}
+
+function fontsDirFromPython(candidate, cwd) {
+  if (process.env.PHYX_ASSETS) {
+    return path.join(process.env.PHYX_ASSETS, "fonts");
+  }
+  const code = "from phyx.fonts import fonts_dir; print(fonts_dir())";
+  const probes = [];
+  if (candidate.args[0] === "-3") {
+    probes.push({ cmd: candidate.cmd, args: ["-3", "-c", code] });
+  } else if (candidate.args.includes("-m")) {
+    probes.push({ cmd: candidate.cmd, args: ["-c", code] });
+  }
+  probes.push({ cmd: "python", args: ["-c", code] });
+  probes.push({ cmd: "py", args: ["-3", "-c", code] });
+  for (const probe of probes) {
+    const result = spawnSync(probe.cmd, probe.args, {
+      cwd,
+      encoding: "utf8",
+      windowsHide: true,
+      timeout: 20000,
+    });
+    if (result.status === 0 && result.stdout && result.stdout.trim()) {
+      return result.stdout.trim().split(/\r?\n/).pop();
+    }
+  }
+  if (cwd) {
+    return path.join(cwd, "assets", "fonts");
+  }
+  return undefined;
+}
+
+function fetchSuccessMessage() {
+  if (process.platform === "win32") {
+    return "The fonts were installed for this user and VS Code must be restarted.";
+  }
+  return "The fonts are saved in the assets/fonts folder and must be installed in the operating system, then VS Code reloaded.";
+}
+
+async function revealFonts(fontsDir) {
+  const choice = await vscode.window.showInformationMessage(
+    fetchSuccessMessage(),
+    "Reveal folder",
+  );
+  if (choice === "Reveal folder" && fontsDir) {
+    await vscode.env.openExternal(vscode.Uri.file(fontsDir));
+  }
+}
+
+function installFonts(folder) {
+  const cwd = folder || path.dirname(__dirname);
+  const candidate = resolvePhyx("fetch");
+  let fontsDir = fontsDirFromPython(candidate, cwd);
+  const writeEmitter = new vscode.EventEmitter();
+  let proc;
+  let captured = "";
+  let reported = false;
+  const pty = {
+    onDidWrite: writeEmitter.event,
+    open() {
+      writeEmitter.fire(`${candidate.cmd} ${candidate.args.join(" ")}\r\n`);
+      proc = spawn(candidate.cmd, candidate.args, {
+        cwd,
+        windowsHide: true,
+        stdio: ["pipe", "pipe", "pipe"],
+      });
+      const take = (chunk) => {
+        const text = chunk.toString("utf8");
+        captured += text;
+        writeEmitter.fire(text.replace(/\r?\n/g, "\r\n"));
+      };
+      proc.stdout.on("data", take);
+      proc.stderr.on("data", take);
+      proc.on("error", (err) => {
+        reported = true;
+        writeEmitter.fire(`${err.message}\r\n`);
+        vscode.window.showWarningMessage("φyrx: could not start `phyx fetch`. Install phyx and keep Python on PATH.");
+      });
+      proc.on("exit", (code) => {
+        if (reported) {
+          return;
+        }
+        const fromOutput = fontsDirFromOutput(captured);
+        if (fromOutput) {
+          fontsDir = fromOutput;
+        }
+        if (code === 0) {
+          revealFonts(fontsDir);
+        } else {
+          vscode.window.showWarningMessage("φyrx: `phyx fetch` failed. See the terminal.");
+        }
+      });
+    },
+    close() {
+      if (proc) {
+        proc.kill();
+      }
+    },
+    handleInput(data) {
+      if (data === "\u0003" && proc) {
+        proc.kill();
+        return;
+      }
+      if (proc && proc.stdin && proc.stdin.writable) {
+        proc.stdin.write(data);
+      }
+    },
+  };
+  const term = vscode.window.createTerminal({ name: "φyrx: Install fonts", pty });
+  term.show();
+}
+
+async function unsetLanguageFont(scoped, target) {
+  try {
+    await scoped.update("editor.fontFamily", undefined, target, true);
+  } catch (_err) {
+    /* that scope has no settings file */
+  }
+}
+
+async function toggleFont() {
+  const scoped = vscode.workspace.getConfiguration(undefined, { languageId: "phyx" });
+  const inspected = scoped.inspect("editor.fontFamily") || {};
+  const languageValue = inspected.workspaceFolderLanguageValue
+    || inspected.workspaceLanguageValue
+    || inspected.globalLanguageValue;
+  const enabled = typeof languageValue === "string" && /^\s*Phyrexian\b/.test(languageValue);
+  if (enabled) {
+    if (inspected.workspaceFolderLanguageValue !== undefined) {
+      await unsetLanguageFont(scoped, vscode.ConfigurationTarget.WorkspaceFolder);
+    }
+    if (inspected.workspaceLanguageValue !== undefined) {
+      await unsetLanguageFont(scoped, vscode.ConfigurationTarget.Workspace);
+    }
+    if (inspected.globalLanguageValue !== undefined) {
+      await unsetLanguageFont(scoped, vscode.ConfigurationTarget.Global);
+    }
+    return;
+  }
+  const base = vscode.workspace.getConfiguration().inspect("editor.fontFamily") || {};
+  let current = base.workspaceFolderValue || base.workspaceValue || base.globalValue || base.defaultValue || "";
+  if (typeof current !== "string") {
+    current = "";
+  }
+  const fallback = current.replace(/^\s*Phyrexian\s*,\s*/, "");
+  const next = fallback ? `Phyrexian, ${fallback}` : "Phyrexian";
+  await scoped.update("editor.fontFamily", next, vscode.ConfigurationTarget.Global, true);
 }
 
 class Rpc {
@@ -106,6 +288,10 @@ function activate(context) {
   const folder = vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0]
     ? vscode.workspace.workspaceFolders[0].uri.fsPath
     : undefined;
+  context.subscriptions.push(
+    vscode.commands.registerCommand("phyx.installFonts", () => installFonts(folder)),
+    vscode.commands.registerCommand("phyx.toggleFont", () => toggleFont()),
+  );
   const child = spawnLsp(folder);
   if (!child) {
     vscode.window.showWarningMessage("φyrx: could not start `python -m phyx lsp`. Install phyx and keep Python on PATH.");
