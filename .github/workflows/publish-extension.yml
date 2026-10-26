@@ -15,8 +15,14 @@ on:
     types: [published]
 
 jobs:
+  ci:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/ci.yml
+
   marketplace:
-    if: ${{ github.event_name == 'release' || inputs.registry == 'marketplace' || inputs.registry == 'both' }}
+    needs: ci
+    if: ${{ needs.ci.result == 'success' && (github.event_name == 'release' || inputs.registry == 'marketplace' || inputs.registry == 'both') }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -31,11 +37,48 @@ jobs:
           node-version: "22"
       - name: Package
         run: npx --yes @vscode/vsce package --no-dependencies
+      - name: Compare with the published Marketplace version
+        id: marketplace-version
+        env:
+          JSON_PATH: ${{ runner.temp }}/marketplace.json
+        run: |
+          set -euo pipefail
+          local_version="$(node -p 'require("./package.json").version')"
+          npx --yes @vscode/vsce show brage1025.phyx --json > "$JSON_PATH"
+          remote_version="$(node <<'NODE'
+          const fs = require("fs");
+          const raw = fs.readFileSync(process.env.JSON_PATH, "utf8");
+          let data;
+          try {
+            data = JSON.parse(raw);
+          } catch (err) {
+            console.error("Marketplace query did not return JSON");
+            process.exit(1);
+          }
+          const listed = data && Array.isArray(data.versions) ? data.versions : [];
+          const version = listed[0] && listed[0].version;
+          if (!version) {
+            console.error("Marketplace query did not include a version");
+            process.exit(1);
+          }
+          process.stdout.write(String(version));
+          NODE
+          )"
+          echo "editors/package.json version: ${local_version}"
+          echo "published version: ${remote_version}"
+          if [ "$local_version" = "$remote_version" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::Visual Studio Marketplace already has brage1025.phyx ${local_version}; skipping publish"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
       - name: Publish to Visual Studio Marketplace
+        if: ${{ success() && steps.marketplace-version.outputs.skip == 'false' }}
         run: npx --yes @vscode/vsce publish --oidc --no-dependencies
 
   openvsx:
-    if: ${{ github.event_name == 'release' || inputs.registry == 'openvsx' || inputs.registry == 'both' }}
+    needs: ci
+    if: ${{ needs.ci.result == 'success' && (github.event_name == 'release' || inputs.registry == 'openvsx' || inputs.registry == 'both') }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -50,5 +93,44 @@ jobs:
           node-version: "22"
       - name: Package
         run: npx --yes @vscode/vsce package --no-dependencies
+      - name: Compare with the published Open VSX version
+        id: openvsx-version
+        env:
+          JSON_PATH: ${{ runner.temp }}/openvsx.json
+        run: |
+          set -euo pipefail
+          local_version="$(node -p 'require("./package.json").version')"
+          npx --yes ovsx get brage1025.phyx --metadata > "$JSON_PATH"
+          remote_version="$(node <<'NODE'
+          const fs = require("fs");
+          const raw = fs.readFileSync(process.env.JSON_PATH, "utf8");
+          let data;
+          try {
+            data = JSON.parse(raw);
+          } catch (err) {
+            console.error("Open VSX query did not return JSON");
+            process.exit(1);
+          }
+          if (data && data.error) {
+            console.error(data.error);
+            process.exit(1);
+          }
+          const version = data && data.version;
+          if (!version) {
+            console.error("Open VSX query did not include a version");
+            process.exit(1);
+          }
+          process.stdout.write(String(version));
+          NODE
+          )"
+          echo "editors/package.json version: ${local_version}"
+          echo "published version: ${remote_version}"
+          if [ "$local_version" = "$remote_version" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::Open VSX already has brage1025.phyx ${local_version}; skipping publish"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
       - name: Publish to Open VSX
+        if: ${{ success() && steps.openvsx-version.outputs.skip == 'false' }}
         run: npx --yes ovsx publish --trusted-publishing --no-dependencies

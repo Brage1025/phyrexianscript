@@ -24,13 +24,21 @@ The language version is the first two numbers of the toolchain version (spec sec
 
 Do not create the tag or the release until the bump commit is the one you mean to ship.
 
+## CI
+
+`.github/workflows/ci.yml` runs on every pull request, and on a push only when the branch is `main`, so a pull request is checked once. `workflow_call` runs the same jobs from the publish workflows. The last job is named `ci-passed`. It uses `if: always()` and fails unless `test`, `tree-walker`, `lint`, `fuzz`, `package`, and `extension` each finished as `success`. A skipped or cancelled job fails `ci-passed`. The required status check is `ci-passed`.
+
 ## What the publish workflows do
 
-Neither workflow reads a secret. Both authenticate with GitHub's OpenID Connect token (`permissions: id-token: write`). Neither job sets `environment:`.
+Neither workflow reads a secret. The jobs that upload authenticate with GitHub's OpenID Connect token (`permissions: id-token: write`). The job that calls CI does not: its token is `contents: read` only. No job sets `environment:`.
+
+Both publish workflows start with a job that calls `.github/workflows/ci.yml`. Every publish job needs that job. A failed `ci-passed` on the release commit uploads nothing to PyPI, the Marketplace, or Open VSX.
 
 ### `publish.yml`
 
-Runs when a release is published, and on `workflow_dispatch`. One job, `pypi`, on `ubuntu-latest`. It checks out the repository, installs Python 3.12, installs `build` and `twine`, runs `python -m build` and `python -m twine check dist/*`, then `pypa/gh-action-pypi-publish@release/v1` with no username, password, or repository URL. That action uploads the built distributions to PyPI using the job's OIDC token.
+Runs when a release is published, and on `workflow_dispatch`. The first job, `ci`, calls `.github/workflows/ci.yml`. The `pypi` job needs `ci` and does not run when that call fails.
+
+`pypi` runs on `ubuntu-latest` with `id-token: write` and `contents: read`. It checks out the repository, installs Python 3.12, installs `build` and `twine`, runs `python -m build` and `python -m twine check dist/*`, then `pypa/gh-action-pypi-publish@release/v1` with no username, password, or repository URL. That action uploads the built distributions to PyPI using the job's OIDC token.
 
 Configure this on the existing PyPI project, not as a GitHub secret. Open the project's Publishing page (`https://pypi.org/manage/project/phyx/settings/publishing/`, from Your projects → Manage `phyx` → Publishing). Add a GitHub Actions trusted publisher:
 
@@ -39,13 +47,17 @@ Configure this on the existing PyPI project, not as a GitHub secret. Open the pr
 - Workflow name: `publish.yml`
 - Environment name: leave empty
 
-PyPI's own docs recommend a GitHub environment. This workflow does not declare one, so a name on the PyPI form will not match the token and the upload will fail. Adding an environment means changing the workflow so the job's `environment:` is that same name. The workflow also does not run the tests before it uploads.
+PyPI's own docs recommend a GitHub environment. This workflow does not declare one, so a name on the PyPI form will not match the token and the upload will fail. Adding an environment means changing the workflow so the job's `environment:` is that same name.
 
 ### `publish-extension.yml`
 
-Runs when a release is published, and on `workflow_dispatch`. The dispatch input `registry` is `both` (the default), `marketplace`, or `openvsx`. On a published release the input is ignored and both jobs run, because each job's condition is true when `github.event_name == 'release'`. On a manual run, only the selected registry runs.
+Runs when a release is published, and on `workflow_dispatch`. The first job, `ci`, calls `.github/workflows/ci.yml` with `contents: read` only. The `marketplace` and `openvsx` jobs need `ci`.
+
+The dispatch input `registry` is `both` (the default), `marketplace`, or `openvsx`. On a published release the input is ignored and both jobs run when CI succeeded, because each job's condition is true when `github.event_name == 'release'` and `needs.ci.result` is `success`. On a manual run, only the selected registry runs, and only after CI succeeded.
 
 Both jobs run on `ubuntu-latest`, with `contents: read` and `id-token: write`, working directory `editors`, and Node 22. Each job packages with `npx --yes @vscode/vsce package --no-dependencies`.
+
+Before the publish step, each job reads `version` from `editors/package.json` and queries that registry with the same tool it publishes with: `npx --yes @vscode/vsce show brage1025.phyx --json` for the Marketplace (`versions[0].version`, the version `vsce show` prints as current), and `npx --yes ovsx get brage1025.phyx --metadata` for Open VSX (the `version` field). When that published version equals `editors/package.json`, the publish step is skipped and the log prints a notice. The package step still runs. When the query fails, or the response has no version, the job fails and does not publish. A release that does not change the extension can succeed.
 
 The `marketplace` job uses `vsce publish --oidc` (`npx --yes @vscode/vsce publish --oidc --no-dependencies`). The workflow file contains no `VSCE_PAT` and no `--pat`, and there is nothing in GitHub secrets to fill in for this job. Whether the Marketplace accepts a trusted-publishing policy for this repository is unverified. Before relying on it for a release, run the "Publish extension" workflow manually (`workflow_dispatch`) with `registry=marketplace` and read the result. If it fails, the fix is a workflow change (a PAT secret or `--azure-credential`), not a docs change. The places to check are the [vsce README](https://github.com/microsoft/vscode-vsce/blob/main/README.md) and the VS Code [Publishing Extensions](https://code.visualstudio.com/api/working-with-extensions/publishing-extension) page.
 
@@ -59,8 +71,6 @@ Register the workflow under the namespace owner's Trusted Publishers settings, w
 - Environment name: leave empty
 
 The job does not set `environment:`. A name in that field will not match.
-
-A published release always runs this workflow, even when `editors/package.json` was not bumped. The registries reject a version that is already published, so that job fails. The workflow does not skip an unchanged extension version. That skip would be a workflow change.
 
 ## After it publishes
 

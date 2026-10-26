@@ -4,8 +4,11 @@ permissions:
   contents: read
 
 on:
-  push:
   pull_request:
+  push:
+    branches:
+      - main
+  workflow_call:
 
 jobs:
   test:
@@ -141,3 +144,39 @@ jobs:
       - uses: actions/checkout@v7
       - name: Extension manifest
         run: python -c "import json, pathlib; p=json.loads(pathlib.Path('editors/package.json').read_text(encoding='utf-8')); assert p['contributes']['grammars'][0]['scopeName']=='source.phyx'"
+      - name: Extension check
+        run: node editors/check.js
+
+  ci-passed:
+    name: ci-passed
+    needs: [test, tree-walker, lint, fuzz, package, extension]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail unless every needed job succeeded
+        env:
+          TEST: ${{ needs.test.result }}
+          TREE_WALKER: ${{ needs.tree-walker.result }}
+          LINT: ${{ needs.lint.result }}
+          FUZZ: ${{ needs.fuzz.result }}
+          PACKAGE: ${{ needs.package.result }}
+          EXTENSION: ${{ needs.extension.result }}
+        run: |
+          fail=0
+          check() {
+            if [ "$2" != "success" ]; then
+              echo "$1 finished as $2"
+              fail=1
+            else
+              echo "$1 finished as success"
+            fi
+          }
+          check test "$TEST"
+          check tree-walker "$TREE_WALKER"
+          check lint "$LINT"
+          check fuzz "$FUZZ"
+          check package "$PACKAGE"
+          check extension "$EXTENSION"
+          if [ "$fail" -ne 0 ]; then
+            exit 1
+          fi
