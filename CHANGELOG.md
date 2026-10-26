@@ -8,6 +8,7 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ### Added
 
+- CI's required status check is the `ci-passed` job. It fails unless `test`, `tree-walker`, `lint`, `fuzz`, `package`, and `extension` each finished as `success`. A skipped or cancelled job fails it. Publish workflows call CI before they upload. An extension publish step is skipped when that registry already has the `version` in `editors/package.json`, and the job fails if the registry query fails.
 - The editor extension adds **φyrx: Install fonts**, which runs `phyx fetch` in an integrated terminal using the same Python command as `python -m phyx lsp`. Fonts are fetched into `assets/fonts` and are not bundled with the extension. **φyrx: Toggle Phyrexian font** sets the language-scoped `[phyx]` `editor.fontFamily` to Phyrexian followed by the current font, or clears it. The font is proportional, so it stays off until that command is run.
 - `node editors/check.js` fails when a command declared in `editors/package.json` is not registered in `editors/extension.js`, when a `.ttf`, `.otf`, `.woff`, or `.woff2` file is under `editors/`, or when `editors/.vscodeignore` does not exclude `assets/` or `check.js`.
 - The specification now defines every standard verb (arity, result, and faults) in section 5. `tests/test_spec_verbs.py` checks that each lexicon verb has a row and runs an example of each row on both engines.
@@ -18,6 +19,7 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ### Changed
 
+- CI runs on every pull request and on pushes to `main` only. The extension job runs `node editors/check.js`. Dependabot groups GitHub Actions updates into one weekly pull request.
 - The root README Fan content section and the editor README replace the older Wizards wording with the Fan Content Policy disclaimer.
 - Behaviour change: a number and a truth are different book keys. `1` and `əxbytp` are two entries in `tekt`, `tapq`, `ţə''`, `čxət'` and `dl`, and `samk` counts both. `0` and `bytp` are different keys as well. `rukxtekt` returns each key with the kind it was written with, in the order it was first written.
 - Behaviour change: the message of `ɬšeɴazv` is the spoken form of the object, the same text `xušv` gives. Text is unchanged, a number is hexadecimal (`0a` stays `0a`), a list is φyrx list form, and a truth is its word. A caught `dekp` is still the object.
