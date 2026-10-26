@@ -951,6 +951,93 @@ class EngineBugTests(unittest.TestCase):
         self.assertEqual(run_both(at)[1], ("100000\n", None))
         assertParity(at)
 
+    def test_number_and_truth_are_different_book_keys(self):
+        # 1 and əxbytp, and the text key "1", stay distinct in every key verb.
+        source = (
+            "^xe-əxbytp-5-1-9-2-tekt-b-ţə''.\n"
+            "!b.\n"
+            "!b-samk.\n"
+            "!b-1-tapq,b-əxbytp-tapq.\n"
+            "!b-rukxtekt.\n"
+            "!b-rukxtekt-0-tapq-πøkk,b-rukxtekt-1-tapq-πøkk.\n"
+            "!1-b-dl,əxbytp-b-dl,bytp-b-dl,0-b-dl.\n"
+            "^xe-7-b-1-tapq-ţə''.\n"
+            "!b-samk,b-1-tapq.\n"
+            "^xe-b-1-čxət'-gone-ţə''.\n"
+            "!gone,b,1-b-dl,əxbytp-b-dl.\n"
+            "^xe-1-4-1-tekt-c-ţə''.\n"
+            "^xe-8-c-əxbytp-tapq-ţə''.\n"
+            "!c,c-samk.\n"
+            '^xe-"1"-7-1-8-2-tekt-t-ţə\'\'.\n'
+            '!t-samk,t-"1"-tapq,t-1-tapq.\n'
+        )
+        stdout = (
+            "əxbytp-5-1-9-2-tekt\n"
+            "2\n"
+            "9 5\n"
+            "əxbytp-1-2-ťewn\n"
+            "wija'x asərθ\n"
+            "əxbytp əxbytp bytp bytp\n"
+            "2 7\n"
+            "7 əxbytp-5-1-tekt bytp əxbytp\n"
+            "1-4-əxbytp-8-2-tekt 2\n"
+            "2 7 8\n"
+        )
+        self.assertEqual(run_both(source)[1], (stdout, None))
+        assertParity(source)
+
+    def test_mistake_message_is_the_spoken_form(self):
+        caught = (
+            "^baqilx:\n"
+            "    ^xe-0a-ɬšeɴazv.\n"
+            "^qit:\n"
+            "    !dekp,dekp-πøkk.\n"
+            "^baqilx:\n"
+            "    ^xe-1-2-2-ťewn-ɬšeɴazv.\n"
+            "^qit:\n"
+            "    !dekp-πøkk.\n"
+        )
+        self.assertEqual(run_both(caught)[1], ("0a asərθ\nťewn\n", None))
+        assertParity(caught)
+        cases = (
+            ("^xe-0a-ɬšeɴazv.\n", "0a"),
+            ("^xe-1-2-2-ťewn-ɬšeɴazv.\n", "1-2-2-ťewn"),
+            ("^xe-1-2-2-ťewn-3-2-ťewn-ɬšeɴazv.\n", "1-2-2-ťewn-3-2-ťewn"),
+            ('^xe-"bad"-ɬšeɴazv.\n', "bad"),
+            ("^xe-əxbytp-ɬšeɴazv.\n", "əxbytp"),
+            ("^xe-əixiww-ɬšeɴazv.\n", "əixiww"),
+            ('^xe-"a"-1-1-tekt-ɬšeɴazv.\n', '"a"-1-1-tekt'),
+        )
+        for source, message in cases:
+            fault = ("UserMistake", message, 1, None)
+            self.assertEqual(run_both(source)[1], ("", fault), source)
+            assertParity(source)
+
+    def test_zero_and_false_stay_distinct_and_books_still_walk_and_copy(self):
+        source = (
+            "^xe-0-4-bytp-6-2-tekt-b-ţə''.\n"
+            "!b,b-samk,b-0-tapq,b-bytp-tapq,b-rukxtekt.\n"
+            '^xe-1-"n"-2-1-tekt-əxbytp-"t"-3-1-tekt-2-tekt-outer-ţə\'\'.\n'
+            "!outer.\n"
+            "^xe-1-8-əxbytp-3-2-tekt-b-ţə''.\n"
+            "^aχəw'-k-dl-b:\n"
+            "    !k,k-πøkk,b-k-tapq.\n"
+            "^xe-1-2-1-tekt-orig-ţə''.\n"
+            "^xe-orig-tluxt-copy-ţə''.\n"
+            "^xe-4-copy-1-tapq-ţə''.\n"
+            "^xe-6-copy-əxbytp-tapq-ţə''.\n"
+            "!orig,copy,copy-samk.\n"
+        )
+        stdout = (
+            "0-4-bytp-6-2-tekt 2 4 6 0-bytp-2-ťewn\n"
+            '1-"n"-2-1-tekt-əxbytp-"t"-3-1-tekt-2-tekt\n'
+            "1 asərθ 8\n"
+            "əxbytp wija'x 3\n"
+            "1-2-1-tekt 1-4-əxbytp-6-2-tekt 2\n"
+        )
+        self.assertEqual(run_both(source)[1], (stdout, None))
+        assertParity(source)
+
     def test_bug_g_bench_treewalk_typeerror(self):
         compiled = _bench_result(False)
         walked = _bench_result(True)

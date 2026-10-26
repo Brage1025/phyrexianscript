@@ -42,7 +42,7 @@ from .render import render_html
 from .repl import Repl
 from .scaffold import create as create_scaffold
 from .testing import run_suite
-from .values import format_number
+from .values import format_number, to_source
 from .vertical import from_vertical, to_vertical
 from .vocabulary import CONSTANTS, MARKERS, VERBS
 
@@ -397,7 +397,7 @@ def cmd_words(args: argparse.Namespace) -> int:
         print(f"  {v.word:<16} {ar:<3} {v.gloss:<14} {v.doc}")
     print("\nCONSTANTS")
     for w, val in CONSTANTS.items():
-        print(f"  {w:<10} {val!r}")
+        print(f"  {w:<10} {to_source(val)}")
     return 0
 
 

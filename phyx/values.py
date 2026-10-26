@@ -1,9 +1,10 @@
 """Runtime values and how they are written back out in Phyrexian.
 
 Values are plain Python objects: ``int`` (numbers), ``str`` (text), ``bool``
-(truth), ``None`` (void), ``list`` and ``dict`` (book).  Numbers are shown in
-hexadecimal, exactly as they are written in source, so output can be pasted
-back into a program.
+(truth), ``None`` (void), ``list`` and ``dict`` (book).  A book's keys are
+:class:`BookKey` values, so a number and a truth stay distinct.  Numbers are
+shown in hexadecimal, exactly as they are written in source, so output can
+be pasted back into a program.
 """
 
 from __future__ import annotations
@@ -110,6 +111,35 @@ def type_word(v: object) -> str:
     return TYPE_WORDS.get(kind_of(v), kind_of(v))
 
 
+class BookKey:
+    """A book key tagged with its φyrx kind.
+
+    The host hashes ``True`` with ``1`` and ``False`` with ``0``. A book
+    keeps a number and a truth as different keys.
+    """
+
+    __slots__ = ("kind", "value")
+
+    def __init__(self, value: object) -> None:
+        self.kind = kind_of(value)
+        self.value = value
+
+    def __hash__(self) -> int:
+        return hash((self.kind, self.value))
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, BookKey):
+            return NotImplemented
+        return self.kind == other.kind and self.value == other.value
+
+
+def bare_key(key: object) -> object:
+    """The φyrx value written as this book key."""
+    if isinstance(key, BookKey):
+        return key.value
+    return key
+
+
 def values_equal(a: object, b: object) -> bool:
     try:
         return _values_equal(a, b)
@@ -157,6 +187,8 @@ def to_source(v: object) -> str:
 
 
 def _to_source(v: object) -> str:
+    if isinstance(v, BookKey):
+        return _to_source(v.value)
     if v is None:
         return "əixiww"
     if isinstance(v, bool):

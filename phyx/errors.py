@@ -90,7 +90,9 @@ class UserMistake(RuntimeFault):
     kind = "ɬšeɴazv [program]"
 
     def __init__(self, value, line: int | None = None):
-        super().__init__(str(value), line)
+        from .values import to_text
+
+        super().__init__(to_text(value), line)
         self.value = value
 
 

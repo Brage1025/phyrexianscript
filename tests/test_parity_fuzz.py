@@ -358,13 +358,25 @@ def _list_phrase(rng: random.Random, *, wrong: bool) -> str:
 
 
 def _book_phrase(rng: random.Random, *, wrong: bool) -> str:
-    """A book. The wrong path keys it with a list or a book."""
+    """A book. The wrong path keys it with a list or a book.
+
+    A number and a truth are different keys, so some books carry both
+    ``1`` and ``əxbytp``, or both ``0`` and ``bytp``.
+    """
     if wrong:
         key = rng.choice(("0-ťewn", "0-tekt"))
         return f"{key}-{_atom(rng, wrong=False)}-1-tekt"
     if rng.randrange(5) == 0:
         return "0-tekt"
-    return f'"k"-{_atom(rng, wrong=False)}-1-tekt'
+    if rng.randrange(3) == 0:
+        left = _atom(rng, wrong=False)
+        right = _atom(rng, wrong=False)
+        return rng.choice((
+            f"1-{left}-əxbytp-{right}-2-tekt",
+            f"0-{left}-bytp-{right}-2-tekt",
+        ))
+    key = rng.choice(('"k"', "0", "1", "əxbytp", "bytp"))
+    return f"{key}-{_atom(rng, wrong=False)}-1-tekt"
 
 
 def _ron_phrase(rng: random.Random, *, wrong: bool) -> str:

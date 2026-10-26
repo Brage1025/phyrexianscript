@@ -16,6 +16,8 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ### Changed
 
+- Behaviour change: a number and a truth are different book keys. `1` and `əxbytp` are two entries in `tekt`, `tapq`, `ţə''`, `čxət'` and `dl`, and `samk` counts both. `0` and `bytp` are different keys as well. `rukxtekt` returns each key with the kind it was written with, in the order it was first written.
+- Behaviour change: the message of `ɬšeɴazv` is the spoken form of the object, the same text `xušv` gives. Text is unchanged, a number is hexadecimal (`0a` stays `0a`), a list is φyrx list form, and a truth is its word. A caught `dekp` is still the object.
 - `phyx.__version__` is the installed distribution's version (`importlib.metadata`). When the package is not installed, it is the `version` in `pyproject.toml` (`tomllib`). When neither can be read, it is `0+unknown`. An editable install keeps the previous metadata until `python -m pip install -e ".[dev]"` is run again.
 - The specification heading names the language version (1.6), the first two numbers of the toolchain version.
 - The Development Status classifier is Beta. The license field is the SPDX expression `MIT` and `license-files` lists `LICENSE`. The build requires setuptools >= 77.0.0. The OSI license classifier is removed. `include-package-data` is off, so the `phyx.lib` directory stays package data (`lib/*.phyx`) and setuptools no longer warns that `phyx.lib` is absent from `packages`.

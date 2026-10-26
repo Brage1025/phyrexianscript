@@ -243,7 +243,7 @@ CASES: dict[str, list[dict]] = {
     "tekt": [
         {"source": '!"a"-1-"b"-2-2-tekt.', "stdout": '"a"-1-"b"-2-2-tekt\n'},
         {"source": '!"a"-1-"a"-2-2-tekt.', "stdout": '"a"-2-1-tekt\n'},
-        {"source": "!əxbytp-5-1-tekt-1-tapq.", "stdout": "5\n"},
+        {"source": "!əxbytp-5-1-9-2-tekt.", "stdout": "əxbytp-5-1-9-2-tekt\n"},
         {
             "source": "!əx1-tekt.",
             "fault": "'tekt' (book) must be preceded by a plain numeral giving how many items to gather",
@@ -266,6 +266,10 @@ CASES: dict[str, list[dict]] = {
     ],
     "tapq": [
         {"source": '!1-2-3-3-ťewn-0-tapq,1-2-3-3-ťewn-əx1-tapq,"abc"-1-tapq.', "stdout": "1 3 b\n"},
+        {
+            "source": "!əxbytp-5-1-9-2-tekt-1-tapq,əxbytp-5-1-9-2-tekt-əxbytp-tapq.",
+            "stdout": "9 5\n",
+        },
         {"source": '!0-tekt-"k"-tapq.', "fault": 'the book has no entry "k"', "kind": "RuntimeFault"},
         {
             "source": '!"ab"-"a"-tapq.',
@@ -283,6 +287,10 @@ CASES: dict[str, list[dict]] = {
     ],
     "čxət'": [
         {"source": "^xe-1-2-3-3-ťewn-l-ţə''.\n!l-əx1-čxət'.\n!l.", "stdout": "3\n1-2-2-ťewn\n"},
+        {
+            "source": "^xe-əxbytp-5-1-9-2-tekt-b-ţə''.\n!b-1-čxət'.\n!b.",
+            "stdout": "9\nəxbytp-5-1-tekt\n",
+        },
         {"source": "!0-ťewn-0-čxət'.", "fault": "the list has 0 items; there is no item 0", "kind": "RuntimeFault"},
         {"source": '!0-tekt-"k"-čxət\'.', "fault": 'the book has no entry "k"', "kind": "RuntimeFault"},
         {
@@ -308,6 +316,10 @@ CASES: dict[str, list[dict]] = {
     ],
     "dl": [
         {"source": '!"a"-"a"-1-1-tekt-dl,""-""-dl,2-1-2-2-ťewn-dl.', "stdout": "əxbytp əxbytp əxbytp\n"},
+        {
+            "source": "!1-1-5-1-tekt-dl,əxbytp-1-5-1-tekt-dl,əxbytp-əxbytp-5-1-tekt-dl,1-əxbytp-5-1-tekt-dl.",
+            "stdout": "əxbytp bytp əxbytp bytp\n",
+        },
         {
             "source": '!1-"hello"-dl.',
             "fault": "only text can be found inside text, not asərθ (number)",
@@ -363,8 +375,8 @@ CASES: dict[str, list[dict]] = {
     "ɬšeɴazv": [
         {"source": '^baqilx:\n    ^xe-"bad"-ɬšeɴazv.\n^qit:\n    !dekp.\n', "stdout": "bad\n"},
         {"source": '^xe-"bad"-ɬšeɴazv.', "fault": "bad", "kind": "UserMistake"},
-        {"source": "^xe-0a-ɬšeɴazv.", "fault": "10", "kind": "UserMistake"},
-        {"source": "^xe-1-2-2-ťewn-ɬšeɴazv.", "fault": "[1, 2]", "kind": "UserMistake"},
+        {"source": "^xe-0a-ɬšeɴazv.", "fault": "0a", "kind": "UserMistake"},
+        {"source": "^xe-1-2-2-ťewn-ɬšeɴazv.", "fault": "1-2-2-ťewn", "kind": "UserMistake"},
     ],
     "qab'": [
         {"source": "^lo-3-qab'.", "exit": True},

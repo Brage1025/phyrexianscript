@@ -14,7 +14,7 @@ from .errors import PhyrexianError, RuntimeFault, UserMistake
 from .limits import call_on_stack, memory_fault
 from .parser import parse
 from .paths import cast_hint, resolve_cast
-from .values import Ability, Env, to_text, truthy
+from .values import Ability, Env, bare_key, to_text, truthy
 from .vertical import from_vertical
 from .vocabulary import BLAME_WORD
 
@@ -218,7 +218,7 @@ class Interpreter:
         elif isinstance(stmt, ast.For):
             coll = self.eval(stmt.iterable, env)
             if isinstance(coll, dict):
-                items = list(coll.keys())
+                items = [bare_key(k) for k in coll]
             elif isinstance(coll, (list, str)):
                 items = list(coll)
             else:

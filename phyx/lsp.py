@@ -19,6 +19,7 @@ from .lexer import Token, tokenize
 from .lint import lint_program
 from .parser import parse
 from .paths import resolve_cast
+from .values import to_source
 from .vocabulary import CAST_WORD, CONSTANTS, MARKERS, VERBS
 
 
@@ -158,7 +159,7 @@ def completions_for(
     for v in VERBS.values():
         add(v.word, 3, v.gloss, v.doc)
     for w, val in CONSTANTS.items():
-        add(w, 21, "constant", repr(val))
+        add(w, 21, "constant", to_source(val))
     for name, (_path, _line) in abilities_in(
         source, base_dir=base_dir, ascii_mode=ascii_mode, origin=origin
     ).items():
