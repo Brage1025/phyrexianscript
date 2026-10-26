@@ -16,7 +16,9 @@
   },
   "main": "./extension.js",
   "activationEvents": [
-    "onLanguage:phyx"
+    "onLanguage:phyx",
+    "onCommand:phyx.installFonts",
+    "onCommand:phyx.toggleFont"
   ],
   "engines": {
     "vscode": "^1.74.0"
@@ -32,6 +34,16 @@
     "phyrexian"
   ],
   "contributes": {
+    "commands": [
+      {
+        "command": "phyx.installFonts",
+        "title": "φyrx: Install fonts"
+      },
+      {
+        "command": "phyx.toggleFont",
+        "title": "φyrx: Toggle Phyrexian font"
+      }
+    ],
     "languages": [
       {
         "id": "phyx",

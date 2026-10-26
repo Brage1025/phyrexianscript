@@ -2,3 +2,5 @@ _gen.py
 syntax/**
 ftdetect/**
 *.vsix
+assets/
+check.js

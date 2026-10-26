@@ -53,6 +53,18 @@ python editors/_gen.py
 
 `_gen.py` rewrites the TextMate and Vim grammars. It does not touch `package.json`.
 
+## Font
+
+`.phyx` can be shown in the Phyrexian font. The font is fetched onto your machine with `phyx fetch`. It is not bundled, and this extension ships no font file.
+
+**φyrx: Install fonts** runs `phyx fetch` in an integrated terminal. It uses the same Python command the extension already uses to start `python -m phyx lsp` (`PHYX_PYTHON` when that is set, otherwise `phyx`, then `python -m phyx`, then `py -3 -m phyx`). The fonts are saved in the `assets/fonts` folder. On Windows they are installed for this user and VS Code must be restarted. On macOS and Linux, install them in the operating system, then reload VS Code. **Reveal folder** opens that folder in the file manager.
+
+**φyrx: Toggle Phyrexian font** switches the language-scoped setting `[phyx]` → `editor.fontFamily` between `Phyrexian` followed by your current font as a fallback, and unset. Nothing turns the font on until you run the command. The font is proportional, so it is opt-in.
+
+Phyrexian Regular is from the PhyrexianDictionary project under GPL-3.0; Basilica is by GuruJ under CC-BY.
+
+φyrx is unofficial Fan Content permitted under the Fan Content Policy. Not approved/endorsed by Wizards. Portions of the materials used are property of Wizards of the Coast. ©Wizards of the Coast LLC.
+
 ## Vim / Neovim
 
 ```

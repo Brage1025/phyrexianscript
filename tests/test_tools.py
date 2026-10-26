@@ -1,10 +1,18 @@
+import contextlib
 import io
+import os
+import shutil
+import sys
+import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from phyx.cli import main
 from phyx.render import render_html
 from phyx.vertical import from_vertical, to_vertical
+
+_REAL_COPY2 = shutil.copy2
 
 EXAMPLES = Path(__file__).resolve().parent.parent / "examples"
 
@@ -68,6 +76,106 @@ class RenderTests(unittest.TestCase):
     def test_escapes_html(self):
         page = render_html('!"<b>".')
         self.assertIn("&lt;b&gt;", page)
+
+
+class _Winreg:
+    def __init__(self):
+        self.HKEY_CURRENT_USER = object()
+        self.REG_SZ = 1
+        self.entries = []
+
+    def CreateKey(self, root, path):
+        return self
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+    def SetValueEx(self, key, name, reserved, typ, value):
+        self.entries.append((name, value))
+
+
+class InstallUserFontTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        self.local = self.root / "LocalAppData"
+        (self.local / "Microsoft" / "Windows").mkdir(parents=True)
+        self.src = self.root / "Phyrexian-Regular.ttf"
+        self.src.write_bytes(b"\x00\x01\x00\x00" + b"phyrexian-font")
+        self.dest = self.local / "Microsoft" / "Windows" / "Fonts" / self.src.name
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def _install(self, copy2):
+        import phyx.fonts as fonts
+
+        winreg = _Winreg()
+        stderr = io.StringIO()
+        with (
+            mock.patch.object(fonts.sys, "platform", "win32"),
+            mock.patch.dict(os.environ, {"LOCALAPPDATA": str(self.local)}),
+            mock.patch.object(fonts.shutil, "copy2", copy2),
+            mock.patch.dict(sys.modules, {"winreg": winreg}),
+            contextlib.redirect_stderr(stderr),
+        ):
+            result = fonts.install_user_font(self.src, "Phyrexian")
+        return result, stderr.getvalue(), winreg
+
+    def test_identical_file_is_already_installed(self):
+        self.dest.parent.mkdir(parents=True)
+        self.dest.write_bytes(self.src.read_bytes())
+        calls = []
+
+        def copy2(src, dst, *args, **kwargs):
+            calls.append(Path(dst))
+            return _REAL_COPY2(src, dst, *args, **kwargs)
+
+        result, err, winreg = self._install(copy2)
+        self.assertEqual(calls, [])
+        self.assertEqual(result, self.dest)
+        self.assertEqual(self.dest.read_bytes(), self.src.read_bytes())
+        self.assertEqual(err, "")
+        self.assertEqual(winreg.entries, [("Phyrexian (TrueType)", str(self.dest))])
+
+    def test_locked_different_file_warns_and_returns_none(self):
+        self.dest.parent.mkdir(parents=True)
+        self.dest.write_bytes(b"\x00\x01\x00\x00" + b"other-font!!")
+        calls = []
+
+        def copy2(src, dst, *args, **kwargs):
+            calls.append(Path(dst))
+            raise PermissionError(
+                32,
+                "The process cannot access the file because it is being used by another process",
+                str(dst),
+            )
+
+        result, err, winreg = self._install(copy2)
+        self.assertEqual(calls, [self.dest])
+        self.assertIsNone(result)
+        self.assertEqual(self.dest.read_bytes(), b"\x00\x01\x00\x00" + b"other-font!!")
+        self.assertEqual(err.count("\n"), 1)
+        self.assertIn(str(self.dest), err)
+        self.assertIn("being used by another process", err)
+        self.assertEqual(winreg.entries, [])
+
+    def test_normal_copy_installs_the_font(self):
+        calls = []
+
+        def copy2(src, dst, *args, **kwargs):
+            calls.append(Path(dst))
+            return _REAL_COPY2(src, dst, *args, **kwargs)
+
+        result, err, winreg = self._install(copy2)
+        self.assertEqual(calls, [self.dest])
+        self.assertEqual(result, self.dest)
+        self.assertEqual(self.dest.read_bytes(), self.src.read_bytes())
+        self.assertEqual(err, "")
+        self.assertEqual(winreg.entries, [("Phyrexian (TrueType)", str(self.dest))])
 
 
 class CliTests(unittest.TestCase):
