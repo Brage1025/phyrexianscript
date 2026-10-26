@@ -159,7 +159,7 @@ python -m phyx examples/10_command.phyx red blue
 
 ```
 python -m phyx explain if          # English → ba
-python -m phyx lint FILE           # dropped 'iţpənn, unused objects
+python -m phyx lint FILE           # dropped 'iţpənn, unused objects, English keywords, short calls in this file
 python -m phyx --ascii FILE        # Te is ťe, TTE'' is ţə''
 ```
 

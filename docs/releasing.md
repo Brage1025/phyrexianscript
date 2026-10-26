@@ -16,7 +16,7 @@ The language version is the first two numbers of the toolchain version (spec sec
    - `editors/package.json`: `version`, only if the extension changed. Keep it `X.Y.Z`.
    - `CHANGELOG.md`: rename `## Unreleased` to `## X.Y.Z - YYYY-MM-DD` and leave a new empty `## Unreleased` above it. The date is optional for the version test; the version in that heading must equal `project.version`, and `## Unreleased` must stay the first heading.
    - `docs/spec.md`: the heading's `(major.minor)`, only when the language version changed. A patch does not change it.
-   - `README.md`: the Status section. It currently names the toolchain version (`φyrx 1.6.4`), not the language version. Update the number it already shows. Rewording that section is a separate docs change.
+   - `README.md`: the Status line `Language version: X.Y`. `X.Y` is major.minor of `project.version`. A patch does not change it. The README does not hold the toolchain version; that number stays in `pyproject.toml` and on the PyPI badge. `tests/test_versions.py` fails when the line is missing or names a different major.minor.
 3. Run `python -m pip install -e ".[dev]"` so the editable install picks up the new metadata.
 4. Commit the bump.
 5. Tag `vX.Y.Z` on that commit.

@@ -112,7 +112,7 @@ Inside a program, `'uxq` (command) is the list of arguments. A first line `#! /u
 | [docs/cookbook.md](docs/cookbook.md) | Short recipes |
 | [docs/toolchain.md](docs/toolchain.md) | CLI, REPL, modules, tests, vertical script, ASCII |
 | [docs/rationale.md](docs/rationale.md) | Why the language is this shape |
-| [docs/remaining.md](docs/remaining.md) | What still needs to be done |
+| [docs/roadmap.md](docs/roadmap.md) | Known issues, and how language decisions are made |
 | [CHANGELOG.md](CHANGELOG.md) | What changed |
 | [editors/README.md](editors/README.md) | TextMate and Vim grammars |
 
@@ -127,14 +127,12 @@ python -m unittest discover -s tests -v
 
 ## Status
 
-φyrx 1.6.4 (PhyrxScript / PhyrexianScript) is a Turing-complete language that compiles to CPython. Unbounded lists, `baxuφ`, and recursive `ťe` run a Turing machine (`examples/11_machine.phyx`). Pure abilities compile to ordinary Python `def` with nested `return fib(n-1)+fib(n-2)` and `while i < n:`. After compile, `python -m phyx bench` is typically within a small factor of CPython on recursive `fib` and a tight loop (equality and ordering keep Phyrexian kinds, so they are not raw Python `==`).
+Language version: 1.6
 
-The standard library is φyrx: `phyx/lib/` is on the `bukð` search path. `python -m phyx test` runs tests written in φyrx (`ǩaπa` is the assertion; a sibling `.expected` file is exact stdout). `python -m phyx lookup` searches the lexicon without a fetch. TextMate and Vim grammars live in `editors/`.
+The toolchain version is the [PyPI badge](https://pypi.org/project/phyx/) above.
 
-Faults name the fix and the ability stack. `python -m phyx explain if` answers in Phyrexian. `fmt` and `lint` keep a file canonical and catch a dropped `'iţpənn`.
+Python 3.11 to 3.14, as the classifiers in `pyproject.toml` say. It runs on Linux, macOS and Windows (see [CI](https://github.com/Brage1025/phyrexianscript/actions/workflows/ci.yml)).
 
-It has binding, closures, first-class abilities, lists and books, modules, UTF-8 notes on disk (`brøtjt` / `mɴyrx`), program arguments, a REPL, vertical rendering in the official Phyrexian font, a [language spec](docs/spec.md), a [tour](docs/tour.md) for someone who has never seen Phyrexian, and docs aimed at someone arriving from Python.
+Known issues: [docs/roadmap.md](docs/roadmap.md).
 
-Verbs may take chapter-3 person inflection (`babeg` is `babg`); tense is the mood marker. Numerals may be Arabic hex or Basilica Mathematical Monospace.
-
-Phyrexian script, romanisation, grammar and lexicon: [fxbuson/PhyrexianDictionary](https://fxbuson.github.io/PhyrexianDictionary/). See [docs/reference.md](docs/reference.md#provenance) for the mapping and the licence split.
+[Specification](docs/spec.md). [Tour](docs/tour.md). [Reference](docs/reference.md).

@@ -14,8 +14,8 @@ import phyx
 
 ROOT = Path(__file__).resolve().parent.parent
 
-_LANGUAGE_VERSION = re.compile(r"(?<![\d.])(\d+\.\d+)(?!\.\d)")
 _VERSION_HEADING = re.compile(r"(\d+\.\d+\.\d+)(?: - \d{4}-\d{2}-\d{2})?")
+_README_LANGUAGE = re.compile(r"^Language version: (\d+\.\d+)\s*$", re.M)
 
 
 def _project_version() -> str:
@@ -43,22 +43,22 @@ class VersionRuleTests(unittest.TestCase):
         self.assertIsNotNone(match, f"spec heading is not the language version: {heading}")
         self.assertEqual(match.group(1), _major_minor(_project_version()))
 
-    def test_readme_status_language_version_when_it_names_one(self):
-        """A two-part version in Status must be the language version.
+    def test_readme_status_names_the_language_version(self):
+        """Status must contain a line 'Language version: X.Y'.
 
-        An X.Y.Z toolchain version is not a language version. This test does
-        not rewrite the README when that is all the section names.
+        X.Y is major.minor of the package version. A missing line fails.
         """
         text = (ROOT / "README.md").read_text(encoding="utf-8")
         section = re.search(r"^## Status\n(.*?)(?=^## |\Z)", text, re.M | re.S)
         self.assertIsNotNone(section, "README.md has no ## Status section")
+        match = _README_LANGUAGE.search(section.group(1))
+        self.assertIsNotNone(match, "README status has no line 'Language version: X.Y'")
         language = _major_minor(_project_version())
-        for found in _LANGUAGE_VERSION.findall(section.group(1)):
-            self.assertEqual(
-                found,
-                language,
-                f"README status names language {found}, not {language}",
-            )
+        self.assertEqual(
+            match.group(1),
+            language,
+            f"README status names language {match.group(1)}, not {language}",
+        )
 
     def test_changelog_unreleased_then_package_version(self):
         text = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
