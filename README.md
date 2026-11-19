@@ -125,7 +125,7 @@ python -m unittest discover -s tests -v
 
 ## Status
 
-Language version: 1.6
+Language version: 1.7
 
 The toolchain version is the [PyPI badge](https://pypi.org/project/phyx/) above.
 

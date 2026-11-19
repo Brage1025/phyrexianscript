@@ -6,6 +6,8 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ## Unreleased
 
+## 1.7.0 - 2026-11-19
+
 ### Added
 
 - CI's required status check is the `ci-passed` job. It fails unless `test`, `tree-walker`, `lint`, `fuzz`, `package`, and `extension` each finished as `success`. A skipped or cancelled job fails it. Publish workflows call CI before they upload. An extension publish step is skipped when that registry already has the `version` in `editors/package.json`, and the job fails if the registry query fails.
@@ -26,7 +28,7 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 - Behaviour change: a number and a truth are different book keys. `1` and `əxbytp` are two entries in `tekt`, `tapq`, `ţə''`, `čxət'` and `dl`, and `samk` counts both. `0` and `bytp` are different keys as well. `rukxtekt` returns each key with the kind it was written with, in the order it was first written.
 - Behaviour change: the message of `ɬšeɴazv` is the spoken form of the object, the same text `xušv` gives. Text is unchanged, a number is hexadecimal (`0a` stays `0a`), a list is φyrx list form, and a truth is its word. A caught `dekp` is still the object.
 - `phyx.__version__` is the installed distribution's version (`importlib.metadata`). When the package is not installed, it is the `version` in `pyproject.toml` (`tomllib`). When neither can be read, it is `0+unknown`. An editable install keeps the previous metadata until `python -m pip install -e ".[dev]"` is run again.
-- The specification heading names the language version (1.6), the first two numbers of the toolchain version.
+- The specification heading names the language version (1.7), the first two numbers of the toolchain version.
 - The Development Status classifier is Beta. The license field is the SPDX expression `MIT` and `license-files` lists `LICENSE`. The build requires setuptools >= 77.0.0. The OSI license classifier is removed. `include-package-data` is off, so the `phyx.lib` directory stays package data (`lib/*.phyx`) and setuptools no longer warns that `phyx.lib` is absent from `packages`.
 - Behaviour change: `'iţpənn` outside an ability, and `lups` or `ɢnagɮ` outside a loop, are grammar faults with a line and a hint. The parser raises them, so neither engine can reach them at run time. A loop that only calls an ability does not make `lups` or `ɢnagɮ` in that ability legal. A legal use still passes through `baqilx`.
 - Behaviour change: the tree-walker reports `the abilities called each other too deeply` with no line, the same as the compiled engine. The `in abilities:` stack stays.
