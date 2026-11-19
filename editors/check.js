@@ -146,10 +146,35 @@ function syntaxCheck() {
   }
 }
 
+function readmeImagesAreAbsolute() {
+  const readmePath = path.join(editors, "README.md");
+  const lines = fs.readFileSync(readmePath, "utf8").split(/\r?\n/);
+  for (let i = 0; i < lines.length; i += 1) {
+    const line = lines[i];
+    const lineNo = i + 1;
+    const img = /<img\b[^>]*\bsrc\s*=\s*(["'])(.*?)\1/gi;
+    const markdown = /!\[[^\]]*]\(([^)\s]+)/g;
+    let match;
+    while ((match = img.exec(line)) !== null) {
+      const address = match[2];
+      if (!address.startsWith("https://")) {
+        fail(`editors/README.md:${lineNo}: image address does not start with https://: ${address}`);
+      }
+    }
+    while ((match = markdown.exec(line)) !== null) {
+      const address = match[1];
+      if (!address.startsWith("https://")) {
+        fail(`editors/README.md:${lineNo}: image address does not start with https://: ${address}`);
+      }
+    }
+  }
+}
+
 commandsAreRegistered();
 noFontFiles();
 ignoreExcludesAssets();
 syntaxCheck();
+readmeImagesAreAbsolute();
 
 if (errors.length) {
   for (const message of errors) {

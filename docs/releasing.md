@@ -59,7 +59,24 @@ Both jobs run on `ubuntu-latest`, with `contents: read` and `id-token: write`, w
 
 Before the publish step, each job reads `version` from `editors/package.json` and queries that registry with the same tool it publishes with: `npx --yes @vscode/vsce show brage1025.phyx --json` for the Marketplace (`versions[0].version`, the version `vsce show` prints as current), and `npx --yes ovsx get brage1025.phyx --metadata` for Open VSX (the `version` field). When that published version equals `editors/package.json`, the publish step is skipped and the log prints a notice. The package step still runs. When the query fails, or the response has no version, the job fails and does not publish. A release that does not change the extension can succeed.
 
-The `marketplace` job uses `vsce publish --oidc` (`npx --yes @vscode/vsce publish --oidc --no-dependencies`). The workflow file contains no `VSCE_PAT` and no `--pat`, and there is nothing in GitHub secrets to fill in for this job. Whether the Marketplace accepts a trusted-publishing policy for this repository is unverified. Before relying on it for a release, run the "Publish extension" workflow manually (`workflow_dispatch`) with `registry=marketplace` and read the result. If it fails, the fix is a workflow change (a PAT secret or `--azure-credential`), not a docs change. The places to check are the [vsce README](https://github.com/microsoft/vscode-vsce/blob/main/README.md) and the VS Code [Publishing Extensions](https://code.visualstudio.com/api/working-with-extensions/publishing-extension) page.
+The `marketplace` job uses `vsce publish --oidc` (`npx --yes @vscode/vsce publish --oidc --no-dependencies`). The workflow file contains no `VSCE_PAT` and no `--pat`, and there is nothing in GitHub secrets to fill in for this job.
+
+#### Marketplace trusted publishing
+
+Setup is on `https://marketplace.visualstudio.com/manage` → the publisher `brage1025` → the Trusted Publishing tab → Create. The VS Code [Publishing Extensions](https://code.visualstudio.com/api/working-with-extensions/publishing-extension) page describes the same policy.
+
+Values:
+
+- Policy name: `Release workflow`
+- Provider: GitHub Actions
+- Repository owner: `Brage1025`
+- Repository: `phyrexianscript`
+- Workflow: `publish-extension.yml` (the file that contains the publishing job)
+- Environment: empty (the workflow uses no GitHub environment)
+
+A GitHub token can be exchanged only once, and the resulting Marketplace credential lasts 15 minutes.
+
+If the job fails with `401 Unauthorized ... The token could not be exchanged for the specified publisher`, the publisher has no policy that matches the repository owner, repository and workflow file name exactly. Fix the policy, then re-run "Publish extension" with `registry=marketplace`.
 
 The `openvsx` job runs `npx --yes ovsx publish --trusted-publishing --no-dependencies`. This workflow passes neither `--pat` nor `OVSX_PAT`.
 

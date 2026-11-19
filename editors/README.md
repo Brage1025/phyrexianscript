@@ -1,6 +1,6 @@
 # Editor support for φyrx
 
-<img src="phyx-original.png" width="96" height="96" alt="φyrx">
+<img src="https://raw.githubusercontent.com/Brage1025/phyrexianscript/main/editors/phyx-original.png" width="96" height="96" alt="φyrx">
 
 Grammars for `.phyx` (row layout) and `.vphyx` (vertical columns). They highlight mood markers, verbs, constants, notes (`^rukx`), strings, and hexadecimal numerals.
 
@@ -12,8 +12,9 @@ Install from the [Visual Studio Marketplace](https://marketplace.visualstudio.co
 
 From this repository, without the Marketplace:
 
-1. Cursor / VS Code → **Extensions** → `…` → **Install from Location…** (or **Install from VSIX…** after packaging).
-2. Choose the `editors/` folder.
+1. In `editors/`, run `npx --yes @vscode/vsce package --no-dependencies`.
+2. Extensions → `…` → **Install from VSIX…**.
+3. Choose the `phyx-<version>.vsix` file written in `editors/`.
 
 Or copy the folder into the editor’s extensions directory (restart the editor after):
 
