@@ -135,14 +135,20 @@ function ignoreExcludesAssets() {
   if (!isIgnored(text, "check.js")) {
     fail("editors/.vscodeignore does not exclude check.js");
   }
+  if (!isIgnored(text, "fonts.test.js")) {
+    fail("editors/.vscodeignore does not exclude *.test.js");
+  }
 }
 
 function syntaxCheck() {
-  const target = path.join(editors, "extension.js");
-  const result = spawnSync(process.execPath, ["--check", target], { encoding: "utf8" });
-  if (result.status !== 0) {
-    const detail = (result.stderr || result.stdout || "node --check failed").trim();
-    fail(detail);
+  const names = ["extension.js", "fonts.js"];
+  for (let i = 0; i < names.length; i += 1) {
+    const target = path.join(editors, names[i]);
+    const result = spawnSync(process.execPath, ["--check", target], { encoding: "utf8" });
+    if (result.status !== 0) {
+      const detail = (result.stderr || result.stdout || "node --check failed").trim();
+      fail(names[i] + ": " + detail);
+    }
   }
 }
 
