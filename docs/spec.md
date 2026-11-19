@@ -236,4 +236,4 @@ Calling abilities deeper than the host recursion ceiling is a runtime fault (`th
 
 ## 9. Versioning
 
-The language version is the first two numbers of the toolchain version (`1.6.1` → language 1.6). Additions that stay inside the dictionary are minor. Inventing non-dictionary syntax is not an allowed change.
+The language version is the first two numbers of the toolchain version (`1.6.1` → language 1.6). A correction that makes the toolchain follow this specification, including a fault for a program the specification rejects and a host limit, is a patch of the toolchain version and does not change the language version. A change to the result of a program the specification already allowed is a minor version. Additions that stay inside the dictionary are minor. Inventing non-dictionary syntax is not an allowed change.

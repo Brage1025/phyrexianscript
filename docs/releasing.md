@@ -4,7 +4,7 @@
 
 An editable install keeps the metadata from the last install. After a bump, run `python -m pip install -e ".[dev]"` again before trusting `phyx --version` or `tests/test_versions.py`.
 
-The language version is the first two numbers of the toolchain version (spec section 9). The specification heading names that language version, for example `(1.6)`, not the patch.
+The language version is the first two numbers of the toolchain version (spec section 9, which states when a change is a patch and when it is a minor). The specification heading names that language version, for example `(1.6)`, not the patch.
 
 `editors/package.json` has its own cadence. Its `version` is an `X.Y.Z` and does not have to equal the toolchain version. Bump it only when the extension itself changed. `tests/test_versions.py` checks the shape, not equality with `pyproject.toml`.
 

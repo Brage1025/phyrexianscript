@@ -19,6 +19,7 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ### Changed
 
+- Section 9 of the specification now states when a change is a patch and when it is a minor version.
 - The code base is formatted with ruff format, and CI checks it with `ruff format --check .`.
 - CI runs on every pull request and on pushes to `main` only. The extension job runs `node editors/check.js`. Dependabot groups GitHub Actions updates into one weekly pull request.
 - The root README Fan content section and the editor README replace the older Wizards wording with the Fan Content Policy disclaimer.
