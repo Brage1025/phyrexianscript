@@ -1,4 +1,4 @@
-# φyrx language specification (1.6)
+# φyrx language specification (1.7)
 
 Normative description of **φyrx** (PhyrxScript / PhyrexianScript). The guide ([guide.md](guide.md)) teaches; this page defines. Where they disagree, this page wins. Provenance of every word: [reference.md](reference.md#provenance).
 
