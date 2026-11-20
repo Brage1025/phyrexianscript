@@ -138,10 +138,13 @@ function ignoreExcludesAssets() {
   if (!isIgnored(text, "fonts.test.js")) {
     fail("editors/.vscodeignore does not exclude *.test.js");
   }
+  if (!isIgnored(text, "launch.test.js")) {
+    fail("editors/.vscodeignore does not exclude *.test.js");
+  }
 }
 
 function syntaxCheck() {
-  const names = ["extension.js", "fonts.js"];
+  const names = ["extension.js", "fonts.js", "launch.js"];
   for (let i = 0; i < names.length; i += 1) {
     const target = path.join(editors, names[i]);
     const result = spawnSync(process.execPath, ["--check", target], { encoding: "utf8" });
@@ -149,6 +152,26 @@ function syntaxCheck() {
       const detail = (result.stderr || result.stdout || "node --check failed").trim();
       fail(names[i] + ": " + detail);
     }
+  }
+}
+
+function manifestLaunchSafety() {
+  let manifest;
+  try {
+    manifest = JSON.parse(fs.readFileSync(path.join(editors, "package.json"), "utf8"));
+  } catch (err) {
+    fail(`package.json: ${err.message}`);
+    return;
+  }
+  const properties = manifest.contributes
+    && manifest.contributes.configuration
+    && manifest.contributes.configuration.properties;
+  if (!properties || !properties["phyx.pythonPath"]) {
+    fail("package.json is missing the phyx.pythonPath setting");
+  }
+  const trust = manifest.capabilities && manifest.capabilities.untrustedWorkspaces;
+  if (!trust) {
+    fail("package.json is missing the untrustedWorkspaces capability");
   }
 }
 
@@ -181,6 +204,7 @@ noFontFiles();
 ignoreExcludesAssets();
 syntaxCheck();
 readmeImagesAreAbsolute();
+manifestLaunchSafety();
 
 if (errors.length) {
   for (const message of errors) {

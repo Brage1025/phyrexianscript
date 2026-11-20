@@ -1,41 +1,17 @@
 const vscode = require("vscode");
 const { spawn } = require("child_process");
+const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const fonts = require("./fonts");
+const { lspCandidates } = require("./launch");
+
+const LAUNCH_HOLD_MS = 5000;
+const LAUNCH_WARNING = "φyrx: language features need Python 3.11 or newer with phyx installed (python -m pip install phyx). If phyx is installed somewhere else, set phyx.pythonPath.";
 
 let fontOfferAttempted = false;
-
-function phyxCandidates(subcommand) {
-  const extra = process.env.PHYX_PYTHON;
-  const tries = [];
-  if (extra) {
-    tries.push({
-      cmd: extra,
-      args: extra.toLowerCase().includes("phyx") ? [subcommand] : ["-m", "phyx", subcommand],
-    });
-  }
-  tries.push({ cmd: "phyx", args: [subcommand] });
-  tries.push({ cmd: "python", args: ["-m", "phyx", subcommand] });
-  tries.push({ cmd: "py", args: ["-3", "-m", "phyx", subcommand] });
-  return tries;
-}
-
-function spawnLsp(folder) {
-  const cwd = folder || path.dirname(__dirname);
-  let last;
-  for (const t of phyxCandidates("lsp")) {
-    try {
-      last = spawn(t.cmd, t.args, { cwd, stdio: ["pipe", "pipe", "pipe"] });
-      if (last.pid) {
-        return last;
-      }
-    } catch (_err) {
-      last = undefined;
-    }
-  }
-  return last;
-}
+let languageServerStarted = false;
+let launchWarningShown = false;
 
 async function installFonts(context) {
   const dir = fonts.userFontDir(process.platform, process.env, os.homedir());
@@ -65,9 +41,7 @@ async function installFonts(context) {
   if (context.globalState.get("phyx.fontOfferShown") === undefined) {
     context.globalState.update("phyx.fontOfferShown", true);
   }
-  const installed = process.platform === "win32"
-    ? "The fonts were installed for this user. Restart VS Code to use them."
-    : "The fonts were installed for this user. Reload the window to use them.";
+  const installed = "The fonts were installed for this user. Restart VS Code to use them.";
   const choice = await vscode.window.showInformationMessage(
     installed,
     "Turn on Phyrexian font",
@@ -242,6 +216,14 @@ class Rpc {
   }
 
   dispose() {
+    if (this.disposed) {
+      return;
+    }
+    this.disposed = true;
+    for (const pending of this.pending.values()) {
+      pending.reject(new Error("lsp"));
+    }
+    this.pending.clear();
     try {
       this.notify("exit", {});
       this.child.kill();
@@ -249,6 +231,226 @@ class Rpc {
       /* ignore */
     }
   }
+}
+
+function runCandidate(context, candidate, cwd) {
+  return new Promise((resolve) => {
+    let child;
+    try {
+      child = spawn(candidate.cmd, candidate.args, {
+        cwd,
+        windowsHide: true,
+        shell: false,
+        stdio: ["pipe", "pipe", "pipe"],
+      });
+    } catch (_err) {
+      resolve(false);
+      return;
+    }
+    let settled = false;
+    let session;
+    let timer;
+    const fail = () => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      clearTimeout(timer);
+      if (session) {
+        session.dispose();
+      } else {
+        child.on("error", () => {});
+        try {
+          child.kill();
+        } catch (_err) {
+          /* already gone */
+        }
+      }
+      resolve(false);
+    };
+    if (child.stderr) {
+      child.stderr.on("data", () => {});
+    }
+    if (child.stdin) {
+      child.stdin.on("error", () => {});
+    }
+    if (child.stdout) {
+      child.stdout.on("error", () => {});
+    }
+    child.on("error", fail);
+    child.on("exit", fail);
+    try {
+      session = connectLanguageServer(context, child);
+    } catch (_err) {
+      fail();
+      return;
+    }
+    timer = setTimeout(() => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      resolve(true);
+    }, LAUNCH_HOLD_MS);
+  });
+}
+
+function pythonPathSetting() {
+  const value = vscode.workspace.getConfiguration("phyx").get("pythonPath");
+  return typeof value === "string" ? value : "";
+}
+
+function launchWarning(configured) {
+  if (configured) {
+    return `φyrx: could not start the language server with phyx.pythonPath set to ${configured}. Language features need Python 3.11 or newer with phyx installed (python -m pip install phyx).`;
+  }
+  return LAUNCH_WARNING;
+}
+
+async function warnLanguageServer(configured) {
+  if (launchWarningShown) {
+    return;
+  }
+  launchWarningShown = true;
+  const choice = await vscode.window.showWarningMessage(launchWarning(configured), "Open Settings");
+  if (choice === "Open Settings") {
+    await vscode.commands.executeCommand("workbench.action.openSettings", "phyx.pythonPath");
+  }
+}
+
+function connectLanguageServer(context, child) {
+  const rpc = new Rpc(child);
+  rpc.request("initialize", { processId: process.pid, capabilities: {} }).then(() => {
+    rpc.notify("initialized", {});
+  }).catch(() => {});
+
+  const selector = { language: "phyx" };
+
+  function sync(doc) {
+    rpc.notify("textDocument/didOpen", {
+      textDocument: { uri: doc.uri.toString(), languageId: "phyx", version: doc.version, text: doc.getText() },
+    });
+  }
+
+  const subscriptions = [];
+  const add = (subscription) => {
+    subscriptions.push(subscription);
+    context.subscriptions.push(subscription);
+  };
+  add(rpc);
+  add(vscode.workspace.onDidOpenTextDocument((doc) => {
+    if (doc.languageId === "phyx") {
+      sync(doc);
+    }
+  }));
+  add(vscode.workspace.onDidChangeTextDocument((ev) => {
+    if (ev.document.languageId !== "phyx") {
+      return;
+    }
+    rpc.notify("textDocument/didChange", {
+      textDocument: { uri: ev.document.uri.toString(), version: ev.document.version },
+      contentChanges: [{ text: ev.document.getText() }],
+    });
+  }));
+  add(vscode.languages.registerCompletionItemProvider(selector, {
+    async provideCompletionItems(doc, pos) {
+      sync(doc);
+      const items = await rpc.request("textDocument/completion", {
+        textDocument: { uri: doc.uri.toString() },
+        position: { line: pos.line, character: pos.character },
+      });
+      if (!Array.isArray(items)) {
+        return [];
+      }
+      return items.map((it) => {
+        const c = new vscode.CompletionItem(it.label, it.kind || vscode.CompletionItemKind.Text);
+        c.detail = it.detail;
+        if (it.documentation) {
+          c.documentation = it.documentation;
+        }
+        return c;
+      });
+    },
+  }, "-"));
+  add(vscode.languages.registerDefinitionProvider(selector, {
+    async provideDefinition(doc, pos) {
+      sync(doc);
+      const loc = await rpc.request("textDocument/definition", {
+        textDocument: { uri: doc.uri.toString() },
+        position: { line: pos.line, character: pos.character },
+      });
+      if (!loc || !loc.uri) {
+        return undefined;
+      }
+      const start = new vscode.Position(loc.range.start.line, loc.range.start.character);
+      return new vscode.Location(vscode.Uri.parse(loc.uri), start);
+    },
+  }));
+  add(vscode.languages.registerHoverProvider(selector, {
+    async provideHover(doc, pos) {
+      sync(doc);
+      const hover = await rpc.request("textDocument/hover", {
+        textDocument: { uri: doc.uri.toString() },
+        position: { line: pos.line, character: pos.character },
+      });
+      if (!hover || !hover.contents) {
+        return undefined;
+      }
+      const value = hover.contents.value || hover.contents;
+      return new vscode.Hover(String(value));
+    },
+  }));
+
+  for (const doc of vscode.workspace.textDocuments) {
+    if (doc.languageId === "phyx") {
+      sync(doc);
+    }
+  }
+  return {
+    dispose() {
+      while (subscriptions.length) {
+        const subscription = subscriptions.pop();
+        try {
+          subscription.dispose();
+        } catch (_err) {
+          /* ignore */
+        }
+      }
+    },
+  };
+}
+
+function startLanguageServer(context, folder) {
+  if (languageServerStarted) {
+    return;
+  }
+  languageServerStarted = true;
+  const configured = pythonPathSetting();
+  let candidates = [];
+  try {
+    candidates = lspCandidates({
+      setting: configured,
+      env: process.env,
+      platform: process.platform,
+      exists: (candidate) => fs.existsSync(candidate),
+    });
+  } catch (_err) {
+    warnLanguageServer(configured);
+    return;
+  }
+  const cwd = folder || path.dirname(__dirname);
+  const launch = async () => {
+    for (const candidate of candidates) {
+      const started = await runCandidate(context, candidate, cwd);
+      if (started) {
+        return;
+      }
+    }
+    warnLanguageServer(configured);
+  };
+  launch().catch(() => {
+    warnLanguageServer(configured);
+  });
 }
 
 function activate(context) {
@@ -265,95 +467,13 @@ function activate(context) {
     }),
   );
   offerFontInstall(context);
-  const child = spawnLsp(folder);
-  if (!child) {
-    vscode.window.showWarningMessage("φyrx: could not start `python -m phyx lsp`. Install phyx and keep Python on PATH.");
+  if (vscode.workspace.isTrusted) {
+    startLanguageServer(context, folder);
     return;
   }
-  const rpc = new Rpc(child);
-  rpc.request("initialize", { processId: process.pid, capabilities: {} }).then(() => {
-    rpc.notify("initialized", {});
-  }).catch(() => {});
-
-  const selector = { language: "phyx" };
-
-  function sync(doc) {
-    rpc.notify("textDocument/didOpen", {
-      textDocument: { uri: doc.uri.toString(), languageId: "phyx", version: doc.version, text: doc.getText() },
-    });
-  }
-
-  context.subscriptions.push(
-    rpc,
-    vscode.workspace.onDidOpenTextDocument((doc) => {
-      if (doc.languageId === "phyx") {
-        sync(doc);
-      }
-    }),
-    vscode.workspace.onDidChangeTextDocument((ev) => {
-      if (ev.document.languageId !== "phyx") {
-        return;
-      }
-      rpc.notify("textDocument/didChange", {
-        textDocument: { uri: ev.document.uri.toString(), version: ev.document.version },
-        contentChanges: [{ text: ev.document.getText() }],
-      });
-    }),
-    vscode.languages.registerCompletionItemProvider(selector, {
-      async provideCompletionItems(doc, pos) {
-        sync(doc);
-        const items = await rpc.request("textDocument/completion", {
-          textDocument: { uri: doc.uri.toString() },
-          position: { line: pos.line, character: pos.character },
-        });
-        if (!Array.isArray(items)) {
-          return [];
-        }
-        return items.map((it) => {
-          const c = new vscode.CompletionItem(it.label, it.kind || vscode.CompletionItemKind.Text);
-          c.detail = it.detail;
-          if (it.documentation) {
-            c.documentation = it.documentation;
-          }
-          return c;
-        });
-      },
-    }, "-"),
-    vscode.languages.registerDefinitionProvider(selector, {
-      async provideDefinition(doc, pos) {
-        sync(doc);
-        const loc = await rpc.request("textDocument/definition", {
-          textDocument: { uri: doc.uri.toString() },
-          position: { line: pos.line, character: pos.character },
-        });
-        if (!loc || !loc.uri) {
-          return undefined;
-        }
-        const start = new vscode.Position(loc.range.start.line, loc.range.start.character);
-        return new vscode.Location(vscode.Uri.parse(loc.uri), start);
-      },
-    }),
-    vscode.languages.registerHoverProvider(selector, {
-      async provideHover(doc, pos) {
-        sync(doc);
-        const hover = await rpc.request("textDocument/hover", {
-          textDocument: { uri: doc.uri.toString() },
-          position: { line: pos.line, character: pos.character },
-        });
-        if (!hover || !hover.contents) {
-          return undefined;
-        }
-        const value = hover.contents.value || hover.contents;
-        return new vscode.Hover(String(value));
-      },
-    }),
-  );
-
-  for (const doc of vscode.workspace.textDocuments) {
-    if (doc.languageId === "phyx") {
-      sync(doc);
-    }
-  }
+  context.subscriptions.push(vscode.workspace.onDidGrantWorkspaceTrust(() => {
+    startLanguageServer(context, folder);
+  }));
 }
 
 function deactivate() {}

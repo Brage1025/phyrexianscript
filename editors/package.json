@@ -23,6 +23,12 @@
   "engines": {
     "vscode": "^1.74.0"
   },
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "Language features run phyx, so they are disabled until the workspace is trusted. Syntax highlighting and the font commands still work."
+    }
+  },
   "categories": [
     "Programming Languages"
   ],
@@ -51,6 +57,12 @@
           "type": "boolean",
           "default": true,
           "description": "Offer to install the Phyrexian font the first time a φyrx file is opened."
+        },
+        "phyx.pythonPath": {
+          "type": "string",
+          "default": "",
+          "scope": "machine",
+          "description": "Path to the Python interpreter or phyx executable used to start the φyrx language server. Leave empty to search PATH."
         }
       }
     },
