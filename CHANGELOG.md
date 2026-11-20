@@ -19,6 +19,10 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 - The release checklist documents the Marketplace trusted-publishing policy.
 - The editor README installs a local build from the `phyx-<version>.vsix` written by `npx --yes @vscode/vsce package --no-dependencies` in `editors/`, and its logo uses an absolute URL so the Marketplace and Open VSX pages can show it. `node editors/check.js` fails on a relative image address in that README.
 
+### Fixed
+
+- An installed phyx now keeps fetched fonts and the dictionary in a per-user data folder (`%LOCALAPPDATA%\phyx` on Windows, `~/Library/Application Support/phyx` on macOS, `$XDG_DATA_HOME/phyx` or `~/.local/share/phyx` elsewhere) instead of its install folder. `PHYX_ASSETS` still overrides, and source checkouts are unchanged.
+
 ## 1.7.0 - 2026-11-19
 
 ### Added

@@ -12,7 +12,6 @@ from __future__ import annotations
 import argparse
 import io
 import json
-import os
 import sys
 import urllib.request
 from collections.abc import Iterable
@@ -25,6 +24,7 @@ from .errors import PhyrexianError, format_error
 from .fmt import format_source
 from .fonts import (
     FONT_FAMILY,
+    assets_dir,
     ensure_basilica,
     ensure_font,
     install_user_font,
@@ -70,13 +70,6 @@ SUBCOMMANDS = {
 
 DICT_REMOTE = "https://raw.githubusercontent.com/fxbuson/PhyrexianDictionary/gh-pages/_data/PhyrexianAPI.json"
 VERTICAL_EXT = ".vphyx"
-
-
-def assets_dir() -> Path:
-    env = os.environ.get("PHYX_ASSETS")
-    if env:
-        return Path(env)
-    return Path(__file__).resolve().parent.parent / "assets"
 
 
 def local_dictionary() -> Path:

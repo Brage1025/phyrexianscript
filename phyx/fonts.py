@@ -15,6 +15,7 @@ import os
 import shutil
 import sys
 import urllib.request
+from collections.abc import Mapping
 from pathlib import Path
 
 FONT_FAMILY = "Phyrexian"
@@ -32,11 +33,46 @@ _SFNT_MAGIC = (b"\x00\x01\x00\x00", b"OTTO", b"true", b"typ1")
 _WOFF_MAGIC = (b"wOFF", b"wOF2")
 
 
-def assets_dir() -> Path:
-    env = os.environ.get("PHYX_ASSETS")
-    if env:
-        return Path(env)
-    return Path(__file__).resolve().parent.parent / "assets"
+def user_data_dir(platform: str, env: Mapping[str, str], home: Path) -> Path:
+    """Per-user folder for an installed phyx. Does not create it.
+
+    ``platform`` is a ``sys.platform`` value. ``env`` and ``home`` are
+    arguments so a test can pass fakes and leave the real machine alone.
+    """
+    if platform == "win32":
+        local = env.get("LOCALAPPDATA") or ""
+        base = Path(local) if local else home / "AppData" / "Local"
+        return base / "phyx"
+    if platform == "darwin":
+        return home / "Library" / "Application Support" / "phyx"
+    data_home = env.get("XDG_DATA_HOME") or ""
+    base = Path(data_home) if data_home else home / ".local" / "share"
+    return base / "phyx"
+
+
+def assets_dir(
+    *,
+    env: Mapping[str, str] | None = None,
+    package_root: Path | None = None,
+    platform: str | None = None,
+    home: Path | None = None,
+) -> Path:
+    """Directory for fetched fonts and the dictionary. Does not create it.
+
+    ``PHYX_ASSETS`` wins. A source checkout (``pyproject.toml`` in the
+    directory above the ``phyx`` package) keeps ``<checkout>/assets``.
+    An installed package uses :func:`user_data_dir`.
+    """
+    env_map = os.environ if env is None else env
+    override = env_map.get("PHYX_ASSETS")
+    if override:
+        return Path(override)
+    root = Path(__file__).resolve().parent.parent if package_root is None else package_root
+    if (root / "pyproject.toml").is_file():
+        return root / "assets"
+    plat = sys.platform if platform is None else platform
+    home_dir = Path.home() if home is None else home
+    return user_data_dir(plat, env_map, home_dir)
 
 
 def fonts_dir() -> Path:
@@ -69,6 +105,34 @@ def is_font_file(path: Path | None) -> bool:
         return False
 
 
+def legacy_font(
+    name: str,
+    *,
+    env: Mapping[str, str] | None = None,
+    package_root: Path | None = None,
+    platform: str | None = None,
+    home: Path | None = None,
+) -> Path | None:
+    """Valid font left beside an install, when the user folder has no fonts yet.
+
+    Reading may use that file. This does not copy it and does not create the
+    user folder. A checkout, and ``PHYX_ASSETS``, have no legacy file.
+    """
+    env_map = os.environ if env is None else env
+    if env_map.get("PHYX_ASSETS"):
+        return None
+    root = Path(__file__).resolve().parent.parent if package_root is None else package_root
+    if (root / "pyproject.toml").is_file():
+        return None
+    plat = sys.platform if platform is None else platform
+    home_dir = Path.home() if home is None else home
+    user_fonts = user_data_dir(plat, env_map, home_dir) / "fonts"
+    if user_fonts.is_dir() and any(is_font_file(child) for child in user_fonts.iterdir()):
+        return None
+    old = root / "assets" / "fonts" / name
+    return old if is_font_file(old) else None
+
+
 def _download(urls: list[str], dest: Path) -> Path:
     dest.parent.mkdir(parents=True, exist_ok=True)
     last_err: Exception | None = None
@@ -88,19 +152,28 @@ def _download(urls: list[str], dest: Path) -> Path:
     raise OSError(f"could not fetch {dest.name}: {last_err}")
 
 
-def ensure_font(dest: Path | None = None) -> Path:
-    """Return a valid local Phyrexian Regular file, downloading if needed."""
-    path = dest if dest is not None else local_font()
+def _usable_font(dest: Path | None, default: Path) -> Path | None:
+    path = default if dest is None else dest
     if is_font_file(path):
         return path
-    return _download([FONT_CDN, FONT_REMOTE], path)
+    if dest is None:
+        return legacy_font(path.name)
+    return None
+
+
+def ensure_font(dest: Path | None = None) -> Path:
+    """Return a valid local Phyrexian Regular file, downloading if needed."""
+    found = _usable_font(dest, local_font())
+    if found is not None:
+        return found
+    return _download([FONT_CDN, FONT_REMOTE], dest if dest is not None else local_font())
 
 
 def ensure_basilica(dest: Path | None = None) -> Path:
-    path = dest if dest is not None else local_basilica()
-    if is_font_file(path):
-        return path
-    return _download([BASILICA_CDN, BASILICA_REMOTE], path)
+    found = _usable_font(dest, local_basilica())
+    if found is not None:
+        return found
+    return _download([BASILICA_CDN, BASILICA_REMOTE], dest if dest is not None else local_basilica())
 
 
 def install_user_font(src: Path, family: str) -> Path | None:

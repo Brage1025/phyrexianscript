@@ -319,5 +319,290 @@ class CliTests(unittest.TestCase):
         self.assertIn("nothing found", out)
 
 
+_FONT_BYTES = b"\x00\x01\x00\x00" + b"phyrexian-font"
+
+
+class AssetsDirTests(unittest.TestCase):
+    """Font and dictionary locations. Every path is under a temp directory."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        self.home = self.root / "home"
+        self.home.mkdir()
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def _checkout(self, name: str = "checkout") -> Path:
+        root = self.root / name
+        root.mkdir()
+        (root / "pyproject.toml").write_text("[project]\n", encoding="utf-8")
+        return root
+
+    def _install(self, name: str = "site-packages") -> Path:
+        root = self.root / name
+        root.mkdir(parents=True)
+        return root
+
+    def _font(self, path: Path, data: bytes = _FONT_BYTES) -> Path:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(data)
+        return path
+
+    def test_user_data_dir_per_platform(self):
+        from phyx import fonts
+
+        local = self.root / "LocalAppData"
+        xdg = self.root / "xdg"
+        cases = (
+            ("win32", {"LOCALAPPDATA": str(local)}, local / "phyx"),
+            (
+                "darwin",
+                {"XDG_DATA_HOME": str(xdg), "LOCALAPPDATA": str(local)},
+                self.home / "Library" / "Application Support" / "phyx",
+            ),
+            ("linux", {"XDG_DATA_HOME": str(xdg), "LOCALAPPDATA": str(local)}, xdg / "phyx"),
+            ("linux", {}, self.home / ".local" / "share" / "phyx"),
+        )
+        for platform, env, expected in cases:
+            with self.subTest(platform=platform, env=sorted(env)):
+                got = fonts.user_data_dir(platform, env, self.home)
+                self.assertEqual(got, expected)
+                self.assertFalse(got.exists())
+
+    def test_windows_without_localappdata_uses_home(self):
+        from phyx import fonts
+
+        for env in ({}, {"LOCALAPPDATA": ""}):
+            with self.subTest(env=env):
+                got = fonts.user_data_dir("win32", env, self.home)
+                self.assertEqual(got, self.home / "AppData" / "Local" / "phyx")
+                self.assertFalse(got.exists())
+
+    def test_empty_xdg_data_home_uses_home(self):
+        from phyx import fonts
+
+        got = fonts.user_data_dir("linux", {"XDG_DATA_HOME": ""}, self.home)
+        self.assertEqual(got, self.home / ".local" / "share" / "phyx")
+        self.assertFalse(got.exists())
+
+    def test_phyx_assets_wins(self):
+        from phyx import fonts
+
+        override = self.root / "override"
+        env = {
+            "PHYX_ASSETS": str(override),
+            "LOCALAPPDATA": str(self.root / "Local"),
+            "XDG_DATA_HOME": str(self.root / "xdg"),
+        }
+        for root in (self._checkout(), self._install()):
+            with self.subTest(root=root.name):
+                got = fonts.assets_dir(env=env, package_root=root, platform="win32", home=self.home)
+                self.assertEqual(got, override)
+                self.assertFalse(override.exists())
+                self.assertFalse((root / "assets").exists())
+
+    def test_empty_phyx_assets_does_not_win(self):
+        from phyx import fonts
+
+        root = self._checkout("empty-override")
+        got = fonts.assets_dir(env={"PHYX_ASSETS": ""}, package_root=root, platform="linux", home=self.home)
+        self.assertEqual(got, root / "assets")
+        self.assertFalse((root / "assets").exists())
+
+    def test_source_checkout_keeps_repo_assets(self):
+        from phyx import fonts
+
+        root = self._checkout("src")
+        env = {"LOCALAPPDATA": str(self.root / "Local"), "XDG_DATA_HOME": str(self.root / "xdg")}
+        got = fonts.assets_dir(env=env, package_root=root, platform="win32", home=self.home)
+        self.assertEqual(got, root / "assets")
+        self.assertFalse(got.exists())
+
+    def test_install_uses_the_user_data_dir(self):
+        from phyx import fonts
+
+        root = self._install()
+        local = self.root / "Local"
+        got = fonts.assets_dir(
+            env={"LOCALAPPDATA": str(local)},
+            package_root=root,
+            platform="win32",
+            home=self.home,
+        )
+        self.assertEqual(got, local / "phyx")
+        self.assertFalse(got.exists())
+        self.assertFalse(local.exists())
+
+    def test_pyproject_beside_the_install_root_does_not_count(self):
+        from phyx import fonts
+
+        install = self._install("venv/Lib/site-packages")
+        (install.parent / "pyproject.toml").write_text("[project]\n", encoding="utf-8")
+        local = self.root / "Local"
+        got = fonts.assets_dir(
+            env={"LOCALAPPDATA": str(local)},
+            package_root=install,
+            platform="win32",
+            home=self.home,
+        )
+        self.assertEqual(got, local / "phyx")
+
+    def test_running_tree_is_a_source_checkout(self):
+        from phyx import fonts
+
+        root = Path(fonts.__file__).resolve().parent.parent
+        self.assertTrue((root / "pyproject.toml").is_file())
+        with mock.patch.dict(os.environ, {"PHYX_ASSETS": ""}):
+            self.assertEqual(fonts.assets_dir(), root / "assets")
+
+    def test_cli_assets_dir_is_the_fonts_one(self):
+        import phyx.cli as cli
+        import phyx.fonts as fonts
+
+        self.assertIs(cli.assets_dir, fonts.assets_dir)
+
+    def test_local_dictionary_follows_phyx_assets(self):
+        from phyx.cli import local_dictionary
+
+        override = self.root / "dict-home"
+        with mock.patch.dict(os.environ, {"PHYX_ASSETS": str(override)}):
+            self.assertEqual(local_dictionary(), override / "dictionary.json")
+        self.assertFalse(override.exists())
+
+    def _legacy(self, name: str, root: Path, env: dict[str, str]):
+        from phyx import fonts
+
+        return fonts.legacy_font(name, env=env, package_root=root, platform="win32", home=self.home)
+
+    def test_legacy_font_is_used_when_the_user_dir_has_no_fonts(self):
+        from phyx.fonts import FONT_FILE
+
+        root = self._install("installed-a")
+        old = self._font(root / "assets" / "fonts" / FONT_FILE)
+        local = self.root / "LocalA"
+        got = self._legacy(FONT_FILE, root, {"LOCALAPPDATA": str(local)})
+        self.assertEqual(got, old)
+        self.assertFalse((local / "phyx").exists())
+
+    def test_legacy_font_rejects_a_non_font(self):
+        from phyx.fonts import FONT_FILE
+
+        root = self._install("installed-b")
+        self._font(root / "assets" / "fonts" / FONT_FILE, b"<html>not a font</html>")
+        got = self._legacy(FONT_FILE, root, {"LOCALAPPDATA": str(self.root / "LocalB")})
+        self.assertIsNone(got)
+
+    def test_legacy_font_stops_once_the_user_dir_has_a_font(self):
+        from phyx.fonts import BASILICA_FILE, FONT_FILE
+
+        root = self._install("installed-c")
+        self._font(root / "assets" / "fonts" / FONT_FILE)
+        local = self.root / "LocalC"
+        self._font(local / "phyx" / "fonts" / BASILICA_FILE)
+        got = self._legacy(FONT_FILE, root, {"LOCALAPPDATA": str(local)})
+        self.assertIsNone(got)
+
+    def test_legacy_font_ignores_a_non_font_already_in_the_user_dir(self):
+        from phyx.fonts import FONT_FILE
+
+        root = self._install("installed-d")
+        old = self._font(root / "assets" / "fonts" / FONT_FILE)
+        local = self.root / "LocalD"
+        self._font(local / "phyx" / "fonts" / FONT_FILE, b"<html>not a font</html>")
+        got = self._legacy(FONT_FILE, root, {"LOCALAPPDATA": str(local)})
+        self.assertEqual(got, old)
+
+    def test_legacy_font_skips_a_checkout_and_an_override(self):
+        from phyx import fonts
+        from phyx.fonts import FONT_FILE
+
+        checkout = self._checkout("src-legacy")
+        self._font(checkout / "assets" / "fonts" / FONT_FILE)
+        env = {"LOCALAPPDATA": str(self.root / "LocalE")}
+        self.assertIsNone(self._legacy(FONT_FILE, checkout, env))
+
+        root = self._install("installed-e")
+        self._font(root / "assets" / "fonts" / FONT_FILE)
+        overridden = {**env, "PHYX_ASSETS": str(self.root / "override")}
+        self.assertIsNone(fonts.legacy_font(FONT_FILE, env=overridden, package_root=root, platform="win32", home=self.home))
+        self.assertFalse((self.root / "override").exists())
+
+    def test_ensure_font_reads_the_legacy_file_without_downloading(self):
+        from phyx import fonts
+
+        old = self._font(self.root / "old" / "Phyrexian-Regular.ttf")
+        missing = self.root / "user" / "fonts" / "Phyrexian-Regular.ttf"
+
+        def boom(urls, dest):
+            raise AssertionError(f"downloaded {dest}")
+
+        with (
+            mock.patch.object(fonts, "local_font", return_value=missing),
+            mock.patch.object(fonts, "legacy_font", return_value=old, create=True),
+            mock.patch.object(fonts, "_download", boom),
+        ):
+            self.assertEqual(fonts.ensure_font(), old)
+        self.assertFalse(missing.exists())
+
+    def test_ensure_basilica_reads_the_legacy_file_without_downloading(self):
+        from phyx import fonts
+
+        old = self._font(self.root / "old" / "Basilica.otf")
+        missing = self.root / "user" / "fonts" / "Basilica.otf"
+
+        def boom(urls, dest):
+            raise AssertionError(f"downloaded {dest}")
+
+        with (
+            mock.patch.object(fonts, "local_basilica", return_value=missing),
+            mock.patch.object(fonts, "legacy_font", return_value=old, create=True),
+            mock.patch.object(fonts, "_download", boom),
+        ):
+            self.assertEqual(fonts.ensure_basilica(), old)
+        self.assertFalse(missing.exists())
+
+    def test_ensure_font_downloads_to_the_new_path(self):
+        from phyx import fonts
+
+        dest = self.root / "user" / "fonts" / "Phyrexian-Regular.ttf"
+        seen = []
+
+        def download(urls, path):
+            seen.append(path)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(_FONT_BYTES)
+            return path
+
+        with (
+            mock.patch.object(fonts, "local_font", return_value=dest),
+            mock.patch.object(fonts, "legacy_font", return_value=None, create=True),
+            mock.patch.object(fonts, "_download", download),
+        ):
+            self.assertEqual(fonts.ensure_font(), dest)
+        self.assertEqual(seen, [dest])
+
+    def test_explicit_dest_is_where_the_download_goes(self):
+        from phyx import fonts
+
+        dest = self.root / "out" / "Phyrexian-Regular.ttf"
+        old = self._font(self.root / "old-explicit.ttf")
+        seen = []
+
+        def download(urls, path):
+            seen.append(path)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(_FONT_BYTES)
+            return path
+
+        with (
+            mock.patch.object(fonts, "legacy_font", return_value=old, create=True),
+            mock.patch.object(fonts, "_download", download),
+        ):
+            self.assertEqual(fonts.ensure_font(dest), dest)
+        self.assertEqual(seen, [dest])
+
+
 if __name__ == "__main__":
     unittest.main()

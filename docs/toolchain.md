@@ -120,7 +120,7 @@ python -m phyx render examples/09_sieve.phyx -o sieve.html
 
 `render` writes a page in the official card font. The file is `Phyrexian-Regular.ttf`; its **family name is `Phyrexian`** (full name `Phyrexian Regular`). That is the name CSS and Windows use. `python -m phyx render` downloads and **embeds** a validated copy so the page cannot flash Latin fallbacks.
 
-`python -m phyx fetch` also pulls **Basilica** (native hexadecimal glyphs, CC-BY) and, on Windows, installs both into the current user’s font folder so editors can select **Phyrexian**. The editor extension installs those same fonts on its own, from a pinned commit, and does not run `phyx fetch`. The lexer already reads those Mathematical Monospace digits as the same hex as `0–9a–f`. Assets live in `assets/` (gitignored). Override the directory with `PHYX_ASSETS`.
+`python -m phyx fetch` also pulls **Basilica** (native hexadecimal glyphs, CC-BY) and, on Windows, installs both into the current user’s font folder so editors can select **Phyrexian**. The editor extension installs those same fonts on its own, from a pinned commit, and does not run `phyx fetch`. The lexer already reads those Mathematical Monospace digits as the same hex as `0–9a–f`. In a source checkout, fetched fonts and the dictionary live in `assets/` (gitignored). An installed phyx keeps them in a per-user data folder: `%LOCALAPPDATA%\phyx` on Windows, `~/Library/Application Support/phyx` on macOS, and `$XDG_DATA_HOME/phyx` or `~/.local/share/phyx` elsewhere. `PHYX_ASSETS` overrides that directory. When that per-user folder has no fonts yet, a valid font file still next to the installed package is read from there. A download is written to that per-user folder.
 
 ---
 
@@ -151,7 +151,7 @@ editors/        Cursor / VS Code extension (`package.json`) + Vim grammars
 examples/       programs, aliases of the herds, Turing machine, sort, file notes
 tests/          python -m unittest discover -s tests -v
 tests/phyx/     φyrx tests (`python -m phyx test`)
-assets/         font + dictionary after `phyx fetch` (gitignored)
+assets/         source checkout: font + dictionary after `phyx fetch` (gitignored)
 ```
 
 ---

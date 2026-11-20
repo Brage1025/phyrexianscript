@@ -67,7 +67,7 @@ Leave the version number in [pyproject.toml](pyproject.toml) alone unless a main
 
 The language admits dictionary words and dictionary syntax. Floats, classes, infix operators, and decimal literals are outside it. If a change needs a word or a sentence form the dictionary does not have, stop and ask. The constraint is [docs/rationale.md](docs/rationale.md). [AGENTS.md](AGENTS.md) records the same rule for this repository.
 
-The community dictionary is the one named in [docs/reference.md](docs/reference.md#provenance). This repository does not vendor it. The words the interpreter accepts are the lexicon in [phyx/vocabulary.py](phyx/vocabulary.py). `python -m phyx lookup` searches that file. `python -m phyx fetch` downloads the font and the dictionary JSON into `assets/` (gitignored). That download is extra. See [docs/toolchain.md](docs/toolchain.md).
+The community dictionary is the one named in [docs/reference.md](docs/reference.md#provenance). This repository does not vendor it. The words the interpreter accepts are the lexicon in [phyx/vocabulary.py](phyx/vocabulary.py). `python -m phyx lookup` searches that file. `python -m phyx fetch` downloads the font and the dictionary JSON. In a source checkout they go into `assets/` (gitignored); an installed phyx keeps them in a per-user data folder (see [docs/toolchain.md](docs/toolchain.md)). That download is extra. See [docs/toolchain.md](docs/toolchain.md).
 
 ## Behaviour changes
 
