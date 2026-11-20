@@ -66,6 +66,12 @@
         }
       }
     },
+    "configurationDefaults": {
+      "[phyx]": {
+        "editor.unicodeHighlight.nonBasicASCII": false,
+        "editor.unicodeHighlight.ambiguousCharacters": false
+      }
+    },
     "languages": [
       {
         "id": "phyx",

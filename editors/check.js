@@ -175,6 +175,29 @@ function manifestLaunchSafety() {
   }
 }
 
+function unicodeHighlightDefaults() {
+  let manifest;
+  try {
+    manifest = JSON.parse(fs.readFileSync(path.join(editors, "package.json"), "utf8"));
+  } catch (err) {
+    fail(`package.json: ${err.message}`);
+    return;
+  }
+  const defaults = manifest.contributes
+    && manifest.contributes.configurationDefaults
+    && manifest.contributes.configurationDefaults["[phyx]"];
+  if (!defaults) {
+    fail('package.json is missing contributes.configurationDefaults["[phyx]"]');
+    return;
+  }
+  if (defaults["editor.unicodeHighlight.nonBasicASCII"] !== false) {
+    fail("package.json [phyx] editor.unicodeHighlight.nonBasicASCII is not false");
+  }
+  if (defaults["editor.unicodeHighlight.ambiguousCharacters"] !== false) {
+    fail("package.json [phyx] editor.unicodeHighlight.ambiguousCharacters is not false");
+  }
+}
+
 function readmeImagesAreAbsolute() {
   const readmePath = path.join(editors, "README.md");
   const lines = fs.readFileSync(readmePath, "utf8").split(/\r?\n/);
@@ -205,6 +228,7 @@ ignoreExcludesAssets();
 syntaxCheck();
 readmeImagesAreAbsolute();
 manifestLaunchSafety();
+unicodeHighlightDefaults();
 
 if (errors.length) {
   for (const message of errors) {
