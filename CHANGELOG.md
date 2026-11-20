@@ -6,8 +6,13 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ## Unreleased
 
+### Added
+
+- The editor extension offers once to install the Phyrexian font the first time a φyrx file is open, when that font is not already installed for the user. `phyx.offerFontInstall` (default true) switches the offer off.
+
 ### Changed
 
+- **φyrx: Install fonts** no longer needs Python or `phyx`. It downloads Phyrexian Regular and Basilica from a pinned PhyrexianDictionary commit, checks each file's SHA-256, and installs them for the current user.
 - The release checklist documents the Marketplace trusted-publishing policy.
 - The editor README installs a local build from the `phyx-<version>.vsix` written by `npx --yes @vscode/vsce package --no-dependencies` in `editors/`, and its logo uses an absolute URL so the Marketplace and Open VSX pages can show it. `node editors/check.js` fails on a relative image address in that README.
 

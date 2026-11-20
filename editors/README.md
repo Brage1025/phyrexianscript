@@ -56,11 +56,15 @@ python editors/_gen.py
 
 ## Font
 
-`.phyx` can be shown in the Phyrexian font. The font is fetched onto your machine with `phyx fetch`. It is not bundled, and this extension ships no font file.
+The extension installs Phyrexian Regular and Basilica itself. Python and `phyx` are not needed for the fonts. The files are downloaded from the PhyrexianDictionary project at a pinned commit, checked against a SHA-256 hash, and never bundled with the extension.
 
-**φyrx: Install fonts** runs `phyx fetch` in an integrated terminal. It uses the same Python command the extension already uses to start `python -m phyx lsp` (`PHYX_PYTHON` when that is set, otherwise `phyx`, then `python -m phyx`, then `py -3 -m phyx`). The fonts are saved in the `assets/fonts` folder. On Windows they are installed for this user and VS Code must be restarted. On macOS and Linux, install them in the operating system, then reload VS Code. **Reveal folder** opens that folder in the file manager.
+On Windows they are installed for the current user in `%LOCALAPPDATA%\Microsoft\Windows\Fonts`. Restart VS Code to use them. On macOS they go in `~/Library/Fonts`. On Linux they go in `$XDG_DATA_HOME/fonts`, or `~/.local/share/fonts` when `XDG_DATA_HOME` is unset. Reload the window to use them.
 
-**φyrx: Toggle Phyrexian font** switches the language-scoped setting `[phyx]` → `editor.fontFamily` between `Phyrexian` followed by your current font as a fallback, and unset. Nothing turns the font on until you run the command. The font is proportional, so it is opt-in.
+The first time a φyrx file is open, if Phyrexian Regular is not already installed, it asks "Install the Phyrexian font so φyrx code looks right?" That offer is shown once. Opening the command palette alone does not ask. Set `phyx.offerFontInstall` to false to switch it off.
+
+**φyrx: Install fonts** downloads and installs both fonts. **Turn on Phyrexian font** turns the language font on when it is off, and **Reveal folder** opens the install folder in the file manager.
+
+**φyrx: Toggle Phyrexian font** switches the language-scoped setting `[phyx]` → `editor.fontFamily` between `Phyrexian` followed by your current font as a fallback, and unset. Nothing turns the font on until you run that command or choose **Turn on Phyrexian font**. The font is proportional, so it is opt-in.
 
 Phyrexian Regular is from the PhyrexianDictionary project under GPL-3.0; Basilica is by GuruJ under CC-BY.
 

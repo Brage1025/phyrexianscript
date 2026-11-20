@@ -4,3 +4,4 @@ ftdetect/**
 *.vsix
 assets/
 check.js
+*.test.js

@@ -44,6 +44,16 @@
         "title": "φyrx: Toggle Phyrexian font"
       }
     ],
+    "configuration": {
+      "title": "φyrx",
+      "properties": {
+        "phyx.offerFontInstall": {
+          "type": "boolean",
+          "default": true,
+          "description": "Offer to install the Phyrexian font the first time a φyrx file is opened."
+        }
+      }
+    },
     "languages": [
       {
         "id": "phyx",
