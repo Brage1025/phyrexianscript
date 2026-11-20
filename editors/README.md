@@ -74,6 +74,8 @@ The first time a φyrx file is open, if Phyrexian Regular is not already install
 
 **φyrx: Toggle Phyrexian font** switches the language-scoped setting `[phyx]` → `editor.fontFamily` between `Phyrexian` followed by your current font as a fallback, and unset. Nothing turns the font on until you run that command or choose **Turn on Phyrexian font**. The font is proportional, so it is opt-in.
 
+The extension turns off VS Code's non-ASCII and ambiguous-character highlighting for φyrx files only, so Restricted Mode does not box every character. Invisible characters are still flagged.
+
 Phyrexian Regular is from the PhyrexianDictionary project under GPL-3.0; Basilica is by GuruJ under CC-BY.
 
 φyrx is unofficial Fan Content permitted under the Fan Content Policy. Not approved/endorsed by Wizards. Portions of the materials used are property of Wizards of the Coast. ©Wizards of the Coast LLC.
