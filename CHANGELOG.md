@@ -8,10 +8,13 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ### Added
 
+- The machine setting `phyx.pythonPath` chooses the Python interpreter or phyx executable that starts the language server. Leave it empty to search PATH.
+- In an untrusted workspace the language server does not start. Syntax highlighting and the font commands still work, and the server starts when the workspace is trusted.
 - The editor extension offers once to install the Phyrexian font the first time a φyrx file is open, when that font is not already installed for the user. `phyx.offerFontInstall` (default true) switches the offer off.
 
 ### Changed
 
+- The language server is started with `-P` and an absolute interpreter path. When it cannot start, one warning says that Python 3.11 or newer with phyx is required and can open `phyx.pythonPath`; a configured path is named in that warning. The font success message says to restart VS Code.
 - **φyrx: Install fonts** no longer needs Python or `phyx`. It downloads Phyrexian Regular and Basilica from a pinned PhyrexianDictionary commit, checks each file's SHA-256, and installs them for the current user.
 - The release checklist documents the Marketplace trusted-publishing policy.
 - The editor README installs a local build from the `phyx-<version>.vsix` written by `npx --yes @vscode/vsce package --no-dependencies` in `editors/`, and its logo uses an absolute URL so the Marketplace and Open VSX pages can show it. `node editors/check.js` fails on a relative image address in that README.
