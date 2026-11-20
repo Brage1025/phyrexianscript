@@ -24,6 +24,8 @@ The language version is the first two numbers of the toolchain version (spec sec
 
 Do not create the tag or the release until the bump commit is the one you mean to ship.
 
+One GitHub release publishes everything: the toolchain to PyPI, and the extension to Open VSX and the Marketplace. PyPI refuses to upload a version that already exists, so a release that changes only the extension still needs a toolchain patch bump, as 1.7.1 did for extension 1.8.0. `workflow_dispatch` on "Publish extension" can publish just the extension registries when the extension version is higher than what the registries hold.
+
 ## CI
 
 `.github/workflows/ci.yml` runs on every pull request, and on a push only when the branch is `main`, so a pull request is checked once. `workflow_call` runs the same jobs from the publish workflows. The last job is named `ci-passed`. It uses `if: always()` and fails unless `test`, `tree-walker`, `lint`, `fuzz`, `package`, and `extension` each finished as `success`. A skipped or cancelled job fails `ci-passed`. The required status check is `ci-passed`.

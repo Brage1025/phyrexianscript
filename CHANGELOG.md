@@ -6,6 +6,8 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ## Unreleased
 
+## 1.7.1 - 2026-11-20
+
 ### Added
 
 - The machine setting `phyx.pythonPath` chooses the Python interpreter or phyx executable that starts the language server. Leave it empty to search PATH.
@@ -14,6 +16,7 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ### Changed
 
+- Editor extension 1.8.0 ships with this release.
 - The editor extension turns off VS Code's non-ASCII and ambiguous-character highlighting for φyrx files only, so Restricted Mode does not box every character. Invisible characters are still flagged.
 - The language server is started with `-P` and an absolute interpreter path. When it cannot start, one warning says that Python 3.11 or newer with phyx is required and can open `phyx.pythonPath`; a configured path is named in that warning. The font success message says to restart VS Code.
 - **φyrx: Install fonts** no longer needs Python or `phyx`. It downloads Phyrexian Regular and Basilica from a pinned PhyrexianDictionary commit, checks each file's SHA-256, and installs them for the current user.
