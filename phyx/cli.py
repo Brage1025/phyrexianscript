@@ -13,7 +13,6 @@ import argparse
 import io
 import json
 import sys
-import urllib.request
 from collections.abc import Iterable
 from pathlib import Path
 
@@ -23,13 +22,24 @@ from .compiler import compile_to_python
 from .errors import PhyrexianError, format_error
 from .fmt import format_source
 from .fonts import (
+    BASILICA_CDN,
+    BASILICA_REMOTE,
+    BASILICA_SHA256,
+    DICT_CDN,
+    DICT_REMOTE,
+    DICT_SHA256,
+    FONT_CDN,
     FONT_FAMILY,
+    FONT_REMOTE,
+    PHYREXIAN_SHA256,
     assets_dir,
-    ensure_basilica,
     ensure_font,
+    ensure_pinned,
     install_user_font,
     is_font_file,
+    local_basilica,
     local_font,
+    matches_pin,
 )
 from .hints import explain_missing, explain_word, search_lexicon
 from .interpreter import Interpreter
@@ -68,7 +78,6 @@ SUBCOMMANDS = {
     "lsp",
 }
 
-DICT_REMOTE = "https://raw.githubusercontent.com/fxbuson/PhyrexianDictionary/gh-pages/_data/PhyrexianAPI.json"
 VERTICAL_EXT = ".vphyx"
 
 
@@ -248,20 +257,42 @@ def cmd_translit(args: argparse.Namespace) -> int:
     return 0
 
 
+def _fetch_pinned(heading: str, dest: Path, urls: list[str], sha256: str, *, require_font: bool) -> Path:
+    print(heading)
+    already = matches_pin(dest, sha256)
+    path = ensure_pinned(dest, urls, sha256, require_font=require_font)
+    if already:
+        print("  already up to date")
+    print(f"  -> {path}")
+    return path
+
+
 def cmd_fetch(args: argparse.Namespace) -> int:
-    print("fetching Phyrexian Regular (official card font, family name: Phyrexian)")
-    font = ensure_font()
-    print(f"  -> {font}")
-    print("fetching Basilica (native hexadecimal glyphs)")
-    basilica = ensure_basilica()
-    print(f"  -> {basilica}")
-    dest = local_dictionary()
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    print(f"fetching {DICT_REMOTE}")
-    req = urllib.request.Request(DICT_REMOTE, headers={"User-Agent": "phyx-font-fetch"})
-    with urllib.request.urlopen(req, timeout=60) as resp:  # noqa: S310 - fixed https URLs
-        dest.write_bytes(resp.read())
-    print(f"  -> {dest}")
+    try:
+        font = _fetch_pinned(
+            "fetching Phyrexian Regular (official card font, family name: Phyrexian)",
+            local_font(),
+            [FONT_CDN, FONT_REMOTE],
+            PHYREXIAN_SHA256,
+            require_font=True,
+        )
+        basilica = _fetch_pinned(
+            "fetching Basilica (native hexadecimal glyphs)",
+            local_basilica(),
+            [BASILICA_CDN, BASILICA_REMOTE],
+            BASILICA_SHA256,
+            require_font=True,
+        )
+        _fetch_pinned(
+            f"fetching {DICT_REMOTE}",
+            local_dictionary(),
+            [DICT_REMOTE, DICT_CDN],
+            DICT_SHA256,
+            require_font=False,
+        )
+    except OSError as err:
+        print(f"error: {err}", file=sys.stderr)
+        return 1
     for path, family in ((font, FONT_FAMILY), (basilica, "Basilica")):
         installed = install_user_font(path, family)
         if installed:
