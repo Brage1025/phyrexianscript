@@ -107,3 +107,15 @@ Extension listings, version equal to `editors/package.json`:
 
 - Visual Studio Marketplace: `https://marketplace.visualstudio.com/items?itemName=brage1025.phyx`
 - Open VSX: `https://open-vsx.org/extension/brage1025/phyx`
+
+## Updating the pinned fonts and dictionary
+
+`editors/fonts.js` and `phyx/fonts.py` name the PhyrexianDictionary commits and the SHA-256 of each file `phyx fetch` downloads.
+
+1. Find the new commit with `git ls-remote` (`refs/heads/main` for the fonts, `refs/heads/gh-pages` for the dictionary).
+2. Download each file and compute its SHA-256.
+3. Update `FONT_COMMIT` and the two font hashes in both `editors/fonts.js` and `phyx/fonts.py`. A test checks that they agree.
+4. Update the dictionary commit and hash in `phyx/fonts.py`.
+5. Run the tests.
+6. Add a CHANGELOG line.
+7. Release.

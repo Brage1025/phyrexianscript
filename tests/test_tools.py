@@ -535,7 +535,7 @@ class AssetsDirTests(unittest.TestCase):
         old = self._font(self.root / "old" / "Phyrexian-Regular.ttf")
         missing = self.root / "user" / "fonts" / "Phyrexian-Regular.ttf"
 
-        def boom(urls, dest):
+        def boom(urls, dest, *_args):
             raise AssertionError(f"downloaded {dest}")
 
         with (
@@ -552,7 +552,7 @@ class AssetsDirTests(unittest.TestCase):
         old = self._font(self.root / "old" / "Basilica.otf")
         missing = self.root / "user" / "fonts" / "Basilica.otf"
 
-        def boom(urls, dest):
+        def boom(urls, dest, *_args):
             raise AssertionError(f"downloaded {dest}")
 
         with (
@@ -569,7 +569,7 @@ class AssetsDirTests(unittest.TestCase):
         dest = self.root / "user" / "fonts" / "Phyrexian-Regular.ttf"
         seen = []
 
-        def download(urls, path):
+        def download(urls, path, *_args):
             seen.append(path)
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(_FONT_BYTES)
@@ -590,7 +590,7 @@ class AssetsDirTests(unittest.TestCase):
         old = self._font(self.root / "old-explicit.ttf")
         seen = []
 
-        def download(urls, path):
+        def download(urls, path, *_args):
             seen.append(path)
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(_FONT_BYTES)

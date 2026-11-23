@@ -6,12 +6,15 @@ CC-BY) is the companion face with native hexadecimal glyphs.
 
 Phyrexian Regular is Wizards of the Coast's font, used under the Fan Content Policy, and Basilica is by GuruJ under CC-BY 4.0.
 Both are fetched, not vendored.  A downloaded
-file is rejected unless it is a real OpenType/TrueType container, so a
-GitHub HTML error page can never be served as a font.
+font is rejected unless it is a real OpenType/TrueType container, so a
+GitHub HTML error page can never be served as a font.  ``phyx fetch``
+downloads the fonts and the dictionary from pinned commits and checks
+each file's SHA-256.
 """
 
 from __future__ import annotations
 
+import hashlib
 import os
 import shutil
 import sys
@@ -22,13 +25,29 @@ from pathlib import Path
 FONT_FAMILY = "Phyrexian"
 FONT_FULL_NAME = "Phyrexian Regular"
 FONT_FILE = "Phyrexian-Regular.ttf"
-FONT_REMOTE = "https://raw.githubusercontent.com/fxbuson/PhyrexianDictionary/main/fonts/" + FONT_FILE
-FONT_CDN = "https://cdn.jsdelivr.net/gh/fxbuson/PhyrexianDictionary@main/fonts/" + FONT_FILE
-
 BASILICA_FAMILY = "Basilica"
 BASILICA_FILE = "Basilica.otf"
-BASILICA_REMOTE = "https://raw.githubusercontent.com/fxbuson/PhyrexianDictionary/main/fonts/" + BASILICA_FILE
-BASILICA_CDN = "https://cdn.jsdelivr.net/gh/fxbuson/PhyrexianDictionary@main/fonts/" + BASILICA_FILE
+
+# FONT_COMMIT is PhyrexianDictionary refs/heads/main. DICT_COMMIT is refs/heads/gh-pages.
+# editors/fonts.js pins this same font commit and the same two font hashes.
+FONT_COMMIT = "f3ea2bd41c433976493862325d91435dc3522cc3"
+DICT_COMMIT = "740dd3797cbed2fe04c6c9509a71654c925ce9ea"
+PHYREXIAN_SHA256 = "a62fa75fbdb9f70e4a7873696158c5cdf440d78d156fd5557457b9ab7dc66ed7"
+BASILICA_SHA256 = "849687c0173606acbd920d2fe24e2019cdcdd7dac83182c69383bba187f9bfe2"
+DICT_SHA256 = "9cb6c9edddf610d280dc03070a172535cbfd28afd1e13eac3e1c9926afc506e3"
+
+_MAX_DOWNLOAD_BYTES = 5 * 1024 * 1024
+_UPSTREAM_CHANGED = "The file changed upstream. Update phyx."
+_RAW_ROOT = "https://raw.githubusercontent.com/fxbuson/PhyrexianDictionary/"
+_CDN_ROOT = "https://cdn.jsdelivr.net/gh/fxbuson/PhyrexianDictionary@"
+_DICT_PATH = "_data/PhyrexianAPI.json"
+
+FONT_REMOTE = _RAW_ROOT + FONT_COMMIT + "/fonts/" + FONT_FILE
+FONT_CDN = _CDN_ROOT + FONT_COMMIT + "/fonts/" + FONT_FILE
+BASILICA_REMOTE = _RAW_ROOT + FONT_COMMIT + "/fonts/" + BASILICA_FILE
+BASILICA_CDN = _CDN_ROOT + FONT_COMMIT + "/fonts/" + BASILICA_FILE
+DICT_REMOTE = _RAW_ROOT + DICT_COMMIT + "/" + _DICT_PATH
+DICT_CDN = _CDN_ROOT + DICT_COMMIT + "/" + _DICT_PATH
 
 _SFNT_MAGIC = (b"\x00\x01\x00\x00", b"OTTO", b"true", b"typ1")
 _WOFF_MAGIC = (b"wOFF", b"wOF2")
@@ -134,23 +153,98 @@ def legacy_font(
     return old if is_font_file(old) else None
 
 
-def _download(urls: list[str], dest: Path) -> Path:
+def matches_pin(path: Path, sha256: str) -> bool:
+    """True when ``path`` is a file and its SHA-256 is ``sha256``."""
+    if not path.is_file():
+        return False
+    try:
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    except OSError:
+        return False
+    return digest == sha256.lower()
+
+
+def _read_limited(url: str, max_bytes: int) -> bytes:
+    req = urllib.request.Request(url, headers={"User-Agent": "phyx-font-fetch"})
+    with urllib.request.urlopen(req, timeout=60) as resp:  # noqa: S310 - pinned https URLs
+        final = resp.geturl()
+        if not str(final).startswith("https://"):
+            raise OSError(f"{url} redirected away from https")
+        data = resp.read(max_bytes + 1)
+    if len(data) > max_bytes:
+        raise OSError(f"the file is larger than {max_bytes} bytes")
+    return data
+
+
+def _write_atomic(dest: Path, data: bytes) -> None:
+    """Write ``data`` to ``dest`` via a temporary file in the same folder.
+
+    The temporary file is opened normally, so its mode follows the umask.
+    """
     dest.parent.mkdir(parents=True, exist_ok=True)
+    tmp = dest.with_name(f".{dest.name}.{os.getpid()}.part")
+    try:
+        with tmp.open("wb") as handle:
+            handle.write(data)
+        os.replace(tmp, dest)
+    except BaseException:
+        try:
+            tmp.unlink(missing_ok=True)
+        except OSError:
+            pass
+        raise
+
+
+def _fetch_error(name: str, last: Exception | None, mismatch: bool) -> OSError:
+    if mismatch:
+        return OSError(f"could not fetch {name}: {_UPSTREAM_CHANGED}")
+    detail = str(last) if last is not None and str(last) else "the download failed"
+    return OSError(f"could not fetch {name}: {detail}")
+
+
+def _download(
+    urls: list[str],
+    dest: Path,
+    expected_sha256: str,
+    max_bytes: int,
+    *,
+    require_font: bool = True,
+) -> Path:
+    """Download ``dest`` from the first URL whose bytes match ``expected_sha256``."""
+    wanted = expected_sha256.lower()
     last_err: Exception | None = None
+    mismatch = False
     for url in urls:
         try:
-            req = urllib.request.Request(url, headers={"User-Agent": "phyx-font-fetch"})
-            with urllib.request.urlopen(req, timeout=60) as resp:  # noqa: S310
-                data = resp.read()
+            data = _read_limited(url, max_bytes)
         except OSError as err:
             last_err = err
             continue
-        if not is_font_bytes(data):
-            last_err = ValueError(f"{url} did not return a font file")
+        if require_font and not is_font_bytes(data):
+            last_err = OSError(f"{url} did not return a font file")
             continue
-        dest.write_bytes(data)
+        if hashlib.sha256(data).hexdigest() != wanted:
+            mismatch = True
+            last_err = OSError(_UPSTREAM_CHANGED)
+            continue
+        try:
+            _write_atomic(dest, data)
+        except OSError as err:
+            last_err = err
+            continue
         return dest
-    raise OSError(f"could not fetch {dest.name}: {last_err}")
+    raise _fetch_error(dest.name, last_err, mismatch)
+
+
+def ensure_pinned(dest: Path, urls: list[str], sha256: str, *, require_font: bool = True) -> Path:
+    """Make ``dest`` match ``sha256``.
+
+    A file that already has that hash is returned without using the network.
+    Otherwise the bytes are downloaded, checked, and written atomically.
+    """
+    if matches_pin(dest, sha256):
+        return dest
+    return _download(urls, dest, sha256, _MAX_DOWNLOAD_BYTES, require_font=require_font)
 
 
 def _usable_font(dest: Path | None, default: Path) -> Path | None:
@@ -167,14 +261,16 @@ def ensure_font(dest: Path | None = None) -> Path:
     found = _usable_font(dest, local_font())
     if found is not None:
         return found
-    return _download([FONT_CDN, FONT_REMOTE], dest if dest is not None else local_font())
+    target = local_font() if dest is None else dest
+    return _download([FONT_CDN, FONT_REMOTE], target, PHYREXIAN_SHA256, _MAX_DOWNLOAD_BYTES)
 
 
 def ensure_basilica(dest: Path | None = None) -> Path:
     found = _usable_font(dest, local_basilica())
     if found is not None:
         return found
-    return _download([BASILICA_CDN, BASILICA_REMOTE], dest if dest is not None else local_basilica())
+    target = local_basilica() if dest is None else dest
+    return _download([BASILICA_CDN, BASILICA_REMOTE], target, BASILICA_SHA256, _MAX_DOWNLOAD_BYTES)
 
 
 def install_user_font(src: Path, family: str) -> Path | None:

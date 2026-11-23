@@ -6,6 +6,10 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ## Unreleased
 
+### Changed
+
+- `phyx fetch` now downloads the fonts and the dictionary from pinned commits, checks their SHA-256 hashes, writes them atomically and reports a failed download as an error instead of a traceback; the fallback font links in rendered pages use the same pinned commit.
+
 ### Fixed
 
 - The REPL Ctrl-C test no longer waits on a word that also appears in the banner, which made it fail on slow runners.
