@@ -20,7 +20,6 @@ Nothing below is a promise, and nothing below adds a word or a form the Phyrexia
 
 ## Known issues
 
-- **`phyx lint` and abilities brought in with `bukð`.** A short call of an ability defined in the same file is a note. A short call of an ability brought in with `bukð` is not: `lint` collects arities from this file's `ťe` sentences only ([phyx/lint.py](../phyx/lint.py)). GitHub: [#2](https://github.com/Brage1025/phyrexianscript/issues/2)
 - **Guarded arithmetic.** Compiled programs keep a kind guard on operators, so arithmetic-heavy code is slower than the same code in CPython. `python -m phyx bench` prints the ratio. On the defaults (`--size 16`, `--loops 20000`) the ratio is typically two to four times and varies by machine. A specialised fast path is a possible optimisation. It is unscheduled. Compiling ordering to raw Python `<` stays rejected: `1 == True` is not Phyrexian (1.4.1). GitHub: [#3](https://github.com/Brage1025/phyrexianscript/issues/3)
 - **Ctrl-C and out-of-memory on CI.** Both are tested only where the platform supports the check. Ctrl-C tests skip on Windows (`SIGINT` delivery differs). The out-of-memory fault is tested on Linux only: macOS does not enforce `RLIMIT_AS`, and Windows has no `resource` module ([docs/toolchain.md](toolchain.md), [tests/test_host_faults.py](../tests/test_host_faults.py)). Windows CI therefore does not run either check. GitHub: [#4](https://github.com/Brage1025/phyrexianscript/issues/4)
 
@@ -29,6 +28,7 @@ Nothing below is a promise, and nothing below adds a word or a form the Phyrexia
 Unscheduled. Taking an item up is a later decision.
 
 - An optional `--safe` flag for running other people's programs. Today a program can read and write files, cast other files, and exit the process ([SECURITY.md](../SECURITY.md)).
+- Editor diagnostics. `phyx.lsp.diagnostics_for` computes parse errors and lint notes but the language server does not publish them, and the extension's client ignores server notifications.
 - Fixes for the known issues above, if one of them is taken up. The arithmetic fast path, if it is ever written, still has to keep Phyrexian kinds.
 
 ## Will not be added

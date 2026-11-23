@@ -22,7 +22,7 @@ Start here, then pick the page that matches the job.
 
 The standard library is φyrx: `phyx/lib/` is on the `bukð` search path. `python -m phyx test` runs tests written in φyrx (`ǩaπa` is the assertion; a sibling `.expected` file is exact stdout). `python -m phyx lookup` searches the lexicon without a fetch.
 
-Faults name the fix and the ability stack. `python -m phyx explain if` answers in Phyrexian. `fmt` rewrites a file into canonical separators and indent. `lint` names a dropped `'iţpənn`, an unused object, an English keyword used as a name, and a short call of an ability defined in the same file.
+Faults name the fix and the ability stack. `python -m phyx explain if` answers in Phyrexian. `fmt` rewrites a file into canonical separators and indent. `lint` names a dropped `'iţpənn`, an unused object, an English keyword used as a name, and a short call of an ability defined in the same file or brought in with `bukð`.
 
 A program can bind names, close over them, store abilities, build lists and books, cast modules, read and write UTF-8 notes (`brøtjt` / `mɴyrx`), read program arguments, and run in the REPL. `render` sets the text in vertical columns in the official Phyrexian font.
 

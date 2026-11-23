@@ -206,7 +206,8 @@ def diagnostics_for(
 ) -> list[dict]:
     folder = Path(base_dir) if base_dir is not None else None
     try:
-        program = parse(source, ascii_mode=ascii_mode, base_dir=folder)
+        brought: dict[str, int] = {}
+        program = parse(source, ascii_mode=ascii_mode, base_dir=folder, imported=brought)
     except PhyrexianError as err:
         line = (err.line or 1) - 1
         col = (err.col or 1) - 1
@@ -229,7 +230,7 @@ def diagnostics_for(
             }
         ]
     out: list[dict] = []
-    for note in lint_program(program):
+    for note in lint_program(program, imported=brought):
         line = max((note.line or 1) - 1, 0)
         out.append(
             {

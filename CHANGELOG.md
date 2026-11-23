@@ -12,6 +12,7 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ### Fixed
 
+- `phyx lint` notes a short call of an ability brought in with `bukð`, including an ability cast through another file, with the same wording as a short call of an ability defined in the file. A `ťe` of the same name in the file still wins.
 - In a persistent session, a nested ability that reads a name an enclosing ability bound as a plain local now sees that local when a later module sentence binds the same name, the same as the tree-walker.
 - The compiled engine, in a persistent session, now faults when a nested ability assigns or loops over a name an enclosing ability fixed with `'u`, the same as the tree-walker. A read of that name still sees the constant.
 - The compiled engine now agrees with the tree-walker on `'u` in a loop of a persistent session, in a qit handler after the baqilx body bound the name, and on the message for a second fix; the same programs now behave identically in both engines.
