@@ -4,7 +4,8 @@ Phyrexian Regular (Wizards of the Coast) is the card font: its *family*
 name is ``Phyrexian``, full name ``Phyrexian Regular``.  Basilica (GuruJ,
 CC-BY) is the companion face with native hexadecimal glyphs.
 
-Assets are GPL-3.0 / CC-BY and are fetched, not vendored.  A downloaded
+Phyrexian Regular is Wizards of the Coast's font, used under the Fan Content Policy, and Basilica is by GuruJ under CC-BY 4.0.
+Both are fetched, not vendored.  A downloaded
 file is rejected unless it is a real OpenType/TrueType container, so a
 GitHub HTML error page can never be served as a font.
 """

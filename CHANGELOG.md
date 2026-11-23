@@ -9,6 +9,7 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 ### Fixed
 
 - The REPL Ctrl-C test no longer waits on a word that also appears in the banner, which made it fail on slow runners.
+- The licence notes for the optional fonts, including the line printed by `phyx fetch`, now say that Phyrexian Regular is Wizards of the Coast's font used under the Fan Content Policy, not GPL-3.0.
 
 ## 1.7.1 - 2026-11-20
 

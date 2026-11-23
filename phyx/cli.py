@@ -266,7 +266,10 @@ def cmd_fetch(args: argparse.Namespace) -> int:
         installed = install_user_font(path, family)
         if installed:
             print(f"installed {family} for this user: {installed}")
-    print("done. Phyrexian Regular is GPL-3.0 (Wizards / dictionary repo); Basilica is CC-BY.")
+    print(
+        "done. Phyrexian Regular is Wizards of the Coast's font, "
+        "used under the Fan Content Policy; Basilica is by GuruJ, CC-BY 4.0."
+    )
     return 0
 
 

@@ -11,7 +11,7 @@
 
 φyrx is a programming language written in Phyrexian. Its orthography, vocabulary, and grammar are not invented: they come from the community [Phyrexian Dictionary](https://fxbuson.github.io/PhyrexianDictionary/) (tutorial chapters 1–3). A program is a sequence of Phyrexian sentences. The verb comes last. Numbers are hexadecimal. Text is read in vertical columns.
 
-The toolchain is a small Python 3.11+ interpreter with no third-party dependencies. The language and interpreter are **MIT**. The optional font and dictionary JSON are **GPL-3.0** and are fetched, not vendored. Source: [github.com/Brage1025/phyrexianscript](https://github.com/Brage1025/phyrexianscript).
+The toolchain is a small Python 3.11+ interpreter with no third-party dependencies. The language and interpreter are **MIT**. The Phyrexian Regular font belongs to Wizards of the Coast and is used under their [Fan Content Policy](https://company.wizards.com/en/legal/fancontentpolicy); Basilica is by GuruJ (CC-BY 4.0); the optional dictionary JSON comes from the [PhyrexianDictionary](https://github.com/fxbuson/PhyrexianDictionary) repository, whose LICENSE file is GPL-3.0. None of them is bundled: `python -m phyx fetch` downloads them. Details are in [docs/toolchain.md](docs/toolchain.md#fonts-and-licences). Source: [github.com/Brage1025/phyrexianscript](https://github.com/Brage1025/phyrexianscript).
 
 ```
 python -m phyx examples/01_welcome.phyx

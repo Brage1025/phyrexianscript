@@ -120,7 +120,26 @@ python -m phyx render examples/09_sieve.phyx -o sieve.html
 
 `render` writes a page in the official card font. The file is `Phyrexian-Regular.ttf`; its **family name is `Phyrexian`** (full name `Phyrexian Regular`). That is the name CSS and Windows use. `python -m phyx render` downloads and **embeds** a validated copy so the page cannot flash Latin fallbacks.
 
-`python -m phyx fetch` also pulls **Basilica** (native hexadecimal glyphs, CC-BY) and, on Windows, installs both into the current user’s font folder so editors can select **Phyrexian**. The editor extension installs those same fonts on its own, from a pinned commit, and does not run `phyx fetch`. The lexer already reads those Mathematical Monospace digits as the same hex as `0–9a–f`. In a source checkout, fetched fonts and the dictionary live in `assets/` (gitignored). An installed phyx keeps them in a per-user data folder: `%LOCALAPPDATA%\phyx` on Windows, `~/Library/Application Support/phyx` on macOS, and `$XDG_DATA_HOME/phyx` or `~/.local/share/phyx` elsewhere. `PHYX_ASSETS` overrides that directory. When that per-user folder has no fonts yet, a valid font file still next to the installed package is read from there. A download is written to that per-user folder.
+`python -m phyx fetch` also pulls **Basilica** (native hexadecimal glyphs). Basilica by GuruJ, CC-BY 4.0 (https://creativecommons.org/licenses/by/4.0/). On Windows it installs both fonts into the current user’s font folder so editors can select **Phyrexian**. The editor extension installs those same fonts on its own, from a pinned commit, and does not run `phyx fetch`. The lexer already reads those Mathematical Monospace digits as the same hex as `0–9a–f`. In a source checkout, fetched fonts and the dictionary live in `assets/` (gitignored). An installed phyx keeps them in a per-user data folder: `%LOCALAPPDATA%\phyx` on Windows, `~/Library/Application Support/phyx` on macOS, and `$XDG_DATA_HOME/phyx` or `~/.local/share/phyx` elsewhere. `PHYX_ASSETS` overrides that directory. When that per-user folder has no fonts yet, a valid font file still next to the installed package is read from there. A download is written to that per-user folder.
+
+---
+
+## Fonts and licences
+
+Phyrexian Regular is Wizards of the Coast's font (© 2019 Wizards of the Coast, all rights reserved; made by Delve Fonts). It is not part of this project's licence and is not bundled. It is downloaded for the user and used under Wizards of the Coast's Fan Content Policy (https://company.wizards.com/en/legal/fancontentpolicy). Basilica by GuruJ, CC-BY 4.0 (https://creativecommons.org/licenses/by/4.0/).
+
+The six fonts below are the faces in the PhyrexianDictionary repository. The licence column is what the font file itself states.
+
+| Font | Maker | Licence stated in the file | Used | Why |
+| --- | --- | --- | --- | --- |
+| `Phyrexian-Regular.ttf` | Wizards of the Coast; manufactured by Delve Fonts LLC | None. Copyright © 2019 by Wizards of the Coast, a Hasbro Subsidiary. All rights reserved. | Yes | Card font (family name `Phyrexian`) for `render` and the editor. |
+| `Basilica.otf` | GuruJ (2023) | CC-BY (https://creativecommons.org/licenses/by/4.0/). Derived from Progress Engine and remapped to the official Wizards transliteration. | Yes | Native hexadecimal glyphs. |
+| `Phi_horizontal_gbrsh_9.8.ttf` | Phie (Stas.tk), 2022 | SIL Open Font License 1.1 | No | Missing glyphs for `! : ; ^ ' " ( ) * = < > ? @ #`. |
+| `PhyrexianCompleat.ttf` | Osmago, built with FontStruct | "Open Font License", no version stated | No | No digits and little punctuation, and the licence names no version. |
+| `Phyrexian_Engraved.otf` | Aldurethar | SIL Open Font License (OFL), no version stated | No | Lacks many lowercase letters, and the licence names no version. |
+| `ProgressEngine.otf` | GuruJ, 2020 | None stated | No | No licence is stated. Basilica is derived from this face. |
+
+Phi_horizontal, Phyrexian Compleat, Phyrexian Engraved and ProgressEngine are not offered because their glyph coverage or licence statement is not good enough for source code. Fonts are downloaded at a pinned commit with a SHA-256 check rather than bundled: the editor fetches Phyrexian Regular and Basilica from PhyrexianDictionary commit `f3ea2bd41c433976493862325d91435dc3522cc3` and checks each file's SHA-256. `python -m phyx fetch` downloads those two files from that repository's `main` branch and checks that the response is a font file; it does not pin a commit or check a hash. The same command downloads the dictionary JSON from `gh-pages` `_data/PhyrexianAPI.json` and saves it as `dictionary.json`. `python -m phyx lookup` searches that file when it is present.
 
 ---
 
