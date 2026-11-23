@@ -1296,6 +1296,67 @@ NESTED_CONST_SELF = (
     "^xe-fbx.\n"
 )
 
+# A nested ability reads a plain local of the enclosing ability. A later
+# module sentence binds the same name. The read still sees the local.
+NESTED_LOCAL_READ = "^ťe-fbx:\n    ^3-w-ţə''.\n    ^ťe-fcx:\n        !w.\n    ^xe-fcx.\n^xe-fbx.\n^2-w-ţə''.\n"
+
+# The same read, inside a loop of the inner ability.
+NESTED_LOCAL_READ_LOOP = (
+    "^ťe-fbx:\n"
+    "    ^3-w-ţə''.\n"
+    "    ^ťe-fcx:\n"
+    "        ^baxuφ-əxbytp:\n"
+    "            !w.\n"
+    "            ^lups.\n"
+    "    ^xe-fcx.\n"
+    "^xe-fbx.\n"
+    "^2-w-ţə''.\n"
+)
+
+# The inner ability binds another name, then reads both inside the loop.
+NESTED_LOCAL_READ_LOOP_OTHER = (
+    "^ťe-fbx:\n"
+    "    ^3-w-ţə''.\n"
+    "    ^ťe-fcx:\n"
+    "        ^0-z-ţə''.\n"
+    "        ^baxuφ-əxbytp:\n"
+    "            !w.\n"
+    "            !z.\n"
+    "            ^lups.\n"
+    "    ^xe-fcx.\n"
+    "^xe-fbx.\n"
+    "^2-w-ţə''.\n"
+)
+
+# The module binding is already there when the ability runs.
+NESTED_LOCAL_READ_BEFORE = "^2-w-ţə''.\n^ťe-fbx:\n    ^3-w-ţə''.\n    ^ťe-fcx:\n        !w.\n    ^xe-fcx.\n^xe-fbx.\n"
+
+# The inner ability reads the enclosing local twice.
+NESTED_LOCAL_READ_TWICE = (
+    "^ťe-fbx:\n    ^3-w-ţə''.\n    ^ťe-fcx:\n        !w.\n        !w.\n    ^xe-fcx.\n^xe-fbx.\n^2-w-ţə''.\n"
+)
+
+# The read is two abilities down from the plain local.
+NESTED_LOCAL_READ_TWO_DOWN = (
+    "^ťe-fbx:\n"
+    "    ^3-w-ţə''.\n"
+    "    ^ťe-fmx:\n"
+    "        ^ťe-fcx:\n"
+    "            !w.\n"
+    "        ^xe-fcx.\n"
+    "    ^xe-fmx.\n"
+    "^xe-fbx.\n"
+    "^2-w-ţə''.\n"
+)
+
+# The inner ability assigns the enclosing local, then the outer ability reads it.
+NESTED_LOCAL_ASSIGN = (
+    "^ťe-fbx:\n    ^3-w-ţə''.\n    ^ťe-fcx:\n        ^4-w-ţə''.\n    ^xe-fcx.\n    !w.\n^xe-fbx.\n^2-w-ţə''.\n"
+)
+
+# The later module sentence binds a different name.
+NESTED_LOCAL_OTHER_MODULE = "^ťe-fbx:\n    ^3-w-ţə''.\n    ^ťe-fcx:\n        !w.\n    ^xe-fcx.\n^xe-fbx.\n^2-z-ţə''.\n"
+
 # Both engines fault once the call depth passes the host ceiling.
 # The line is omitted: it would point at whichever call happened to overflow.
 BUG_K = "^ťe-n-go:\n    ^ba-n-1-grmɒɣg:\n        ^lo-0-'iţpənn.\n    ^lo-n-1-mɒɣg-go-'iţpənn.\n!80-go.\n"
@@ -1564,6 +1625,40 @@ class ParityFuzzTests(unittest.TestCase):
             ),
         )
         self._const_both_modes(NESTED_CONST_SELF, walked)
+
+    def test_nested_ability_reads_enclosing_local(self):
+        # fcx reads w, which fbx bound. A later module sentence also binds w.
+        # The read speaks fbx's local.
+        self._const_both_modes(NESTED_LOCAL_READ, ("3\n", None))
+
+    def test_nested_ability_reads_enclosing_local_in_loop(self):
+        # The same read, on one turn of a loop in the inner ability.
+        self._const_both_modes(NESTED_LOCAL_READ_LOOP, ("3\n", None))
+
+    def test_nested_loop_reads_enclosing_local_and_own_local(self):
+        # fcx binds z, then the loop speaks w and z. w is still fbx's local.
+        self._const_both_modes(NESTED_LOCAL_READ_LOOP_OTHER, ("3\n0\n", None))
+
+    def test_module_binding_before_enclosing_local(self):
+        # w is already bound in the module, so fbx rebinds that binding.
+        # fcx speaks the rebound value.
+        self._const_both_modes(NESTED_LOCAL_READ_BEFORE, ("3\n", None))
+
+    def test_nested_ability_reads_enclosing_local_twice(self):
+        # Both reads see the same enclosing local.
+        self._const_both_modes(NESTED_LOCAL_READ_TWICE, ("3\n3\n", None))
+
+    def test_read_of_enclosing_local_two_abilities_down(self):
+        # fmx does not bind w. fcx still sees fbx's local.
+        self._const_both_modes(NESTED_LOCAL_READ_TWO_DOWN, ("3\n", None))
+
+    def test_nested_ability_assigns_enclosing_local(self):
+        # fcx assigns w. That rebinds fbx's local, which fbx then speaks.
+        self._const_both_modes(NESTED_LOCAL_ASSIGN, ("4\n", None))
+
+    def test_later_module_sentence_binds_a_different_name(self):
+        # The module binds z, not w, so fcx's read of w is fbx's local.
+        self._const_both_modes(NESTED_LOCAL_OTHER_MODULE, ("3\n", None))
 
     def test_BUG_K_deep_fault_lines(self):
         previous = os.environ.get("PHYX_RECURSION")
