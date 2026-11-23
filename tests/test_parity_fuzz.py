@@ -1240,6 +1240,62 @@ SECOND_FIX_AFTER_CATCH = (
 # A read of a local, then 'u, when a later sentence also assigns the name.
 READ_LOCAL_BEFORE_FIX = "^ťe-fbx:\n    ^1-z-ţə''.\n    !z.\n    ^'u-3-z-ţə''.\n^xe-fbx.\n^0-z-ţə''.\n"
 
+# A nested ability assigns a name the enclosing ability fixed with 'u.
+# The assignment finds that constant and faults. It does not create a local.
+NESTED_CONST_ASSIGN = "^ťe-fbx:\n    ^'u-2-z-ţə''.\n    ^ťe-fcx:\n        ^0-z-ţə''.\n    ^xe-fcx.\n^xe-fbx.\n"
+
+# The nested ability's loop item is the enclosing constant.
+NESTED_CONST_LOOP = (
+    "^ťe-fbx:\n    ^'u-2-y-ţə''.\n    ^ťe-fcx:\n        ^aχəw'-y-dl-1-ronɣ:\n            !y.\n    ^xe-fcx.\n^xe-fbx.\n"
+)
+
+# The nested ability reads the constant, then assigns it.
+NESTED_CONST_READ = "^ťe-fbx:\n    ^'u-2-z-ţə''.\n    ^ťe-fcx:\n        !z.\n        ^0-z-ţə''.\n    ^xe-fcx.\n^xe-fbx.\n"
+
+# The constant is two abilities out from the assignment.
+NESTED_CONST_TWO_UP = (
+    "^ťe-fbx:\n"
+    "    ^'u-2-z-ţə''.\n"
+    "    ^ťe-fmx:\n"
+    "        ^ťe-fcx:\n"
+    "            ^0-z-ţə''.\n"
+    "        ^xe-fcx.\n"
+    "    ^xe-fmx.\n"
+    "^xe-fbx.\n"
+)
+
+# A for-style loop whose item is a constant fixed in the enclosing ability.
+# The list is 1 2 3. The item binding faults before the body speaks.
+NESTED_CONST_FOR = (
+    "^ťe-fbx:\n    ^'u-4-w-ţə''.\n    ^ťe-fcx:\n        ^aχəw'-w-dl-1-2-3-3-ťewn:\n            !w.\n    ^xe-fcx.\n^xe-fbx.\n"
+)
+
+# The assignment sits in the nested ability's baqilx. qit catches the fault.
+NESTED_CONST_QIT = (
+    "^ťe-fbx:\n"
+    "    ^'u-2-z-ţə''.\n"
+    "    ^ťe-fcx:\n"
+    "        ^baqilx:\n"
+    "            ^0-z-ţə''.\n"
+    "        ^qit:\n"
+    "            !dekp.\n"
+    "    ^xe-fcx.\n"
+    "^xe-fbx.\n"
+)
+
+# The nested ability reads the constant, calls itself, then assigns it.
+NESTED_CONST_SELF = (
+    "^ťe-fbx:\n"
+    "    ^'u-2-z-ţə''.\n"
+    "    ^ťe-n-fcx:\n"
+    "        ^ba-n:\n"
+    "            !z.\n"
+    "            ^n-1-mɒɣg-fcx.\n"
+    "        ^0-z-ţə''.\n"
+    "    ^1-fcx.\n"
+    "^xe-fbx.\n"
+)
+
 # Both engines fault once the call depth passes the host ceiling.
 # The line is omitted: it would point at whichever call happened to overflow.
 BUG_K = "^ťe-n-go:\n    ^ba-n-1-grmɒɣg:\n        ^lo-0-'iţpənn.\n    ^lo-n-1-mɒɣg-go-'iţpənn.\n!80-go.\n"
@@ -1418,6 +1474,96 @@ class ParityFuzzTests(unittest.TestCase):
         )
         self.assertEqual(run_both(READ_LOCAL_BEFORE_FIX)[1], walked)
         assertParity(READ_LOCAL_BEFORE_FIX)
+
+    def _const_both_modes(self, source: str, walked: tuple) -> None:
+        # The tree-walker result, then both engines, with and without a session.
+        for persistent in (False, True):
+            self.assertEqual(run_both(source, persistent=persistent)[1], walked)
+            assertParity(source, persistent=persistent)
+
+    def test_nested_ability_assigns_enclosing_constant(self):
+        # The inner assignment finds the enclosing 'u and cannot change it.
+        walked = (
+            "",
+            (
+                "RuntimeFault",
+                "'z' was fixed in the past ('u) and cannot change",
+                4,
+                None,
+            ),
+        )
+        self._const_both_modes(NESTED_CONST_ASSIGN, walked)
+
+    def test_nested_loop_item_is_enclosing_constant(self):
+        # The loop item is the enclosing constant, so the loop faults on
+        # the first turn and the body does not speak.
+        walked = (
+            "",
+            (
+                "RuntimeFault",
+                "'y' was fixed in the past ('u) and cannot change",
+                4,
+                None,
+            ),
+        )
+        self._const_both_modes(NESTED_CONST_LOOP, walked)
+
+    def test_nested_ability_reads_constant_then_assigns(self):
+        # The read still sees the enclosing constant. The assignment faults.
+        walked = (
+            "2\n",
+            (
+                "RuntimeFault",
+                "'z' was fixed in the past ('u) and cannot change",
+                5,
+                None,
+            ),
+        )
+        self._const_both_modes(NESTED_CONST_READ, walked)
+
+    def test_constant_fixed_two_abilities_up(self):
+        # fcx assigns z, which fbx fixed. fmx does not bind z.
+        walked = (
+            "",
+            (
+                "RuntimeFault",
+                "'z' was fixed in the past ('u) and cannot change",
+                5,
+                None,
+            ),
+        )
+        self._const_both_modes(NESTED_CONST_TWO_UP, walked)
+
+    def test_for_loop_item_is_enclosing_constant(self):
+        # aχəw' over a list. The item name was fixed in the enclosing ability.
+        walked = (
+            "",
+            (
+                "RuntimeFault",
+                "'w' was fixed in the past ('u) and cannot change",
+                4,
+                None,
+            ),
+        )
+        self._const_both_modes(NESTED_CONST_FOR, walked)
+
+    def test_qit_in_nested_ability_catches_constant_fault(self):
+        # The fault is raised in the nested ability, so its qit handles it.
+        message = "'z' was fixed in the past ('u) and cannot change"
+        self._const_both_modes(NESTED_CONST_QIT, (message + "\n", None))
+
+    def test_nested_ability_calls_itself_then_assigns_constant(self):
+        # The call sees the constant. The assignment on the way back faults.
+        walked = (
+            "2\n",
+            (
+                "RuntimeFault",
+                "'z' was fixed in the past ('u) and cannot change",
+                7,
+                None,
+            ),
+        )
+        self._const_both_modes(NESTED_CONST_SELF, walked)
 
     def test_BUG_K_deep_fault_lines(self):
         previous = os.environ.get("PHYX_RECURSION")
