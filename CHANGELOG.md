@@ -6,6 +6,10 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ## Unreleased
 
+### Fixed
+
+- The REPL Ctrl-C test no longer waits on a word that also appears in the banner, which made it fail on slow runners.
+
 ## 1.7.1 - 2026-11-20
 
 ### Added
