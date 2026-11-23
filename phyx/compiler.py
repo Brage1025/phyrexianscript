@@ -762,10 +762,15 @@ class Emitter:
                 scope.needs_rt = True
                 return
             if self.persist and found.kind == "func" and name in found.locals_:
-                scope.dyn.add(name)
-                scope.needs_locs = True
-                scope.needs_rt = True
-                return
+                # A plain binding of that ability lives in its locs dict, and
+                # the nested store walks that dict. A 'u constant is kept
+                # beside it, in the constant set. Capturing the constant puts
+                # the value on that walk, so the constant set can reject it.
+                if name not in found.const_names:
+                    scope.dyn.add(name)
+                    scope.needs_locs = True
+                    scope.needs_rt = True
+                    return
             # The outer assignment may not have run yet. Remember the name so
             # the store can rebind it when it exists, and create a local when
             # it does not.

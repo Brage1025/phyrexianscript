@@ -12,6 +12,7 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ### Fixed
 
+- The compiled engine, in a persistent session, now faults when a nested ability assigns or loops over a name an enclosing ability fixed with `'u`, the same as the tree-walker. A read of that name still sees the constant.
 - The compiled engine now agrees with the tree-walker on `'u` in a loop of a persistent session, in a qit handler after the baqilx body bound the name, and on the message for a second fix; the same programs now behave identically in both engines.
 - The REPL Ctrl-C test no longer waits on a word that also appears in the banner, which made it fail on slow runners.
 - The licence notes for the optional fonts, including the line printed by `phyx fetch`, now say that Phyrexian Regular is Wizards of the Coast's font used under the Fan Content Policy, not GPL-3.0.
