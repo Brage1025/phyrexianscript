@@ -918,6 +918,17 @@ class Emitter:
     def _outer_dynamic(self, name: str, scope: Scope, found: Scope | None) -> bool:
         if name in scope.dyn:
             return True
+        # A plain local of an enclosing ability lives in that ability's locs
+        # dict when a persistent module sentence binds the same name: the
+        # store may rebind the module, or create the local if that sentence
+        # has not run. find() skips the dict and lands on the module, so a
+        # nested read would miss the local the tree-walker walks to.
+        if found is not scope:
+            s = scope.parent
+            while s is not None and s is not found:
+                if name in s.dyn:
+                    return True
+                s = s.parent
         if found is None or found is scope:
             return False
         if name in found.params or name in found.funs:
