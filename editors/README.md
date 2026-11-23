@@ -76,7 +76,7 @@ The first time a φyrx file is open, if Phyrexian Regular is not already install
 
 The extension turns off VS Code's non-ASCII and ambiguous-character highlighting for φyrx files only, so Restricted Mode does not box every character. Invisible characters are still flagged.
 
-Phyrexian Regular is from the PhyrexianDictionary project under GPL-3.0; Basilica is by GuruJ under CC-BY.
+Phyrexian Regular is Wizards of the Coast's font (© 2019 Wizards of the Coast, all rights reserved; made by Delve Fonts). It is not part of this project's licence and is not bundled. It is downloaded for the user and used under Wizards of the Coast's Fan Content Policy (https://company.wizards.com/en/legal/fancontentpolicy). Basilica by GuruJ, CC-BY 4.0 (https://creativecommons.org/licenses/by/4.0/).
 
 φyrx is unofficial Fan Content permitted under the Fan Content Policy. Not approved/endorsed by Wizards. Portions of the materials used are property of Wizards of the Coast. ©Wizards of the Coast LLC.
 
