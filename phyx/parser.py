@@ -54,6 +54,9 @@ class Parser:
         self.toks = tokens
         self.pos = 0
         self.functions: dict[str, int] = dict(known_functions or {})  # ability name → arity
+        # Arities brought in by ``bukð``, including abilities those files themselves
+        # cast. Names defined in this text stay in ``functions`` only.
+        self.imported: dict[str, int] = {}
         self._defined_here: set[str] = set()
         self.base_dir = Path(base_dir) if base_dir is not None else Path.cwd()
         self.ascii_mode = ascii_mode
@@ -103,7 +106,13 @@ class Parser:
     # ------------------------------------------------------------ prescan
     def prescan_includes(self) -> None:
         """Load ability arities from files named by ``bukð`` so they may be
-        called as verbs in this text (execution still happens at runtime)."""
+        called as verbs in this text (execution still happens at runtime).
+
+        The arities are recorded on ``imported``, including abilities those
+        files themselves cast. A name defined in this text is not recorded
+        there. A missing or unreadable file adds nothing. A cycle raises
+        ``ParseError``.
+        """
         for i, tok in enumerate(self.toks):
             if tok.kind != "WORD" or tok.value != CAST_WORD:
                 continue
@@ -143,6 +152,12 @@ class Parser:
         try:
             inner.prescan_includes()
             inner.prescan_abilities()
+            # What the cast file brought in, then its own ``ťe`` so that
+            # definition is the arity this file sees.
+            for name, arity in inner.imported.items():
+                self.imported[name] = arity
+            for name in inner._defined_here:
+                self.imported[name] = inner.functions[name]
             for name, arity in inner.functions.items():
                 self.functions[name] = arity
         finally:
@@ -662,13 +677,30 @@ def parse(
     ascii_mode: bool = False,
     known_functions: dict[str, int] | None = None,
     base_dir: Path | str | None = None,
+    *,
+    imported: dict[str, int] | None = None,
 ) -> list[ast.Stmt]:
+    """Parse ``source`` into sentences.
+
+    The return value is that list, for every caller. Pass ``imported`` to
+    receive the arities brought in by ``bukð`` for this source and
+    ``base_dir`` (abilities defined in the cast files, and abilities those
+    files themselves cast). Names defined in ``source`` are not added. On
+    success the dict is cleared and filled. A missing or unreadable cast
+    file adds nothing. A cycle raises ``ParseError`` and leaves ``imported``
+    unchanged.
+    """
+    parser = Parser(
+        tokenize(source, ascii_mode=ascii_mode),
+        known_functions=known_functions,
+        base_dir=base_dir,
+        ascii_mode=ascii_mode,
+    )
     try:
-        return Parser(
-            tokenize(source, ascii_mode=ascii_mode),
-            known_functions=known_functions,
-            base_dir=base_dir,
-            ascii_mode=ascii_mode,
-        ).parse_program()
+        program = parser.parse_program()
     except RecursionError as err:
         raise nesting_fault(err) from None
+    if imported is not None:
+        imported.clear()
+        imported.update(parser.imported)
+    return program

@@ -193,12 +193,14 @@ def cmd_fmt(args: argparse.Namespace) -> int:
 
 def cmd_lint(args: argparse.Namespace) -> int:
     source = load_source(args.file, args.ascii, args.vertical)
+    root = Path(args.file).resolve().parent
     try:
-        program = parse(source, base_dir=Path(args.file).resolve().parent)
+        brought: dict[str, int] = {}
+        program = parse(source, base_dir=root, imported=brought)
     except PhyrexianError as err:
         print(format_error(err, source), file=sys.stderr)
         return 1
-    notes = lint_program(program)
+    notes = lint_program(program, imported=brought)
     if not notes:
         print(f"{args.file}: no notes")
         return 0

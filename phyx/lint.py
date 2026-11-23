@@ -200,16 +200,22 @@ def _note_short_ability(
         emit(expr)
 
 
-def lint_program(program: list[ast.Stmt]) -> list[Note]:
+def lint_program(program: list[ast.Stmt], *, imported: dict[str, int] | None = None) -> list[Note]:
+    """Notes for ``program``.
+
+    ``imported`` holds arities brought in by ``bukð``. Omit it, as in
+    ``lint_program(program)``, and only abilities defined in ``program``
+    are considered. A ``ťe`` in ``program`` overwrites the same name.
+    """
     try:
-        return _lint_program(program)
+        return _lint_program(program, imported)
     except RecursionError as err:
         raise nesting_fault(err) from None
 
 
-def _lint_program(program: list[ast.Stmt]) -> list[Note]:
+def _lint_program(program: list[ast.Stmt], imported: dict[str, int] | None = None) -> list[Note]:
     notes: list[Note] = []
-    arities: dict[str, int] = {}
+    arities: dict[str, int] = dict(imported or {})
     _collect_arities(program, arities)
 
     def visit_block(stmts: list[ast.Stmt]) -> None:
