@@ -338,6 +338,23 @@ def _fix_here(consts, seen, name, value, const, line):
     return value
 
 
+# 'u fixes a name in the scope that is running. It does not walk outward,
+# so it may shadow an outer name. A loop item, a plain assignment, or an
+# earlier 'u in that scope is already a value here and cannot be fixed.
+# A read before the 'u still sees an outer binding when this scope has none.
+def _running_already(locs, name, line):
+    if locs is not None and name in locs:
+        raise RuntimeFault(
+            f"'{name}' already has a value here and cannot be fixed in the past ('u)",
+            line,
+        )
+
+
+def _fix_running(locs, consts, seen, name, value, line):
+    _running_already(locs, name, line)
+    return _fix_here(consts, seen, name, value, True, line)
+
+
 def _load_dyn(locs, boxes, gvars, name, line):
     """Read a name that may be local, outer, or not bound yet."""
     if locs is not None and name in locs:
@@ -359,7 +376,14 @@ def _store_dyn(locs, boxes, gvars, consts, k, name, value, const, line):
 
     ``locs`` is this ability's own bindings. ``boxes`` are enclosing
     bindings, nearest first. ``gvars`` is the persistent module environment.
+    A ``'u`` does not walk outward; it only looks at ``locs``.
     """
+    if const and locs is not None:
+        _running_already(locs, name, line)
+        if k is not None:
+            k.add(name)
+        locs[name] = value
+        return value
     if locs is not None and name in locs:
         if const or (k is not None and name in k):
             if const:
@@ -446,6 +470,7 @@ _NS_NAMES = {
     "_load_dyn": _load_dyn,
     "_store_dyn": _store_dyn,
     "_fix_here": _fix_here,
+    "_fix_running": _fix_running,
     "Ability": Ability,
     "truthy": truthy,
     "to_text": to_text,
@@ -1345,7 +1370,11 @@ class Emitter:
         return tmp
 
     def _load_late(self, name: str, late: Scope, line: int) -> str:
-        """Read a ``'u`` local, or the binding outside it when ``'u`` has not run."""
+        """Read a ``'u`` local, or the binding outside it when ``'u`` has not run.
+
+        A name already stored in this scope is that binding. The outer name
+        is read only when this scope does not hold it yet.
+        """
         tmp = self.tmp()
         slot = late.late_slot[name]
         self.emit("try:")
@@ -1354,16 +1383,29 @@ class Emitter:
         self.indent -= 1
         self.emit("except NameError:")
         self.indent += 1
+        if late.locs_name:
+            self.emit(f"if {name!r} in {late.locs_name}:")
+            self.indent += 1
+            self.emit(f"{tmp} = {late.locs_name}[{name!r}]")
+            self.indent -= 1
+            self.emit("else:")
+            self.indent += 1
+            self._load_late_outer(name, late, line, tmp)
+            self.indent -= 1
+        else:
+            self._load_late_outer(name, late, line, tmp)
+        self.indent -= 1
+        return tmp
+
+    def _load_late_outer(self, name: str, late: Scope, line: int, tmp: str) -> None:
         outer = late.parent
         if outer is None:  # pragma: no cover - 'u shadows something outside this scope
             hint = hint_for_unknown(name)
             self.emit(f"raise RuntimeFault({f'unknown word {name!r}'!r}, {line}, hint={hint!r})")
             self.emit(f"{tmp} = None")
-        else:
-            loaded = self.load(name, outer, line)
-            self.emit(f"{tmp} = {loaded}")
-        self.indent -= 1
-        return tmp
+            return
+        loaded = self.load(name, outer, line)
+        self.emit(f"{tmp} = {loaded}")
 
     def _late_plain_scopes(self, scope: Scope, name: str) -> list[Scope]:
         """``'u`` slots a plain assignment must see, nearest first.
@@ -1385,7 +1427,8 @@ class Emitter:
     def _store_own_late(self, name: str, val: str, scope: Scope, line: int) -> str:
         """``'u`` in the ability that owns the slot. It does not walk outward."""
         slot = scope.late_slot[name]
-        rhs = f"_fix_here({scope.const_set}, {scope.seen_set}, {name!r}, {val}, True, {line})"
+        locs = scope.locs_name or "None"
+        rhs = f"_fix_running({locs}, {scope.const_set}, {scope.seen_set}, {name!r}, {val}, {line})"
         self.emit(f"{slot} = {rhs}")
         return slot
 
@@ -1579,6 +1622,10 @@ class Emitter:
             already = f"'{name}' already has a value here and cannot be fixed in the past ('u)"
             self.emit(f"raise RuntimeFault({already!r}, {line})")
             return "None"
+        # A dynamic name shares one cell with its read. 'u of that name
+        # still fixes a local of this scope when the cell does not hold it.
+        if self._outer_dynamic(name, scope, found) and (not const or scope.locs_name):
+            return self._dyn_store(scope, name, val, const, line)
         if (
             scope.kind == "func"
             and name in scope.const_names
@@ -1587,8 +1634,6 @@ class Emitter:
             and name not in scope.funs
         ):
             return self._store_local_const(name, val, scope, const, line)
-        if self._outer_dynamic(name, scope, found):
-            return self._dyn_store(scope, name, val, const, line)
         if scope.kind == "module" and self.persist and name not in scope.funs:
             if const:
                 rhs = f"_rt.fix({name!r}, {val}, {line})"

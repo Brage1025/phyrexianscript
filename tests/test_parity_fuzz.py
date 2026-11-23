@@ -1140,12 +1140,13 @@ BUG_Q_WALKER = (
     ("ParseError", "ɢnagɮ (next) used outside of a loop", 2, _NEXT_HINT),
 )
 
-# BUG_R, BUG_S and BUG_T are tracked in https://github.com/Brage1025/phyrexianscript/issues/1
+# BUG_R, BUG_S and BUG_T were fixed. The compiled engine agrees with the
+# tree-walker (https://github.com/Brage1025/phyrexianscript/issues/1).
 
 # 'u of the enclosing loop's item, when that name also exists outside.
-# The same text without a persistent session is LOOP_CONST, and the engines
-# agree. In a persistent session the tree-walker prints 0 and then faults on
-# the 'u. The compiled engine faults with an unknown word on the print.
+# The same text without a persistent session is LOOP_CONST. In a persistent
+# session the program prints 0 and then faults on the 'u: the loop already
+# bound w in the running scope.
 BUG_R = "^ťe-fbx:\n    ^aχəw'-w-dl-2-ronɣ:\n        !w.\n        ^aχəw'-y-dl-2-ronɣ:\n            ^'u-2-w-ţə''.\n^xe-fbx.\n"
 BUG_R_WALKER = (
     "0\n",
@@ -1158,11 +1159,9 @@ BUG_R_WALKER = (
 )
 
 # 'u in a qit handler of a name bound in the baqilx body of the same ability.
-# The program without the last line agrees: both engines fault on the 'u.
-# The tried body does fault (unknown y) and both engines catch that the same
-# way, so the handler runs. A later module assignment of the same name is
-# what still separates them. The tree-walker faults on the 'u. The compiled
-# engine does not fault.
+# The tried body binds z, then faults on an unknown y, so the handler runs.
+# The 'u faults because z already has a value in that scope. A later module
+# assignment of the same name does not let the 'u shadow it.
 BUG_S = (
     "^ťe-fbx:\n"
     "    ^baqilx:\n"
@@ -1184,9 +1183,8 @@ BUG_S_WALKER = (
 )
 
 # A second 'u of the same name, in a different nested block of the handler.
-# The second 'u is not reached. The tree-walker faults on the first 'u.
-# The compiled engine faults on the aχəw' above it, and its message is
-# "'y' was fixed in the past ('u) and cannot change".
+# The second 'u is not reached. The loop inside fcx binds y, and the first
+# 'u faults because y already has a value in the running scope.
 BUG_T = (
     "^baqilx:\n"
     "    !w.\n"
@@ -1209,6 +1207,38 @@ BUG_T_WALKER = (
         None,
     ),
 )
+
+# The same shape as BUG_R, with the 'u two loops inside the binding loop.
+NESTED_LOOP_FIX = (
+    "^ťe-fbx:\n"
+    "    ^aχəw'-w-dl-2-ronɣ:\n"
+    "        !w.\n"
+    "        ^aχəw'-y-dl-2-ronɣ:\n"
+    "            ^aχəw'-z-dl-2-ronɣ:\n"
+    "                ^'u-2-w-ţə''.\n"
+    "^xe-fbx.\n"
+)
+
+# 'u of a name bound earlier in the same qit handler.
+FIX_AFTER_HANDLER_ASSIGN = (
+    "^ťe-fbx:\n    ^baqilx:\n        ^1-0-χɬkevk.\n    ^qit:\n        ^4-z-ţə''.\n        ^'u-5-z-ţə''.\n^xe-fbx.\n"
+)
+
+# 'u in a handler of a name bound only in the baqilx body.
+FIX_TRY_NAME_ONLY = (
+    "^ťe-fbx:\n    ^baqilx:\n        ^1-z-ţə''.\n        ^y-1-babg-y-ţə''.\n    ^qit:\n        ^'u-3-z-ţə''.\n^xe-fbx.\n"
+)
+
+# A read of an outer name, then 'u of that name, in a plain ability.
+READ_OUTER_BEFORE_FIX = "^1-w-ţə''.\n^ťe-fbx:\n    !w.\n    ^'u-2-w-ţə''.\n    !w.\n^xe-fbx.\n!w.\n"
+
+# A second 'u of the same name after qit catches the first fault.
+SECOND_FIX_AFTER_CATCH = (
+    "^ťe-fbx:\n    ^1-y-ţə''.\n    ^baqilx:\n        ^'u-2-y-ţə''.\n    ^qit:\n        !dekp.\n    ^'u-3-y-ţə''.\n^xe-fbx.\n"
+)
+
+# A read of a local, then 'u, when a later sentence also assigns the name.
+READ_LOCAL_BEFORE_FIX = "^ťe-fbx:\n    ^1-z-ţə''.\n    !z.\n    ^'u-3-z-ţə''.\n^xe-fbx.\n^0-z-ţə''.\n"
 
 # Both engines fault once the call depth passes the host ceiling.
 # The line is omitted: it would point at whichever call happened to overflow.
@@ -1292,23 +1322,102 @@ class ParityFuzzTests(unittest.TestCase):
     def test_BUG_R_tree_walker(self):
         self.assertEqual(run_both(BUG_R, persistent=True)[1], BUG_R_WALKER)
 
-    @unittest.expectedFailure
     def test_BUG_R_enclosing_loop_name_persistent(self):
         assertParity(BUG_R, persistent=True)
 
     def test_BUG_S_tree_walker(self):
         self.assertEqual(run_both(BUG_S)[1], BUG_S_WALKER)
 
-    @unittest.expectedFailure
     def test_BUG_S_fix_in_handler_of_try_name(self):
         assertParity(BUG_S)
 
     def test_BUG_T_tree_walker(self):
         self.assertEqual(run_both(BUG_T)[1], BUG_T_WALKER)
 
-    @unittest.expectedFailure
     def test_BUG_T_second_fix_message(self):
         assertParity(BUG_T)
+
+    def test_enclosing_loop_name_without_persistent(self):
+        # BUG_R without a persistent session. The loop binds w, the print
+        # reads it, and the 'u in the inner loop faults.
+        self.assertEqual(run_both(BUG_R)[1], BUG_R_WALKER)
+        assertParity(BUG_R)
+
+    def test_enclosing_loop_name_nested_two_deep(self):
+        # The same shape as BUG_R, with the 'u two loops inside the binding.
+        walked = (
+            "0\n",
+            (
+                "RuntimeFault",
+                "'w' already has a value here and cannot be fixed in the past ('u)",
+                6,
+                None,
+            ),
+        )
+        self.assertEqual(run_both(NESTED_LOOP_FIX)[1], walked)
+        assertParity(NESTED_LOOP_FIX)
+        self.assertEqual(run_both(NESTED_LOOP_FIX, persistent=True)[1], walked)
+        assertParity(NESTED_LOOP_FIX, persistent=True)
+
+    def test_fix_of_name_bound_earlier_in_handler(self):
+        # 'u of a name the qit handler itself bound on an earlier line.
+        walked = (
+            "",
+            (
+                "RuntimeFault",
+                "'z' already has a value here and cannot be fixed in the past ('u)",
+                6,
+                None,
+            ),
+        )
+        self.assertEqual(run_both(FIX_AFTER_HANDLER_ASSIGN)[1], walked)
+        assertParity(FIX_AFTER_HANDLER_ASSIGN)
+
+    def test_fix_in_handler_of_try_name_only(self):
+        # 'u in the handler of a name bound only in the baqilx body.
+        # No later module assignment.
+        walked = (
+            "",
+            (
+                "RuntimeFault",
+                "'z' already has a value here and cannot be fixed in the past ('u)",
+                6,
+                None,
+            ),
+        )
+        self.assertEqual(run_both(FIX_TRY_NAME_ONLY)[1], walked)
+        assertParity(FIX_TRY_NAME_ONLY)
+
+    def test_read_outer_before_fix_in_ability(self):
+        # A read of an outer name, then 'u of that name, in a plain ability.
+        self.assertEqual(run_both(READ_OUTER_BEFORE_FIX)[1], ("1\n2\n1\n", None))
+        assertParity(READ_OUTER_BEFORE_FIX)
+
+    def test_second_fix_after_caught_fault(self):
+        # The first 'u faults and qit catches it. A second 'u of the same
+        # name then faults the same way, because the name still has a value.
+        message = "'y' already has a value here and cannot be fixed in the past ('u)"
+        walked = (
+            message + "\n",
+            ("RuntimeFault", message, 7, None),
+        )
+        self.assertEqual(run_both(SECOND_FIX_AFTER_CATCH)[1], walked)
+        assertParity(SECOND_FIX_AFTER_CATCH)
+
+    def test_read_local_before_fix_with_later_module_assign(self):
+        # A plain assignment in the ability, a read of it, then 'u. A later
+        # module assignment of the same name does not hide the local.
+        walked = (
+            "1\n",
+            (
+                "RuntimeFault",
+                "'z' already has a value here and cannot be fixed in the past ('u)",
+                4,
+                None,
+            ),
+        )
+        self.assertEqual(run_both(READ_LOCAL_BEFORE_FIX)[1], walked)
+        assertParity(READ_LOCAL_BEFORE_FIX)
 
     def test_BUG_K_deep_fault_lines(self):
         previous = os.environ.get("PHYX_RECURSION")
