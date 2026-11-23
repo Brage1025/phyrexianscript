@@ -20,7 +20,8 @@ from phyx.cli import main
 ROOT = Path(__file__).resolve().parent.parent
 EQ = "\u01c6'ynpp"
 # The print sits in the loop, so the first line of output means the body is running.
-SPIN = f'^baxu\u03c6-1-1-{EQ}:\n    !"start".\n'
+# The word must not appear in the REPL banner, which says "start".
+SPIN = f'^baxu\u03c6-1-1-{EQ}:\n    !"spinning".\n'
 # Measured on 3.14 with the default recursion ceiling of 1000: nested ``ba``
 # overflows the parser at 248, and a ``ťewn`` / ``babg`` chain overflows lint
 # at 1000 and ``dis`` at 246. These sit above that, with room for 3.11–3.13.
@@ -116,9 +117,9 @@ class InterruptTests(unittest.TestCase):
                     stderr=subprocess.PIPE,
                 )
                 try:
-                    if not _signal_on_line(proc, b"start"):
+                    if not _signal_on_line(proc, b"spinning"):
                         proc.kill()
-                        self.fail("program did not print start")
+                        self.fail("program did not print spinning")
                     out, err = proc.communicate(timeout=5)
                 except subprocess.TimeoutExpired:
                     proc.kill()
@@ -143,9 +144,9 @@ class InterruptTests(unittest.TestCase):
         try:
             proc.stdin.write((SPIN + "\n").encode())
             proc.stdin.flush()
-            if not _signal_on_line(proc, b"start"):
+            if not _signal_on_line(proc, b"spinning"):
                 proc.kill()
-                self.fail("repl did not print start")
+                self.fail("repl did not print spinning")
             proc.stdin.write(b'!"after".\n.quit\n')
             proc.stdin.flush()
             out, err = proc.communicate(timeout=5)
